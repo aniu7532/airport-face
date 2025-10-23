@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.rfid.ec_apidemo.MainActivity">
+
+    <EditText
+        android:id="@+id/edit_log"
+        android:layout_width="match_parent"
+        android:layout_height="386dp"
+        android:layout_weight="4"
+        android:gravity="left"
+        android:text="" />
+
+</LinearLayout>

@@ -1,0 +1,204 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    compileSdk 33
+    defaultConfig {
+        applicationId "com.arcsoft.arcfacedemo"
+        minSdk 26
+        targetSdk 33
+        versionCode 45092610
+        versionName "1.0.60"
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                // 指定 Schema 导出路径（与错误日志中的路径一致）
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
+//        multiDexEnabled true
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("/home/lippi/.android/debug.keystore")
+        }
+        relealse {
+            keyAlias 'yinchuan_face_2025'
+            keyPassword 'face123456'
+            storeFile file('./signedfile/face.jks')
+            storePassword 'face123456'
+        }
+    }
+
+    buildTypes {
+        release {
+            //混淆
+            minifyEnabled true
+            //Zipalign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.relealse
+        }
+        debug {
+            versionNameSuffix "-debug"
+            minifyEnabled false
+            zipAlignEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.relealse
+        }
+    }
+
+
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            if (variant.buildType.getName().equals('release')) {
+                outputFileName = "YCJC_${variant.flavorName}_v${variant.versionName}_${variant.versionCode}_${buildTime()}.apk"
+            } else {
+                outputFileName = "YCJC_${variant.flavorName}_v${variant.versionName}_${variant.versionCode}.apk"
+            }
+        }
+    }
+//    repositories {
+//        flatDir {
+//            dirs 'libs'
+//        }
+//    }
+}
+
+def buildTime() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMdd')
+    return formattedDate
+}
+
+//greendao {
+//    //数据库schema版本，也可以理解为数据库版本号
+//    schemaVersion 8
+//    //设置DaoMaster 、DaoSession、Dao包名
+//    daoPackage 'com.arcsoft.arcfacedemo.db'
+//    //设置DaoMaster 、DaoSession、Dao目录
+//    targetGenDir 'src/main/java'
+//}
+dependencies {
+    implementation(fileTree("libs"))
+    // androidx.  preference,database,widget,etc.
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+//    implementation "androidx.room:room-runtime:2.3.0"
+//    annotationProcessor "androidx.room:room-compiler:2.3.0"
+    // SQLCipher 依赖
+    implementation "net.zetetic:android-database-sqlcipher:4.5.2"
+//    implementation "androidx.sqlite:sqlite:2.1.0" // 使用适配的 SQLite 版本
+
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation project(path: ':xupdate-lib')
+
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.preference:preference:1.1.1'
+
+
+//    implementation files('libs\\EC_RFID.jar')
+//    implementation files('libs\\yface_api.jar')
+//    implementation files('libs\\ZY-Interface-11.jar')
+
+
+    // material design
+    implementation 'com.google.android.material:material:1.1.0'    // image load lib
+//    implementation 'com.github.bumptech.glide:glide:4.9.0'
+
+
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation 'com.github.bumptech.glide:okhttp3-integration:4.16.0' // OkHttp 集成库
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0' // Glide 注解处理器
+
+//    //room数据库
+//    implementation("androidx.room:room-runtime:2.5.1")
+//
+//    annotationProcessor("androidx.room:room-compiler:2.5.1")
+
+    // rxjava
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.20'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+
+
+//    implementation 'io.reactivex.rxjava3:rxjava:3.1.5'
+//    implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
+
+    implementation 'androidx.room:room-runtime:2.4.3'
+    annotationProcessor 'androidx.room:room-compiler:2.4.3'
+
+
+    // crash dump
+//    implementation 'com.iqiyi.xcrash:xcrash-android-lib:2.4.9'
+
+    // for test
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'com.google.code.gson:gson:2.8.8'
+
+    implementation 'pub.devrel:easypermissions:3.0.0' // 根据最新版本调整
+
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.journeyapps:zxing-android-embedded:4.2.0'
+
+
+//    //在 Java 9 及更高版本中，JAXB API 不再默认包含在 JDK 中，需要显式添加依赖或模块。
+//    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+//    implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+
+//    //Android版的SweetAlert，清新文艺，快意灵动的甜心弹框
+////    compile 'cn.pedant.sweetalert:library:1.3'
+//    implementation 'cn.pedant.sweetalert:library:1.3'
+////    implementation 'com.github.pedant:sweetalert:1.3'
+
+    //WorkManager 是 Android Jetpack 提供的一个用于后台任务调度的库，适合周期性任务，且不受页面生命周期影响
+//    implementation "androidx.work:work-runtime:2.7.1"
+
+    //强大易用的安卓工具类库
+    implementation 'com.blankj:utilcodex:1.31.1'
+    // bugly
+    implementation 'com.tencent.bugly:crashreport:4.0.4'
+    implementation 'com.tencent.bugly:nativecrashreport:3.9.2'
+    implementation 'com.github.GrenderG:Toasty:1.5.2'
+
+    implementation 'com.github.li-xiaojun:XPopup:2.9.15'
+
+    implementation 'com.lzy.net:okgo:3.0.4'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+
+    implementation 'com.yuyh.easyadapter:library:1.2.0'
+//    implementation(name: 'lib_xupdate_2.1.3', ext: 'aar')
+
+
+//    implementation 'org.greenrobot:greendao:3.3.0'
+
+//    // LeakCanary 核心库（仅 Debug 模式生效）
+//    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.6'
+//
+//    // 可选：支持 AndroidX Fragment 的自动检测
+////    debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:2.6'
+//
+//    implementation 'com.squareup.leakcanary:leakcanary-object-watcher-android:2.6'
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--<external-path path="data/data/com.sz.zysx.autoupdate/" name="files_root" />
+    <external-path path="." name="mnt/sdcard" />-->
+    <external-path
+        name="apk_paths"
+        path="."/>
+</paths>
