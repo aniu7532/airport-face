@@ -49,6 +49,18 @@
         android:textColor="@color/white"
         android:textSize="18sp" />
 
+	<TextView
+		android:id="@+id/tvBili"
+		android:layout_width="260dp"
+		android:layout_height="56dp"
+		android:layout_marginTop="16dp"
+		android:background="@mipmap/draw_btn_bg"
+		android:gravity="center_vertical"
+		android:paddingLeft="16dp"
+		android:text="人脸识别最小比例"
+		android:textColor="@color/white"
+		android:textSize="18sp" />
+
     <TextView
         android:id="@+id/tvTipsLoc"
         android:layout_width="260dp"

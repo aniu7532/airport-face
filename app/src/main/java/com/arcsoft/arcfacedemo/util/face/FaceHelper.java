@@ -14,9 +14,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.arcsoft.arcfacedemo.ArcFaceApplication;
 import com.arcsoft.arcfacedemo.facedb.entity.FaceEntity;
 import com.arcsoft.arcfacedemo.faceserver.FaceServer;
 import com.arcsoft.arcfacedemo.ui.model.CompareResult;
+import com.arcsoft.arcfacedemo.util.ConfigUtil;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.util.face.constants.LivenessType;
 import com.arcsoft.arcfacedemo.util.face.constants.RequestFeatureStatus;
@@ -503,7 +505,15 @@ public class FaceHelper implements FaceListener {
             }
             for (int i = 0; i < facePreviewInfoList.size(); i++) {
                 FacePreviewInfo facePreviewInfo = facePreviewInfoList.get(i);
-                if (!facePreviewInfo.isQualityPass()) {
+
+				int previewMaxEdge = Math.max(previewSize.width, previewSize.height);
+				int rectMaxEdge = Math.max(facePreviewInfo.getFaceInfoRgb().getRect().width(), facePreviewInfo.getFaceInfoRgb().getRect().height());
+
+				if (previewMaxEdge / rectMaxEdge > ConfigUtil.getRecognizeScale(ArcFaceApplication.getApplication())) {
+					continue;
+				}
+
+				if (!facePreviewInfo.isQualityPass()) {
                     continue;
                 }
                 // 跳过mask值为MaskInfo.UNKNOWN的人脸
