@@ -858,11 +858,16 @@ public class LoginActivity extends BaseActivity
         SFUemSDK.getInstance().setAuthResultListener(new SFAuthResultListener() {
             @Override
             public void onAuthSuccess(SFBaseMessage sfBaseMessage) {
-                ALog.d("零信任认证成功: " + GsonUtils.toJson(sfBaseMessage));
-                // 保存账号和密码到全局变量
-                infoStorage.saveString("zero_trust_username", editTextUsername.getText().toString().trim());
-                infoStorage.saveString("zero_trust_password", editTextPassword.getText().toString().trim());
-                login();// 后台登录
+							ALog.d("零信任认证成功: " + GsonUtils.toJson(sfBaseMessage));
+							// 保存账号和密码到全局变量
+							infoStorage.saveString("zero_trust_username", editTextUsername.getText().toString().trim());
+							infoStorage.saveString("zero_trust_password", editTextPassword.getText().toString().trim());
+							if(SFAuthType.AUTH_TYPE_RENEW_PASSWORD == sfBaseMessage.currentAuthType) {
+								editTextPassword.setText("");
+								infoStorage.saveString("zero_trust_password", "");
+								return;
+							}
+							login();// 后台登录
             }
 
             @Override
