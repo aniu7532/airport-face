@@ -867,7 +867,7 @@ public class LoginActivity extends BaseActivity
 
             @Override
             public void onAuthFailed(SFBaseMessage sfBaseMessage) {
-                Toast.makeText(LoginActivity.this, "零信任认证失败", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, sfBaseMessage.mErrStr, Toast.LENGTH_SHORT).show();
                 ALog.e("零信任认证失败: " + GsonUtils.toJson(sfBaseMessage));
                 loging = false;
             }
