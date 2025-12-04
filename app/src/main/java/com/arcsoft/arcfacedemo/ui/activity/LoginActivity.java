@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
+import com.arcsoft.arcfacedemo.BuildConfig;
 import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.common.Constants;
 import com.arcsoft.arcfacedemo.databinding.ActivityLoginBinding;
@@ -285,9 +286,11 @@ public class LoginActivity extends BaseActivity
         // editTextUsername.setText("ls001");//默认用户名为ls001
         // editTextPassword.setText("admin123");//默认密码为admin123
 
-        deviceId = DeviceUtils.getDeviceId(this);
-
-        // deviceId = "2bcc421fb9674f8a";
+		if (BuildConfig.DEBUG) {
+			deviceId = "a4835903298640a0";
+		} else {
+			deviceId = DeviceUtils.getDeviceId(this);
+		}
 
         android_id.setText(deviceId);
         ALog.d("Android ID: " + deviceId);
