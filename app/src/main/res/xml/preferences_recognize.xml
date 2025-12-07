@@ -24,7 +24,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:isPreferenceVisible="false"
         app:title="@string/settings_recognize_scale">
 
         <ListPreference

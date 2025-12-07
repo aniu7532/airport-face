@@ -9,7 +9,6 @@ import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LoginActivity;
 import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
-import com.arcsoft.arcfacedemo.util.ConfigUtil;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
@@ -23,7 +22,6 @@ import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.core.DrawerPopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
-import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.lxj.xpopup.interfaces.OnSelectListener;
 
 import android.content.ActivityNotFoundException;
@@ -64,7 +62,6 @@ public class CustomDrawerPopupView extends DrawerPopupView {
 		TextView tvCanshu = findViewById(R.id.tvCanshu);
         TextView tvTipsLoc = findViewById(R.id.tvTipsLoc);
 
-        TextView tvBili = findViewById(R.id.tvBili);
         TextView tvDelete = findViewById(R.id.tvDelete);
         TextView tvWenan = findViewById(R.id.tvWenan);
         TextView tvVersion = findViewById(R.id.tvVersion);
@@ -127,32 +124,6 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                         }).show();
             }
         });
-
-		tvBili.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				new XPopup.Builder(getContext()).isDestroyOnDismiss(true)
-					.asInputConfirm("人脸识别最小比例", "", new OnInputConfirmListener() {
-						@Override
-						public void onConfirm(String text) {
-							boolean success = ConfigUtil.commitRecognizeScale(getContext(), text);
-							if (!success) {
-								ToastUtils.showShort("设置失败，请输入整数");
-							} else {
-								if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
-									ActivityUtils.startActivity(LoginActivity.class);
-									ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
-									ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
-									ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
-									ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);
-									ActivityUtils.finishOtherActivities(RegisterAndRecognizeActivity.class);
-								}
-							}
-						}
-					})
-					.show();
-			}
-		});
 
         tvTipsLoc.setOnClickListener(new OnClickListener() {
             @Override

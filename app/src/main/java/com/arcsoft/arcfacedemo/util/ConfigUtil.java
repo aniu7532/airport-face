@@ -273,14 +273,6 @@ public class ConfigUtil {
         return DEFAULT_MAX_DETECT_FACE_NUM;
     }
 
-	public static boolean commitRecognizeScale(Context context, String scale) {
-		try {
-			int number = Integer.parseInt(scale);
-			return commitInt(context, R.string.preference_recognize_scale_value, number);
-		} catch (NumberFormatException e) {
-			return false;
-		}
-	}
     /**
      * 视频人脸比对界面中，获取预先设置的scale值
      *
