@@ -138,7 +138,7 @@ public class ArcFaceApplication extends Application {
 
         Toasty.Config.getInstance().tintIcon(true).setTextSize(24).allowQueue(false).apply();
 
-        CrashReport.initCrashReport(this, "3562320ccf", BuildConfig.DEBUG);
+        CrashReport.initCrashReport(this, "7db9a3ce0b", BuildConfig.DEBUG);
         HttpInitUtils.init(this);
         ALog.getConfig().setLogSwitch(BuildConfig.DEBUG)// 设置 log 总开关，包括输出到控制台和文件，默认开
                 .setConsoleSwitch(BuildConfig.DEBUG)// 设置是否输出到控制台开关，默认开
