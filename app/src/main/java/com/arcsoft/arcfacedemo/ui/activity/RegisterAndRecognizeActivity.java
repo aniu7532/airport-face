@@ -71,6 +71,7 @@ import com.lzy.okgo.request.PostRequest;
 import com.yuyh.easyadapter.recyclerview.EasyRVAdapter;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -141,6 +142,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     private ImageView iv_face1;
     private ImageView iv_face2;
     private ImageView iv_face3;
+	private View button_set;
 
     private LongTermPassDao cardDao;
 
@@ -326,6 +328,15 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         initView();
         // fragment初始化
         initFragment();
+		button_set = findViewById(R.id.button_set);
+		// 点击跳转设置界面
+		button_set.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(getActivity(), HomeActivity.class);
+				startActivity(intent);
+			}
+		});
         iv_face1 = findViewById(R.id.iv_face1);
         iv_face2 = findViewById(R.id.iv_face2);
         iv_face3 = findViewById(R.id.iv_face3);
