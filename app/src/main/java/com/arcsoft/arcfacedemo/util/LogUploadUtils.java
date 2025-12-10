@@ -12,6 +12,7 @@ import java.util.Locale;
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
 import com.arcsoft.arcfacedemo.data.http.JsonCallback;
 import com.arcsoft.arcfacedemo.entity.Base2;
+import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
@@ -94,7 +95,7 @@ public class LogUploadUtils {
         }
         // HttpInitUtils.init(ArcFaceApplication.getApplication(), 5 * 60 * 1000L);
         ALog.e("FileUtils.getLength:" + FileUtils.getLength(outFile));
-        OkGo.<Base2<String>> post("http://116.63.141.207:6666/UploadLog/UpLogAsName").tag(activity).isMultipart(true)
+        OkGo.<Base2<String>> post(UrlConstants.URL + "/admin-api/infra/file/upload-no-auth").tag(activity).isMultipart(true)
                 .params("fileName", name).params("filePath", "D:\\Download\\android\\Log").params("", outFile)
                 .execute(new JsonCallback<Base2<String>>() {
                     @Override
@@ -191,7 +192,7 @@ public class LogUploadUtils {
         }
 
         ALog.e("FileUtils.getLength:" + FileUtils.getLength(outFile));
-        OkGo.<Base2<String>> post("http://116.63.141.207:6666/UploadLog/UpLogAsName").tag(context).isMultipart(true)
+        OkGo.<Base2<String>> post(UrlConstants.URL + "/admin-api/infra/file/upload-no-auth").tag(context).isMultipart(true)
                 .params("fileName", name).params("filePath", "D:\\Download\\android\\Log").params("", outFile)
                 .execute(new JsonCallback<Base2<String>>() {
                     @Override
@@ -261,7 +262,7 @@ public class LogUploadUtils {
         }
 
         ALog.e("FileUtils.getLength:" + FileUtils.getLength(outFile));
-        OkGo.<Base2<String>> post("http://116.63.141.207:6666/UploadLog/UpLogAsName").tag(context).isMultipart(true)
+        OkGo.<Base2<String>> post(UrlConstants.URL + "/admin-api/infra/file/upload-no-auth").tag(context).isMultipart(true)
                 .params("fileName", name).params("filePath", "D:\\Download\\android\\Log").params("", outFile)
                 .execute(new JsonCallback<Base2<String>>() {
                     @Override
