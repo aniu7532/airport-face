@@ -3013,88 +3013,6 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
-    private CountDownLatch latch;
-    LongTermPassDao longTermPassDao;
-    private int page = 1; // 将 page 声明为成员变量
-    private static final int PAGE_SIZE = 100; // 每页大小
-
-    private void getLongPassCardsTest() {
-        List<LongPassCard> longPassCardList = new ArrayList<>();
-        longTermPassDao = ArcFaceApplication.getApplication().getDb().longTermPassDao();
-        Map<String, String> params = new HashMap<>();
-        params.put("timestamp", String.valueOf(System.currentTimeMillis()));
-        params.put("pageNo", String.valueOf(page));
-        params.put("pageSize", String.valueOf(PAGE_SIZE));
-        // 初始化 CountDownLatch
-        latch = new CountDownLatch(1);
-        final AtomicBoolean shouldContinue = new AtomicBoolean(true); // 使用 AtomicBoolean 来控制循环
-        AsyncTask.execute(() -> {
-            while (true) {
-                GetRequest<String> request =
-                        OkGo.<String> get(UrlConstants.URL_GetLongPass).tag(UrlConstants.URL_GetLongPass);
-                // 更新或添加 timestamp 参数
-                params.put("timestamp", String.valueOf(System.currentTimeMillis()));
-                for (Map.Entry<String, String> entry : params.entrySet()) {
-                    request.params(entry.getKey(), entry.getValue());
-                }
-                request.headers("tenant-id", "1");
-                // 检查是否有 accessToken，如果有则添加 Authorization 头
-                if (ApiUtils.accessToken != null) {
-                    request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-                }
-
-                // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
-                Call<String> call = request.converter(new StringConvert()).adapt();
-                try {
-                    Response<String> res = call.execute();
-                    // ALog.d("Response code:" + res.code() + ", body:" + res.body());
-                    if (res.code() == 200) {
-                        ApiResponse<LongPassCards> response =
-                                GsonUtils.fromJson(res.body(), new TypeToken<ApiResponse<LongPassCards>>() {
-                                }.getType());
-                        // ALog.d("获取通信证接口数据response: " + gson.toJson(response));
-
-                        if (response.getCode() == 200) {
-                            LongPassCards longPassCards = response.getData();
-                            if (longPassCards != null && longPassCards.getList() != null
-                                    && !longPassCards.getList().isEmpty()) {
-                                // 下载图片到本地
-                                longPassCardList.addAll(longPassCards.getList());
-                                page++; // 修改成员变量 page
-                                params.put("pageNo", String.valueOf(page));
-                            } else {
-                                // shouldContinue.set(false); // 设置标志位为 false，终止循环
-                                break;
-                            }
-                        } else {
-                            showWarningToast(response.getMsg());
-                            ALog.d("接口非200: " + response.getMsg());
-                            // shouldContinue.set(false); // 设置标志位为 false，终止循环
-                            page = 1;
-                            longPassCardList.clear();
-                            break;
-                        }
-                        // 计数器减一
-                        latch.countDown();
-                        continue;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    ALog.e("获取通信证接口数据失败", e);
-                    showWarningToast("获取通信证接口数据失败");
-                    ALog.d("接口报错: " + e.getMessage());
-                    // shouldContinue.set(false); // 设置标志位为 false，终止循环
-                    page = 1;
-                    longPassCardList.clear();
-                    // 计数器减一
-                    latch.countDown();
-                    break;
-                }
-                break;
-            }
-        });
-    }
-
     private RFdata rf = null;
 
     private boolean iscmd;// 是否正在执行命令
@@ -3198,25 +3116,25 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
          * //不常用的命令示例 //读配置块3命令 if(api.EC_ReadCfgBlock(rf, (byte) 3)){ log.showSendReceiveData(rf); ALog.e("读配置块3成功");
          * //记录配置块数据，保证写配置时不更改配置 data=new byte[8]; for(int k=0;k<8;k++) { data[k]=rf.RecvData[k+6]; } //记录上传天线编号标识
          * if((data[0]>>>4&0x01)==1) { isUploadAntNum=true;//网络盘点解析天线口号用到 } }else{ ALog.e("读配置块3失败"); return; }
-         * 
+         *
          * //写配置块3命令 if(data!=null&&api.EC_WriteCfgBlock(rf,data, (byte) 3)){ log.showSendReceiveData(rf);
          * ALog.e("写配置块3成功"); data=null; }else{ ALog.e("写配置块3失败"); return; }
-         * 
+         *
          * //保存配置块命令 if(api.EC_SaveCfgBlock(rf, (byte) 0)){ log.showSendReceiveData(rf); ALog.e("保存配置块成功"); }else{
          * ALog.e("保存配置块失败"); return; }
-         * 
+         *
          * //噪音检测命令 if(api.EC_NoiseCheck(rf,(byte)0)){ log.showSendReceiveData(rf); ALog.e("噪音检测成功"); }else{
          * ALog.e("噪音检测失败"); return; }
-         * 
+         *
          * //打开射频命令 if(api.EC_Open_CloseRFPower(rf,(byte)1)){ log.showSendReceiveData(rf); ALog.e("打开射频成功"); }else{
          * ALog.e("打开射频失败"); return; }
-         * 
+         *
          * //关闭射频命令 if(api.EC_Open_CloseRFPower(rf,(byte)0)){ log.showSendReceiveData(rf); ALog.e("关闭射频成功"); }else{
          * ALog.e("关闭射频失败"); return; }
-         * 
+         *
          * //蜂鸣器闪烁命令 if(api.EC_HardwareControl(rf,(byte)1,(byte)0x80,(byte)0)){ log.showSendReceiveData(rf);
          * ALog.e("蜂鸣器闪烁成功"); }else{ ALog.e("蜂鸣器闪烁失败"); return; }
-         * 
+         *
          * //继电器闪烁命令 if(api.EC_HardwareControl(rf,(byte)1,(byte)1,(byte)0)){ log.showSendReceiveData(rf);
          * ALog.e("继电器闪烁成功"); }else{ ALog.e("继电器闪烁失败"); return; }
          */
