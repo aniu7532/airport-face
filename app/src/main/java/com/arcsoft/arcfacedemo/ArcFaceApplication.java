@@ -32,6 +32,7 @@ import com.arcsoft.arcfacedemo.ui.callback.OnRegisterFinishedCallback;
 import com.arcsoft.arcfacedemo.util.Converters;
 import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
+import com.arcsoft.arcfacedemo.util.ImageDeleter;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
@@ -348,76 +349,6 @@ public class ArcFaceApplication extends Application {
     public static int UPDATE_DELAY_TIME = 5;
     public static int PING_DELAY_TIME = 10 * 1000;
     public static int POOL_SIZE = 15;
-    // private SmallTask task = new SmallTask() {
-    // @Override
-    // public String doInBackground() throws Throwable {
-    // if (DateUtil.getHour(TimeUtils.getNowDate()) == 2 && DateUtil.getMinute(TimeUtils.getNowDate()) == 0) {
-    // // ALog.e("AppUtils.relaunchApp(true)");
-    // // // AppUtils.relaunchApp(true);
-    // // Intent intent = IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName());
-    // // if (intent == null) {
-    // // Log.e("AppUtils", "Didn't exist launcher activity.");
-    // // return null;
-    // // }
-    // // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
-    // // | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-    // // intent.putExtra("auto", true);
-    // // Utils.getApp().startActivity(intent);
-    // // android.os.Process.killProcess(android.os.Process.myPid());
-    // // System.exit(0);
-    // int screenSize = ScreenUtils.getScreenWidth();
-    // int typeDevice = screenSize > 800 ? 1 : 2;
-    // ALog.d("获取屏幕尺寸宽度:" + screenSize);
-    // if (typeDevice == 1) {
-    // // 声明manager对象
-    // @SuppressLint("WrongConstant")
-    // ZysjSystemManager manager = (ZysjSystemManager) getSystemService("zysj");
-    // int result = manager.zYRebootSys();
-    // ALog.e("zYRebootSys result:" + result);
-    // // ALog.e("IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName())");
-    // // Intent intent = IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName());
-    // // if (intent == null) {
-    // // ALog.e("Didn't exist launcher activity.");
-    // // return null;
-    // // }
-    // // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
-    // // | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-    // // intent.putExtra("auto", true);
-    // // Utils.getApp().startActivity(intent);
-    // // android.os.Process.killProcess(android.os.Process.myPid());
-    // // System.exit(0);
-    //
-    // } else {
-    // // 安装 test.apk
-    // MyManager manager = MyManager.getInstance(getInstance());
-    // manager.reboot();
-    // }
-    // return null;
-    // }
-    // // 执行任务逻辑
-    // ALog.d("更新通行证任务执行中...");
-    //
-    // // new Thread(() -> {
-    // // List<LongTermPass> all = db.longTermPassDao().getAll();
-    // // ALog.d("查询本地数据库数据: "+gson.toJson(all));
-    // // }).start();
-    // // updateNext = true;
-    //
-    // // ALog.d("Ping 开始");
-    // // boolean result = NetworkUtils.isAvailableByPing();
-    // // if (result) {
-    // // isOffLine = false;
-    // // ALog.d("Ping 成功");
-    // // } else {
-    // // isOffLine = true;
-    // // ALog.d("Ping 失败");
-    // // }
-    // updatePage = 1;
-    // getLongPassCardsUpdate();
-    //
-    // return null;
-    // }
-    // };
     private ImageUploader imageUploader;
     private SmallTask task;
 
@@ -968,27 +899,44 @@ public class ArcFaceApplication extends Application {
                             && !longPassCards.getList().isEmpty()) {
                         if (!ArcFaceApplication.TEST) {
                             for (LongPassCard longPassCard : longPassCards.list) {
-                                ALog.e("正在下载：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
-                                if (!directory1.exists()) {
-                                    directory1.mkdirs();
-                                }
-                                boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-                                        longPassCard.id, longPassCard.nickname);
-                                if (!result) {
-                                    ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                    return;
-                                }
-                                File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
-                                if (!directory2.exists()) {
-                                    directory2.mkdirs();
-                                }
-                                result = ImageDownloader.downloadImage(directory2, longPassCard.photo, longPassCard.id,
-                                        longPassCard.nickname);
-                                if (!result) {
-                                    ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                    return;
-                                }
+								// 如果是注销的 需要删除之前的缓存
+								if (longPassCard.status == 2) {
+									ALog.e("正在删除：" + longPassCard.nickname + "，第" + updatePage + "页");
+									File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
+									boolean result = ImageDeleter.deleteImage(directory1, longPassCard.checkPhoto,
+										longPassCard.id, longPassCard.nickname);
+									if (!result) {
+										ALog.e("删除失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
+									}
+									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
+									result = ImageDeleter.deleteImage(directory2, longPassCard.photo, longPassCard.id,
+										longPassCard.nickname);
+									if (!result) {
+										ALog.e("删除失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
+									}
+								} else {
+									ALog.e("正在下载：" + longPassCard.nickname + "，第" + updatePage + "页");
+									File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
+									if (!directory1.exists()) {
+										directory1.mkdirs();
+									}
+									boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
+										longPassCard.id, longPassCard.nickname);
+									if (!result) {
+										ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
+										return;
+									}
+									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
+									if (!directory2.exists()) {
+										directory2.mkdirs();
+									}
+									result = ImageDownloader.downloadImage(directory2, longPassCard.photo, longPassCard.id,
+										longPassCard.nickname);
+									if (!result) {
+										ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
+										return;
+									}
+								}
                             }
 
                             // 下载图片到本地

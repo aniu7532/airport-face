@@ -5,7 +5,7 @@ public class UrlConstants {
     // 二所正式环境：https://inckzqtxz.caacsri.com
     // public static final String URL = "https://inc-kzqtxz.caacsri.com";// 二所测试环境
     public static final String URL = "https://inckzqtxz.caacsri.com";// 二所正式环境
-    // public static final String URL = "http://test.sczhbf.com:58088";//慧能测试环境
+//     public static final String URL = "http://test.sczhbf.com:58088";//慧能测试环境
     public static final String URL_TOKEN = "";
     public static final String URL_ClIENTID = "VERTICAL";
     public static final String URL_LOGIN = URL + "/app-api/system/auth/vertical-client-login";// 登录
