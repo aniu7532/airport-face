@@ -1488,7 +1488,6 @@ public class LoginActivity extends BaseActivity
         params.put("pageSize", String.valueOf(PAGE_SIZE));
         // 初始化 CountDownLatch
         latch = new CountDownLatch(1);
-        final AtomicBoolean shouldContinue = new AtomicBoolean(true); // 使用 AtomicBoolean 来控制循环
 
         Snackbar snackbar = showIndefiniteSnackBar(binding.getRoot(), getString(R.string.registering_please_wait),
                 getString(R.string.stop), new View.OnClickListener() {
@@ -1500,69 +1499,6 @@ public class LoginActivity extends BaseActivity
                 });
 
         AsyncTask.execute(() -> {
-            // while (shouldContinue.get()) {
-            // // 每次循环增加一个计数器
-            // latch.countDown();
-            // latch = new CountDownLatch(1);
-            //
-            // ApiUtils.getPassCard(UrlConstants.URL_GetLongPass, params, new ApiUtils.ApiCallback() {
-            // @RequiresApi(api = Build.VERSION_CODES.N)
-            // @Override
-            // public void onSuccess(String res) {
-            // Gson gson = new Gson();
-            // Type responseType = new TypeToken<Response<LongPassCards>>() {
-            // }.getType();
-            // Response<LongPassCards> response = gson.fromJson(res, responseType);
-            // ALog.d("获取通信证接口数据response: " + gson.toJson(response));
-            //
-            // if (response.getCode() == 200) {
-            // LongPassCards longPassCards = response.getData();
-            // if (longPassCards != null && longPassCards.getList() != null
-            // && !longPassCards.getList().isEmpty()) {
-            //
-            // // 下载图片到本地
-            // ImageDownloader.downloadImages(longPassCards.list, LoginActivity.this);
-            // longPassCardList.addAll(longPassCards.getList());
-            // page++; // 修改成员变量 page
-            // params.put("pageNo", String.valueOf(page));
-            // } else {
-            // shouldContinue.set(false); // 设置标志位为 false，终止循环
-            // }
-            // } else {
-            // showWarningToast(response.getMsg());
-            // ALog.d("接口非200: " + response.getMsg());
-            // shouldContinue.set(false); // 设置标志位为 false，终止循环
-            // page = 1;
-            // longPassCardList.clear();
-            // }
-            // // 计数器减一
-            // latch.countDown();
-            // }
-            //
-            // @Override
-            // public void onFailure(Throwable e) {
-            // ALog.e("获取通信证接口数据失败", e);
-            // showWarningToast("获取通信证接口数据失败");
-            // ALog.d("接口报错: " + e.getMessage());
-            // shouldContinue.set(false); // 设置标志位为 false，终止循环
-            // page = 1;
-            // longPassCardList.clear();
-            // // 计数器减一
-            // latch.countDown();
-            // }
-            // });
-            // try {
-            // // 等待当前请求完成
-            // latch.await();
-            // } catch (InterruptedException e) {
-            // Thread.currentThread().interrupt();
-            // ALog.e("初始化线程中断", e);
-            // }
-            // }
-            // if (longPassCardList.size() > 0) {
-            // page = 1;
-            // insertDataToLocalDb(longPassCardList);
-            // }
 
             while (true) {
                 GetRequest<String> request =
@@ -1617,7 +1553,7 @@ public class LoginActivity extends BaseActivity
                                         directory1.mkdirs();
                                     }
                                     boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-                                            longPassCard.id, longPassCard.nickname);
+                                            longPassCard.id, longPassCard.nickname, false);
                                     if (!result) {
                                         runOnUiThread(new Runnable() {
                                             @Override
@@ -1633,7 +1569,7 @@ public class LoginActivity extends BaseActivity
                                         directory2.mkdirs();
                                     }
                                     result = ImageDownloader.downloadImage(directory2, longPassCard.photo,
-                                            longPassCard.id, longPassCard.nickname);
+                                            longPassCard.id, longPassCard.nickname, true);
                                     if (!result) {
                                         runOnUiThread(new Runnable() {
                                             @Override
@@ -1696,85 +1632,6 @@ public class LoginActivity extends BaseActivity
             if (longPassCardList.size() > 0) {
                 page = 1;
                 insertDataToLocalDb(longPassCardList);
-            }
-        });
-    }
-
-    private void getLongPassCardsTest() {
-        List<LongPassCard> longPassCardList = new ArrayList<>();
-        longTermPassDao = ArcFaceApplication.getApplication().getDb().longTermPassDao();
-        Map<String, String> params = new HashMap<>();
-        params.put("timestamp", String.valueOf(System.currentTimeMillis()));
-        params.put("pageNo", String.valueOf(page));
-        params.put("pageSize", String.valueOf(PAGE_SIZE));
-        // 初始化 CountDownLatch
-        latch = new CountDownLatch(1);
-        final AtomicBoolean shouldContinue = new AtomicBoolean(true); // 使用 AtomicBoolean 来控制循环
-        AsyncTask.execute(() -> {
-            while (true) {
-                GetRequest<String> request =
-                        OkGo.<String> get(UrlConstants.URL_GetLongPass).tag(UrlConstants.URL_GetLongPass);
-                if (params != null) {
-                    // 更新或添加 timestamp 参数
-                    params.put("timestamp", String.valueOf(System.currentTimeMillis()));
-                    for (Map.Entry<String, String> entry : params.entrySet()) {
-                        request.params(entry.getKey(), entry.getValue());
-                    }
-                }
-                request.headers("tenant-id", "1");
-                // 检查是否有 accessToken，如果有则添加 Authorization 头
-                if (ApiUtils.accessToken != null) {
-                    request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-                }
-
-                // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
-                Call<String> call = request.converter(new StringConvert()).adapt();
-                try {
-                    com.lzy.okgo.model.Response<String> res = call.execute();
-                    // ALog.d("Response code:" + res.code() + ", body:" + res.body());
-                    if (res.code() == 200) {
-                        ApiResponse<LongPassCards> response =
-                                GsonUtils.fromJson(res.body(), new TypeToken<ApiResponse<LongPassCards>>() {
-                                }.getType());
-                        // ALog.d("获取通信证接口数据response: " + gson.toJson(response));
-
-                        if (response.getCode() == 200) {
-                            LongPassCards longPassCards = response.getData();
-                            if (longPassCards != null && longPassCards.getList() != null
-                                    && !longPassCards.getList().isEmpty()) {
-                                // 下载图片到本地
-                                longPassCardList.addAll(longPassCards.getList());
-                                page++; // 修改成员变量 page
-                                params.put("pageNo", String.valueOf(page));
-                            } else {
-                                // shouldContinue.set(false); // 设置标志位为 false，终止循环
-                                break;
-                            }
-                        } else {
-                            showWarningToast(response.getMsg());
-                            ALog.d("接口非200: " + response.getMsg());
-                            // shouldContinue.set(false); // 设置标志位为 false，终止循环
-                            page = 1;
-                            longPassCardList.clear();
-                            break;
-                        }
-                        // 计数器减一
-                        latch.countDown();
-                        continue;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    ALog.e("获取通信证接口数据失败", e);
-                    showWarningToast("获取通信证接口数据失败");
-                    ALog.d("接口报错: " + e.getMessage());
-                    // shouldContinue.set(false); // 设置标志位为 false，终止循环
-                    page = 1;
-                    longPassCardList.clear();
-                    // 计数器减一
-                    latch.countDown();
-                    break;
-                }
-                break;
             }
         });
     }

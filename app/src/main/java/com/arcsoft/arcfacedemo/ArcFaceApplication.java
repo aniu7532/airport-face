@@ -169,144 +169,6 @@ public class ArcFaceApplication extends Application {
         File customDbPath = new File(file.getAbsolutePath(), "airportDb.db");
         db = Room.databaseBuilder(getApplicationContext(), YinchuanAirportDB.class, customDbPath.getAbsolutePath())
                 .setJournalMode(RoomDatabase.JournalMode.AUTOMATIC).fallbackToDestructiveMigration().build();
-        // String json =
-        // "{\"area\":\"1840686989613682689\",\"areaName\":\"A国内候机隔离区\",\"cardId\":\"EF60B6D2\",\"checkUserId\":\"1872521165688688642\",\"checkUserName\":"
-        // +
-        // "\"李海明\",\"deviceId\":\"1891762311002578945\",\"deviceName\":\"航站楼2楼员工通道设备01\",\"direction\":\"1\",\"id\":\"3c9dfe8a-2dc7-4723-9061-7043c45bdf3d\","
-        // +
-        // "\"reason\":\"人脸识别失败\",\"sitePhoto\":\"https://obs-digitalpass-prod.caacsri.com/39cb4e65f251a73d91c878de71edda55e3789220cf7d2c699765370a3b6b28d5.jpg\","
-        // + "\"status\":\"false\"}";
-        //
-        // ThreadUtils.executeByCached(new SmallTask() {
-        // @Override
-        // public String doInBackground() throws Throwable {
-        // for (int i = 0; i < 200; i++) {
-        // LongTermRecords item = GsonUtils.fromJson(json, LongTermRecords.class);
-        // item.id = SnowflakeIdUtil.getInstance().nextId() + "";
-        // db.longTermRecordsDao().insert(item);
-        // }
-        // return null;
-        // }
-        // });
-
-        // try {
-        // ZipUtils.zipFile("/data/data/com.arcsoft.arcfacedemo/databases", file.getAbsolutePath());
-        // } catch (IOException e) {
-        // e.printStackTrace();
-        // }
-
-        // String name = AppUtils.getAppPackageName() + "_" + AppUtils.getAppVersionName() + "_"
-        // + TimeUtils.getNowString(new SimpleDateFormat("MM_dd_HH_mm_ss", Locale.getDefault())) + ".zip";
-        // ALog.e(name);
-        // // zip data
-        // File outFile = new File(file, name);
-        // if (outFile.exists()) {
-        // outFile.delete();
-        // }
-        //
-        // boolean result = false;
-        // try {
-        // result = ZipUtils.zipFiles(FileUtils.listFilesInDir("/data/data/com.arcsoft.arcfacedemo/databases"),
-        // outFile);
-        // } catch (IOException e) {
-        // e.printStackTrace();
-        // }
-        // ThreadUtils.executeByFixed(12, new SmallTask() {
-        // @Override
-        // public String doInBackground() throws Throwable {
-        // List<LongTermPass> list1 = db.longTermPassDao().getAll();
-        // if (ObjectUtils.isNotEmpty(list1)) {
-        // ALog.e("长期证件 list1.size():" + list1.size());
-        //// for (LongTermPass item : list1) {
-        //// ALog.e(item.toString());
-        //// }
-        // } else {
-        // ALog.e("长期证件 0");
-        // }
-        // return null;
-        // }
-        // });
-        //
-        //
-        // SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        // String cur = TimeUtils.getNowString();
-        // String startTime = "2025-02-27 00:00:00";
-        // String endTime = "2025-02-28 23:59:59";
-        // long span1 = TimeUtils.getTimeSpan(cur, startTime, format, TimeConstants.SEC);
-        // long span2 = TimeUtils.getTimeSpan(endTime, cur, format, TimeConstants.SEC);
-        // ALog.e("span1:" + span1 + ",span2:" + span2);
-
-        // ThreadUtils.executeByFixed(POOL_SIZE, new SmallTask() {
-        // @Override
-        // public String doInBackground() throws Throwable {
-        // String[] areaCode = { "C1" };
-        //
-        // // ALog.e(isAreaPass());
-        //
-        // // FaceEntity faceEntity =
-        // // FaceDatabase.getInstance(getInstance()).faceDao().queryByUserName("1872472149001134082");
-        // // if (faceEntity != null) {
-        // // ALog.e(faceEntity.toString());
-        // // } else {
-        // // ALog.e("无记录");
-        // // }
-        //
-        // // faceEntity =
-        // // FaceDatabase.getInstance(getInstance()).faceDao().queryByUserName("1895379310107394050");
-        // // if (faceEntity != null) {
-        // // ALog.e(faceEntity.toString());
-        // // } else {
-        // // ALog.e("无记录");
-        // // }
-        // //
-        // //
-        // // faceEntity =
-        // // FaceDatabase.getInstance(getInstance()).faceDao().queryByUserName("1895379313672552450");
-        // // if (faceEntity != null) {
-        // // ALog.e(faceEntity.toString());
-        // // } else {
-        // // ALog.e("无记录");
-        // // }
-        // //
-        // //
-        // // File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
-        // // if (!directory1.exists()) {
-        // // directory1.mkdirs();
-        // // }
-        //
-        // // ImageDownloader.downloadImage(client, directory1, longPassCard.checkPhoto, longPassCard.id);
-        //
-        // File directory = new File(getExternalFilesDir(null), "log");
-        // if (directory.exists()) {
-        // List<File> list = FileUtils.listFilesInDir(directory.getAbsolutePath());
-        // if (ObjectUtils.isNotEmpty(list)) {
-        // for (File file : list) {
-        // // ALog.e(file.getName());
-        // if (file.getName().endsWith("zip")) {
-        // ALog.e("刪除" + file.getName());
-        // FileUtils.delete(file);
-        // }
-        // }
-        // }
-        // }
-        //
-        // // ALog.e(SnowflakeIdUtil.getInstance().nextId() + "");
-        //
-        // SnowFlake worker = new SnowFlake(1, 1, 1);
-        // ALog.e(worker.nextId() + "");
-        // // List<LongTermPass> list1 = db.longTermPassDao().getAll();
-        // // if (ObjectUtils.isNotEmpty(list1)) {
-        // // ALog.e("长期证件 list1.size():" + list1.size());
-        // //// for (LongTermPass item : list1) {
-        // //// ALog.e(item.toString());
-        // //// }
-        // // } else {
-        // // ALog.e("长期证件 0");
-        // // }
-        // return null;
-        // }
-        // });
-        // infoStorage.saveString("startDate", "2025-03-11 16:00:00");
     }
 
     @Override
@@ -598,105 +460,9 @@ public class ArcFaceApplication extends Application {
                         }
                     }
 
-                    // max = 3 * 86400000L;
-                    // cur = TimeUtils.getNowMills();
-                    // directory = new File(getExternalFilesDir(null), "register");
-                    // if (!directory.exists()) {
-                    // directory.mkdirs();
-                    // }
-                    // list = FileUtils.listFilesInDir(directory.getAbsolutePath());
-                    // if (ObjectUtils.isNotEmpty(list)) {
-                    // for (int i = 0; i < list.size(); i++) {
-                    // long temp = cur - list.get(i).lastModified();
-                    // ALog.e("temp:" + temp);
-                    // if (temp > max) {
-                    // boolean delete = list.get(i).delete();
-                    // ALog.e(list.get(i).getAbsolutePath() + "，delete:" + delete);
-                    // }
-                    // }
-                    // }
-
-                    // if (ObjectUtils.isNotEmpty(list) && list.size() > 1000) {
-                    // for (int i = 1000; i < list.size(); i++) {
-                    // boolean delete = list.get(i).lastModified().delete();
-                    // ALog.e(list.get(i).getAbsolutePath() + "，delete:" + delete);
-                    // }
-                    // }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-                // PostRequest<String> request =
-                // OkGo.<String> post(UrlConstants.URL_refresh_token).tag(UrlConstants.URL_refresh_token);
-                // request.headers("tenant-id", "1");
-                // request.params("refreshToken", ApiUtils.getRefreshToken());
-                // request.params("clientId", UrlConstants.URL_ClIENTID);
-                // // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
-                // Call<String> call = request.converter(new StringConvert()).adapt();
-                // try {
-                // Response<String> res = call.execute();
-                // if (res.code() == 200) {
-                // ApiResponse<Login> response =
-                // GsonUtils.fromJson(res.body(), new TypeToken<ApiResponse<Login>>() {
-                // }.getType());
-                // if (response.getCode() == 200) {
-                // Login login = response.getData();
-                // if (login != null) {
-                // String accessToken = login.getAccessToken();
-                // String refreshToken = login.getRefreshToken();
-                // String userId = login.getUserId();
-                // ApiUtils.userId = userId;
-                // infoStorage.saveString("userId", userId);
-                // ApiUtils.setRefreshToken(refreshToken);
-                // ApiUtils.setAccessToken(accessToken);
-                // }
-                // }
-                // ALog.d("刷新Token成功返回");
-                // }
-                // } catch (Exception e) {
-                // e.printStackTrace();
-                // ALog.e("刷新Token失败返回: " + e.getMessage());
-                // }
-
-                // List<LongTermRecords> list4 = db.longTermRecordsDao().getAll();
-                // List<TemporaryCardRecords> list5 = db.temporaryCardRecordsDao().getAll();
-                // if (ObjectUtils.isNotEmpty(list4) && ObjectUtils.isNotEmpty(list5)) {
-                // ALog.e("list4.size():" + list4.size());
-                // ALog.e("list5.size():" + list5.size());
-                // Map<String, List<TemporaryCardRecords>> map = new HashMap<>();
-                // for (LongTermRecords item1 : list4) {//把所有长期卡存在map里，有引领的临时卡存在list里
-                // List<TemporaryCardRecords> list = map.get(item1.id);
-                // if (list == null) {
-                // map.put(item1.id, new ArrayList<>());
-                // }
-                // for (TemporaryCardRecords item2 : list5) {
-                // if (list != null) {
-                // list.add(item2);
-                // }
-                // }
-                // }
-                //
-                //
-                // for (LongTermRecords item1 : list4) {
-                // List<TemporaryCardRecords> list = map.get(item1.id);
-                // if (list == null) {//非引领人
-                // //改变ID
-                // item1.id = SnowflakeIdUtil.getInstance().nextId() + "";
-                // up(item1);
-                // } else {//引领人
-                // //改变ID
-                // item1.id = SnowflakeIdUtil.getInstance().nextId() + "";
-                // up(item1);
-                // for (TemporaryCardRecords item : list) {//临时卡
-                // ALog.e(item.toString());
-                // //改变ID，使其和引领人ID一致
-                // item.id = item1.id;
-                // up(item);
-                // }
-                // }
-                // }
-                //
-                // }
 
                 return "";
             }
@@ -974,7 +740,7 @@ public class ArcFaceApplication extends Application {
                                     directory1.mkdirs();
                                 }
                                 boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-                                        longPassCard.id, longPassCard.nickname);
+                                        longPassCard.id, longPassCard.nickname, false);
                                 if (!result) {
                                     ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
                                     return;
@@ -984,7 +750,7 @@ public class ArcFaceApplication extends Application {
                                     directory2.mkdirs();
                                 }
                                 result = ImageDownloader.downloadImage(directory2, longPassCard.photo, longPassCard.id,
-                                        longPassCard.nickname);
+                                        longPassCard.nickname, true);
                                 if (!result) {
                                     ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
                                     return;
