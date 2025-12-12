@@ -106,7 +106,6 @@ public class ImageDownloader {
             return originalBitmap;
         }
     }
-
     public static void encrypt(InputStream inputStream, OutputStream outputStream, String key) throws Exception {
         Key secretKey = new SecretKeySpec(key.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);

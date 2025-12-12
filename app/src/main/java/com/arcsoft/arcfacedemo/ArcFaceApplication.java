@@ -32,6 +32,7 @@ import com.arcsoft.arcfacedemo.ui.callback.OnRegisterFinishedCallback;
 import com.arcsoft.arcfacedemo.util.Converters;
 import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
+import com.arcsoft.arcfacedemo.util.ImageDeleter;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
@@ -91,15 +92,6 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class ArcFaceApplication extends Application {
-    // public class RemoteLeakReporter implements OnHeapAnalyzedListener {
-    // @Override
-    // public void onHeapAnalyzed(@NonNull HeapAnalysis heapAnalysis) {
-    // String leakTrace = heapAnalysis.toString();
-    // // 上报至服务器
-    // ALog.e(leakTrace);
-    // LogUploadUtils.upload(getApplication(), leakTrace);
-    // }
-    // }
 
     private static ArcFaceApplication application;
     public static final String TAG = "YCJC";
@@ -110,10 +102,6 @@ public class ArcFaceApplication extends Application {
     public String getWlyCacheDir() {
         return wlyCacheDir;
     }
-
-    // public static ArcFaceApplication getInstance() {
-    // return application;
-    // }
 
     @Override
     public void onCreate() {
@@ -192,8 +180,6 @@ public class ArcFaceApplication extends Application {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        // initParameters.setLogDir(DebugInfoDumper.CRASH_LOG_DIR);
-        // XCrash.init(application, initParameters);
     }
 
     @Override
@@ -210,76 +196,6 @@ public class ArcFaceApplication extends Application {
     public static int UPDATE_DELAY_TIME = 5;
     public static int PING_DELAY_TIME = 10 * 1000;
     public static int POOL_SIZE = 15;
-    // private SmallTask task = new SmallTask() {
-    // @Override
-    // public String doInBackground() throws Throwable {
-    // if (DateUtil.getHour(TimeUtils.getNowDate()) == 2 && DateUtil.getMinute(TimeUtils.getNowDate()) == 0) {
-    // // ALog.e("AppUtils.relaunchApp(true)");
-    // // // AppUtils.relaunchApp(true);
-    // // Intent intent = IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName());
-    // // if (intent == null) {
-    // // Log.e("AppUtils", "Didn't exist launcher activity.");
-    // // return null;
-    // // }
-    // // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
-    // // | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-    // // intent.putExtra("auto", true);
-    // // Utils.getApp().startActivity(intent);
-    // // android.os.Process.killProcess(android.os.Process.myPid());
-    // // System.exit(0);
-    // int screenSize = ScreenUtils.getScreenWidth();
-    // int typeDevice = screenSize > 800 ? 1 : 2;
-    // ALog.d("获取屏幕尺寸宽度:" + screenSize);
-    // if (typeDevice == 1) {
-    // // 声明manager对象
-    // @SuppressLint("WrongConstant")
-    // ZysjSystemManager manager = (ZysjSystemManager) getSystemService("zysj");
-    // int result = manager.zYRebootSys();
-    // ALog.e("zYRebootSys result:" + result);
-    // // ALog.e("IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName())");
-    // // Intent intent = IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName());
-    // // if (intent == null) {
-    // // ALog.e("Didn't exist launcher activity.");
-    // // return null;
-    // // }
-    // // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
-    // // | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-    // // intent.putExtra("auto", true);
-    // // Utils.getApp().startActivity(intent);
-    // // android.os.Process.killProcess(android.os.Process.myPid());
-    // // System.exit(0);
-    //
-    // } else {
-    // // 安装 test.apk
-    // MyManager manager = MyManager.getInstance(getInstance());
-    // manager.reboot();
-    // }
-    // return null;
-    // }
-    // // 执行任务逻辑
-    // ALog.d("更新通行证任务执行中...");
-    //
-    // // new Thread(() -> {
-    // // List<LongTermPass> all = db.longTermPassDao().getAll();
-    // // ALog.d("查询本地数据库数据: "+gson.toJson(all));
-    // // }).start();
-    // // updateNext = true;
-    //
-    // // ALog.d("Ping 开始");
-    // // boolean result = NetworkUtils.isAvailableByPing();
-    // // if (result) {
-    // // isOffLine = false;
-    // // ALog.d("Ping 成功");
-    // // } else {
-    // // isOffLine = true;
-    // // ALog.d("Ping 失败");
-    // // }
-    // updatePage = 1;
-    // getLongPassCardsUpdate();
-    //
-    // return null;
-    // }
-    // };
     private ImageUploader imageUploader;
     private SmallTask task;
 
@@ -299,54 +215,11 @@ public class ArcFaceApplication extends Application {
                     ALog.e("faceRepository.getTotalFaceCount():" + faceRepository.getTotalFaceCount());
                 }
 
-                // LongTermPass card = db.longTermPassDao().getById("1907693397930926081");
-                //
-                // if (ObjectUtils.isEmpty(card)) {
-                // ALog.i("本地数据库未查询到: getById 1907693397930926081");
-                // } else {
-                // ALog.e(card.toString());
-                // }
-                //
-                // LongTermPass card1 = db.longTermPassDao().getByApplyId("1907685091850051586");
-                //
-                // if (ObjectUtils.isEmpty(card1)) {
-                // ALog.i("本地数据库未查询到 getByApplyId: 1907685091850051586");
-                // } else {
-                // ALog.e(card1.toString());
-                // }
-                //
-                // LongTermPass card3 = db.longTermPassDao().getByApplyId("1909876155616845826");
-                //
-                // if (ObjectUtils.isEmpty(card3)) {
-                // ALog.i("本地数据库未查询到 getByApplyId: 1909876155616845826");
-                // } else {
-                // ALog.e(card3.toString());
-                // }
-
-                // if (ObjectUtils.isNotEmpty(list1)) {
-                // ALog.e("长期证件 list1.size():" + list1.size());
-                //// for (LongTermPass item : list1) {
-                //// ALog.e(item.toString());
-                //// }
-                // // new ImageUploader()
-                // // .uploadBitmap2(ImageDownloader.loadAndDecryptImage(list1.get(0).idCode, getInstance()));
-                // }
-
                 List<LongTermRecords> list2 = db.longTermRecordsDao().getAll();
                 if (ObjectUtils.isNotEmpty(list2)) {
                     ALog.e("list2.size():" + list2.size());
                     for (LongTermRecords item : list2) {
                         ALog.e(item.toString());
-                        // {id='664573625730469888', passid='1872521146050961409', cardId='EF61ACF2', idCode='A40203',
-                        // applyId='null', direction='-1', nickname='齐修平',
-                        // photo='null', deviceId='1896459165704093697', deviceName='航站楼2楼员工通道出口设备02',
-                        // checkUserId='1872521165688688642',
-                        // checkUserName='李海明', companyName='安检护卫部', expiryDate='2027-12-31', templateType=1,
-                        // areaDisplayCode=[A, C, F],
-                        // area='1840686989613682689', areaName='A国内候机隔离区A1国内', status='true', reason='null',
-                        // parentld='null',
-                        // sitePhoto='/storage/emulated/0/Android/data/com.arcsoft.arcfacedemo/files/records/664573625730469888.jpg',
-                        // checkTime='null', faceSimilar='0.7142504', leadingPeopleld='null'}
                         if (ObjectUtils.isNotEmpty(item.sitePhoto)
                                 && (item.sitePhoto.startsWith("/") || item.sitePhoto.startsWith("storage/"))) {
                             // Bitmap bitmap = ImageUtils.getBitmap(item.sitePhoto);
@@ -508,7 +381,6 @@ public class ArcFaceApplication extends Application {
     private FaceDao faceDao;
     private MutableLiveData<List<FaceEntity>> faceEntityList = new MutableLiveData<>();
 
-    // private MutableLiveData<Boolean> initFinished = new MutableLiveData<>();
     // 总数
     private int faceCount = -1;
 
@@ -518,11 +390,6 @@ public class ArcFaceApplication extends Application {
         return isOffLine;
     }
 
-    //
-    // public MutableLiveData<Boolean> getInitFinished() {
-    // return initFinished;
-    // }
-    //
     public MutableLiveData<List<FaceEntity>> getFaceEntityList() {
         return faceEntityList;
     }
@@ -652,24 +519,6 @@ public class ArcFaceApplication extends Application {
         };
         ThreadUtils.executeByFixedAtFixRate(POOL_SIZE, task1, PING_DELAY_TIME, TimeUnit.MILLISECONDS);
 
-        // SmallTask task2 = new SmallTask() {
-        // @Override
-        // public String doInBackground() throws Throwable {
-        // LongTermPass card1 = getDb().longTermPassDao().getByNickname("小芳");
-        // if (ObjectUtils.isEmpty(card1)) {
-        // ALog.i("本地数据库未查询到 getByNickname: 小芳");
-        // } else {
-        // ALog.e(card1.toString());
-        // LongPassCard card = Converters.convertToLongPassCard(card1);
-        // List<LongPassCard> longPassCardList = new ArrayList<>();
-        // longPassCardList.add(card);
-        // handleUpdateComplete(longPassCardList);
-        // }
-        // return null;
-        // }
-        // };
-        // ThreadUtils.executeByFixedAtFixRate(POOL_SIZE, task2, 30 * 1000, TimeUnit.MILLISECONDS);
-
     }
 
     /**
@@ -734,37 +583,47 @@ public class ArcFaceApplication extends Application {
                             && !longPassCards.getList().isEmpty()) {
                         if (!ArcFaceApplication.TEST) {
                             for (LongPassCard longPassCard : longPassCards.list) {
-                                ALog.e("正在下载：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
-                                if (!directory1.exists()) {
-                                    directory1.mkdirs();
-                                }
-                                boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-                                        longPassCard.id, longPassCard.nickname, false);
-                                if (!result) {
-                                    ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                    return;
-                                }
-                                File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
-                                if (!directory2.exists()) {
-                                    directory2.mkdirs();
-                                }
-                                result = ImageDownloader.downloadImage(directory2, longPassCard.photo, longPassCard.id,
-                                        longPassCard.nickname, true);
-                                if (!result) {
-                                    ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                    return;
-                                }
+								// 如果是注销的 需要删除之前的缓存
+								if (longPassCard.status == 2) {
+									ALog.e("正在删除：" + longPassCard.nickname + "，第" + updatePage + "页");
+									File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
+									boolean result = ImageDeleter.deleteImage(directory1, longPassCard.checkPhoto,
+										longPassCard.id, longPassCard.nickname);
+									if (!result) {
+										ALog.e("删除失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
+									}
+									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
+									result = ImageDeleter.deleteImage(directory2, longPassCard.photo, longPassCard.id,
+										longPassCard.nickname);
+									if (!result) {
+										ALog.e("删除失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
+									}
+								} else {
+									ALog.e("正在下载：" + longPassCard.nickname + "，第" + updatePage + "页");
+									File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
+									if (!directory1.exists()) {
+										directory1.mkdirs();
+									}
+									boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
+										longPassCard.id, longPassCard.nickname, false);
+									if (!result) {
+										ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
+										return;
+									}
+									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
+									if (!directory2.exists()) {
+										directory2.mkdirs();
+									}
+									result = ImageDownloader.downloadImage(directory2, longPassCard.photo, longPassCard.id,
+										longPassCard.nickname, true);
+									if (!result) {
+										ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
+										return;
+									}
+								}
                             }
-
-                            // 下载图片到本地
-                            // ImageDownloader.downloadImages(longPassCards.list, getApplication());
                         }
                         longPassCardList.addAll(longPassCards.getList());
-                        // updatePage++;
-                        // params.put("pageNo", String.valueOf(updatePage));
-                        // ALog.i("更新通行证有数据，当前页码: " + updatePage);
-                        // fetchNextPage(params, longPassCardList); // 递归调用
                     } else {
                         ALog.i("更新通行证数据为空，当前页码: " + updatePage);
                     }
@@ -774,7 +633,6 @@ public class ArcFaceApplication extends Application {
                     Intent intent = new Intent(getApplication(), LoginActivity.class);
                     intent.putExtra("auto", true);
                     ActivityUtils.startActivity(intent);
-                    // ActivityUtils.getTopActivity().finish();
                     return;
                 } else {
                     ALog.d("更新通行证线程接口非200: " + resResponse.getMsg());
@@ -831,38 +689,6 @@ public class ArcFaceApplication extends Application {
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
             @Override
             public String doInBackground() throws Throwable {
-                // // faceRepository = null;
-                // if (!ArcFaceApplication.TEST) {
-                // // faceDao = FaceDatabase.getInstance(getApplication()).faceDao();
-                // // if (faceRepository == null)
-                // {
-                // FaceServer instance = FaceServer.getInstance();
-                // instance.init(getApplication(), new FaceServer.OnInitFinishedCallback() {
-                // @Override
-                // public void onFinished(int faceCount) {
-                // ALog.e("faceCount:" + faceCount);
-                // // initFinished.postValue(true);
-                // }
-                // });
-                // faceRepository = new FaceRepository(PAGE_SIZE, faceDao, instance);
-                // }
-                // }
-
-                // FaceServer instance = FaceServer.getInstance();
-                // if (FaceServer.getFaceEngine() == null) {
-                // ALog.e("FaceServer.getFaceEngine() == null");
-                // instance.init(getApplication(), new FaceServer.OnInitFinishedCallback() {
-                // @Override
-                // public void onFinished(int faceCount) {
-                // ALog.e("faceCount:" + faceCount);
-                // // initFinished.postValue(true);
-                // }
-                // });
-                // }
-                // if (faceRepository == null) {
-                // ALog.e("faceRepository == null");
-                // faceRepository = new FaceRepository(PAGE_SIZE, faceDao, instance);
-                // }
 
                 List<FaceEntity> faceEntityList = FaceDatabase.getInstance(getApplication()).faceDao().getAllFaces();
                 for (LongPassCard longPassCard : longPassCardList) {
@@ -923,11 +749,6 @@ public class ArcFaceApplication extends Application {
                         ALog.i("单个注册人脸: " + success);
                     }
                 }, applyId);
-                // registerFace(bitmap, (facePreviewInfo, success) -> {
-                // // showLongSnackBar(binding.fabAdd, getString(success ? R.string.register_success :
-                // // R.string.register_failed));
-                // ALog.i("单个注册人脸: " + success);
-                // });
                 return null;
             }
         });
@@ -935,10 +756,6 @@ public class ArcFaceApplication extends Application {
 
     public void registerFace(Bitmap bitmap, OnRegisterFinishedCallback callback, String applyId) {
         Bitmap alignedBitmap = ArcSoftImageUtil.getAlignedBitmap(bitmap, true);
-        // if (bitmap != null && !bitmap.isRecycled()) {
-        // bitmap.recycle();
-        // bitmap = null;
-        // }
         ALog.e("alignedBitmap.getWidth():" + alignedBitmap.getWidth() + ",alignedBitmap.getHeight():"
                 + alignedBitmap.getHeight());
         if (FaceServer.getInstance().getFaceEngine() == null) {
@@ -1030,7 +847,6 @@ public class ArcFaceApplication extends Application {
     }
 
     public boolean isValid() {
-        // return DateUtil.getHour(TimeUtils.getNowDate()) >= 1 && DateUtil.getHour(TimeUtils.getNowDate()) <= 3;
         return true;
     }
 

@@ -6,7 +6,7 @@ public class LongPassCard {
     public String idCode;
     public String cardId;
     public int score;
-    public int status;
+    public int status; // 2 注销
     public int type;
     public String userId;
     public String companyId;
