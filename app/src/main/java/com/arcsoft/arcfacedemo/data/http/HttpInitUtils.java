@@ -41,7 +41,7 @@ public class HttpInitUtils {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        if (BuildConfig.DEBUG) {
+        if (true) {
             // log相关
             HttpLog loggingInterceptor = new HttpLog(ArcFaceApplication.TAG);
             loggingInterceptor.setPrintLevel(HttpLog.Level.BODY); // log打印级别，决定了log显示的详细程度
