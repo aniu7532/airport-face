@@ -29,6 +29,7 @@ import com.arcsoft.arcfacedemo.util.ConfigUtil;
 import com.arcsoft.arcfacedemo.util.Converters;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
+import com.arcsoft.arcfacedemo.util.ImageDeleter;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.LogUtils;
@@ -313,198 +314,31 @@ public class LoginActivity extends BaseActivity
         // 获取存储权限
         obtainStoragePermissions();
 
-        initRadio();// 初始化按钮
-
         copyAndroidID();// 复制deviceId到粘贴板
         // 写入日志
         LogUtils.writeLogToFile(this, "这是一条测试日志");
-        // handler = new Handler(Looper.getMainLooper());
-        // handler.postDelayed(new Runnable() {
-        // @Override
-        // public void run() {
-        // // // ALog.e("AppUtils.relaunchApp(true)");
-        // // // AppUtils.relaunchApp(true);
-        // // ALog.e("AppUtils.relaunchApp(true)");
-        // // // AppUtils.relaunchApp(true);
-        // // Intent intent = IntentUtils.getLaunchAppIntent(Utils.getApp().getPackageName());
-        // // if (intent == null) {
-        // // Log.e("AppUtils", "Didn't exist launcher activity.");
-        // // return;
-        // // }
-        // // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
-        // // | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        // // intent.putExtra("auto", true);
-        // // Utils.getApp().startActivity(intent);
-        // // android.os.Process.killProcess(android.os.Process.myPid());
-        // // System.exit(0);
-        //
-        // // String apkPath = "/sdcard/v1.apk";
-        // // if (!(new File(apkPath)).exists()) {
-        // // Toast.makeText(LoginActivity.this, "apk not exist", Toast.LENGTH_SHORT).show();
-        // // return;
-        // // }
-        // // File file = new File(apkPath);
-        // // Uri uri = Uri.fromFile(file);
-        // // if (uri != null) {
-        // // Intent intent = new Intent(Intent.ACTION_VIEW);
-        // // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        // // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        // // String authority = LoginActivity.this.getPackageName();
-        // // Uri contentUri =
-        // // FileProvider.getUriForFile(LoginActivity.this, authority + ".fileprovider", file);
-        // // intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        // // intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
-        // // } else {
-        // // intent.setDataAndType(uri, "application/vnd.android.package-archive");
-        // // }
-        // // LoginActivity.this.startActivity(intent);
-        // // }
-        //
-        // // // 安装 test.apk
-        // // MyManager manager = MyManager.getInstance(LoginActivity.this);
-        // // manager.reboot();
-        // // 静默安装 YiShentTest.apk,安装成功后打开 apk
-        //
-        // int screenSize = ScreenUtils.getScreenWidth();
-        // int typeDevice = screenSize > 800 ? 1 : 2;
-        // ALog.d("获取屏幕尺寸宽度:" + screenSize);
-        // if (typeDevice == 1) {
-        // // 声明manager对象
-        // @SuppressLint("WrongConstant")
-        // ZysjSystemManager manager = (ZysjSystemManager) getSystemService("zysj");
-        // int result = manager.zYRebootSys();
-        // ALog.e("zYRebootSys result:" + result);
-        // } else {
-        // // 安装 test.apk
-        // MyManager manager = MyManager.getInstance(LoginActivity.this);
-        // manager.reboot();
-        // }
-        // }
-        // }, 30000L);
-
-        // editTextUsername.setText("18683256800");// 默认用户名为ls001
-        // editTextPassword.setText("pia_123456");// 默认密码为admin123
 
         if (getIntent().hasExtra("auto") && getIntent().getBooleanExtra("auto", false)) {
             ALog.e("auto");
             ActivityUtils.finishAllActivitiesExceptNewest();
         }
 
-        // handler.postDelayed(new Runnable() {
-        // @Override
-        // public void run() {
-        // auto = true;
-        // buttonLogin.performClick();
-        // logingPopDialog = new LogingPopDialog(getActivity());
-        // new XPopup.Builder(getActivity()).dismissOnTouchOutside(true).asCustom(logingPopDialog).show();
-        // }
-        // }, 10 * 1000L);
-        //
-
         startLogin(10 * 1000);
 
-        // showInfoToast("10秒后自动登录,可点击取消按钮取消");
-        // check();
-        // String spa = SPUtils.getInstance().getString("spa", "y121-fbcq-BPXz");
-        // DialogUtils.startInputConfirm(LoginActivity.this, "安全码验证失败", "请核对后再次验证", spa, "请输入文案内容",
-        // new DialogUtils.OnInputListener() {
-        // @Override
-        // public void onConfirm(String text) {
-        // SPUtils.getInstance().put("spa", text);
-        // buttonLogin.performClick();
-        // }
-        // }, new DialogUtils.CancelListener() {
-        // @Override
-        // public void onCancel() {
-        //
-        // }
-        // });
         binding.inputLayout.setVisibility(View.INVISIBLE);
         ALog.e("getAppId:" + ConfigUtil.getAppId(this));
         ALog.e("getSdkKey:" + ConfigUtil.getSdkKey(this));
         ALog.e("getActiveKey:" + ConfigUtil.getActiveKey(this));
 
-        // ThreadUtils.executeByCached(new SmallTask() {
-        // @Override
-        // public String doInBackground() throws Throwable {
-        // YinchuanAirportDB db = ArcFaceApplication.getApplication().getDb();
-        // int count = db.longTermPassDao().getCount();
-        // ALog.e("通行证数量 count:" + count);
-        //
-        // String time = db.longTermPassDao().getMaxUpdateTime();
-        // ALog.e("通行证数量 getMaxUpdateTime:" + time);
-        //
-        // LongTermPass card = db.longTermPassDao().getById("1907693397930926081");
-        //
-        // if (ObjectUtils.isEmpty(card)) {
-        // ALog.i("本地数据库未查询到: getById 1907693397930926081");
-        // } else {
-        // ALog.e(card.toString());
-        // }
-        //
-        // LongTermPass card1 = db.longTermPassDao().getByApplyId("1907685091850051586");
-        //
-        // if (ObjectUtils.isEmpty(card1)) {
-        // ALog.i("本地数据库未查询到 getByApplyId: 1907685091850051586");
-        // } else {
-        // ALog.e(card1.toString());
-        // }
-        //
-        // LongTermPass card3 = db.longTermPassDao().getByApplyId("1909876155616845826");
-        // if (ObjectUtils.isEmpty(card3)) {
-        // ALog.i("本地数据库未查询到 getByApplyId: 1909876155616845826");
-        // } else {
-        // ALog.e(card3.toString());
-        // }
-        // card3 = db.longTermPassDao().getByNickname("方振");
-        // if (ObjectUtils.isEmpty(card3)) {
-        // ALog.i("本地数据库未查询到 getByNickname: 方振");
-        // } else {
-        // ALog.e(card3.toString());
-        // }
-        // card3 = db.longTermPassDao().getByNickname("杨振飞");
-        // if (ObjectUtils.isEmpty(card3)) {
-        // ALog.i("本地数据库未查询到 getByNickname: 杨振飞");
-        // } else {
-        // ALog.e(card3.toString());
-        // }
-        //
-        // card3 = db.longTermPassDao().getByNickname("林旭");
-        // if (ObjectUtils.isEmpty(card3)) {
-        // ALog.i("本地数据库未查询到 getByNickname: 林旭");
-        // } else {
-        // ALog.e(card3.toString());
-        // }
-        //
-        // card3 = db.longTermPassDao().getByNickname("张高伟");
-        // if (ObjectUtils.isEmpty(card3)) {
-        // ALog.i("本地数据库未查询到 getByNickname: 张高伟");
-        // } else {
-        // ALog.e(card3.toString());
-        // }
-        // card3 = db.longTermPassDao().getByNickname("李锐强");
-        // if (ObjectUtils.isEmpty(card3)) {
-        // ALog.i("本地数据库未查询到 getByNickname: 李锐强");
-        // } else {
-        // ALog.e(card3.toString());
-        // }
-        // return null;
-        // }
-        // });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        initRadio();
     }
 
     @Override
     protected void onDestroy() {
-        // if (facePhotoViewModel != null) {
-        // facePhotoViewModel.release();
-        // facePhotoViewModel = null;
-        // }
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
         auto = false;
@@ -586,39 +420,6 @@ public class LoginActivity extends BaseActivity
             }
         });
     }
-
-    void initRadio() {
-        // // 获取单选按钮控件
-        // radioGroup = findViewById(R.id.radioGroup);
-        // radioIn = findViewById(R.id.radioIn);
-        // radioOut = findViewById(R.id.radioOut);
-        // String deviceDirection = infoStorage.getString("deviceDirection", "1");
-        // if (deviceDirection.equals("-1")) {
-        // radioOut.setChecked(true);
-        // } else if (deviceDirection.equals("1")) {
-        // radioIn.setChecked(true);
-        // }
-
-        int direction = SPUtils.getInstance().getInt("direction", 1);
-        // if (direction == -1) {
-        // radioOut.setChecked(true);
-        // } else if (direction == 1) {
-        // radioIn.setChecked(true);
-        // }
-        // // 监听选择变化
-        // radioGroup.setOnCheckedChangeListener(this);
-    }
-
-    // @Override
-    // public void onCheckedChanged(RadioGroup group, int checkedId) {
-    // if (checkedId == R.id.radioIn) {
-    // SPUtils.getInstance().put("direction", 1);
-    // infoStorage.saveString("deviceDirection", "1");
-    // } else if (checkedId == R.id.radioOut) {
-    // SPUtils.getInstance().put("direction", -1);
-    // infoStorage.saveString("deviceDirection", "-1");
-    // }
-    // }
 
     public void startLogin(int time) {
         handler.postDelayed(new Runnable() {
@@ -816,37 +617,6 @@ public class LoginActivity extends BaseActivity
             break;
         }
     }
-    // /**
-    // * 每隔一分钟获取通行证，更新到本地数据库.
-    // */
-    // private void startPeriodicTask() {
-    // handler = new WeakHandler();
-    // runnable = new Runnable() {
-    // @Override
-    // public void run() {
-    // // 执行任务逻辑
-    // ALog.d("更新通行证任务执行中...");
-    //
-    // // new Thread(() -> {
-    // // List<LongTermPass> all = db.longTermPassDao().getAll();
-    // // ALog.d("查询本地数据库数据: "+gson.toJson(all));
-    // // }).start();
-    // // updateNext = true;
-    // updatePage = 1;
-    // getLongPassCardsUpdate();
-    // // 每隔1分钟执行一次
-    // handler.postDelayed(this, 1 * 60 * 1000);
-    // // handler.postDelayed(this, 1000);
-    // }
-    // };
-    // handler.post(runnable);
-    // }
-    //
-    // public void stopPeriodicTask() {
-    // if (handler != null && runnable != null) {
-    // handler.removeCallbacks(runnable);
-    // }
-    // }
 
     /**
      * 初始化零信任
@@ -929,10 +699,6 @@ public class LoginActivity extends BaseActivity
             }
         });
         dialog.show();
-        // Map<String, String> map = new HashMap<>();
-        // map.put(SFConstants.AUTH_KEY_RENEW_OLD_PASSWORD, Constants.ZERO_PASSWORD);
-        // map.put(SFConstants.AUTH_KEY_REWNEW_NEW_PASSWORD, "6822078aA@");
-        // SFUemSDK.getInstance().doSecondaryAuth(sfAuthType,map);
     }
 
     public void initFaceServer() {
@@ -985,23 +751,6 @@ public class LoginActivity extends BaseActivity
                 }
 
                 if (resData.getCode() == 200) {
-                    // runOnUiThread(new Runnable() {
-                    // @Override
-                    // public void run() {
-                    // // 更新 UI 或显示成功消息
-                    // dismissProgressDialog();// 关闭加载弹窗
-                    // infoStorage.saveBoolean("isFirstStart", false);
-                    // showSuccessToast("数据插入成功");
-                    // // 开启定时更新
-                    // ArcFaceApplication.getApplication().startPeriodicTask();
-                    // // 批量注册人脸
-                    // registerFace();
-                    // // 跳转到 IndexActivity
-                    // // Intent intent = new Intent(LoginActivity.this, LivenessDetectActivity.class);
-                    // // startActivity(intent);
-                    // // finish();
-                    // }
-                    // });
 
                     Login login = GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), Login.class);
                     String accessToken = login.getAccessToken();
@@ -1014,12 +763,6 @@ public class LoginActivity extends BaseActivity
 
                     showSuccessToast("后台登录成功");
 
-                    // 跳转到 IndexActivity
-                    // Intent intent = new Intent(LoginActivity.this, RegisterAndRecognizeActivity.class);
-                    // startActivity(intent);
-                    // finish();
-                    // 加载查验方式
-                    // getCheckMethod();
                     ThreadUtils.executeByCached(new SmallTask() {
                         @Override
                         public String doInBackground() throws Throwable {
@@ -1091,8 +834,6 @@ public class LoginActivity extends BaseActivity
     }
 
     void gotoActivity() {
-        // String deviceDirection = infoStorage.getString("deviceDirection", "1");
-        // LogUploadUtils.upload(this);
 
         ALog.e("checkType:" + SPUtils.getInstance().getInt("checkType", 0));
         ALog.e("direction:" + SPUtils.getInstance().getInt("direction", 0));
@@ -1124,34 +865,6 @@ public class LoginActivity extends BaseActivity
         ArcFaceApplication.getApplication().startPeriodicTask();
         startActivity(intent);
         finish();
-
-        // if (deviceDirection.equals("1")) {
-        // // Intent intent = new Intent(LoginActivity.this, LivenessDetectActivity.class);
-        // Intent intent = null;
-        // int checkType = SPUtils.getInstance().getInt("checkType", 0);
-        // switch (checkType) {
-        // case 0:
-        // intent = new Intent(LoginActivity.this, LivenessDetectJinActivity.class);
-        // break;
-        // case 1:
-        // intent = new Intent(LoginActivity.this, LivenessDetectYuanActivity.class);
-        // break;
-        // case 2:
-        // intent = new Intent(LoginActivity.this, LivenessDetectYuanAndJinActivity.class);
-        // break;
-        // case 3:
-        // intent = new Intent(LoginActivity.this, RegisterAndRecognizeActivity.class);
-        // break;
-        // default:
-        // break;
-        // }
-        // startActivity(intent);
-        // finish();
-        // } else if (deviceDirection.equals("-1")) {
-        // Intent intent = new Intent(LoginActivity.this, RegisterAndRecognizeActivity.class);
-        // startActivity(intent);
-        // finish();
-        // }
     }
 
     // 获取查验方式
@@ -1194,31 +907,6 @@ public class LoginActivity extends BaseActivity
     // 获取用户详情
     private boolean getUserDetail(String userId) {
         ALog.d("获得用户详情: ");
-        // Map<String, String> params = new HashMap<>();
-        // params.put("id", userId);
-        // ApiUtils.get(UrlConstants.URL_GET_USER_DETAIL, params, new ApiUtils.ApiCallback() {
-        //
-        // @Override
-        // public void onSuccess(String response) {
-        // ALog.d("获获取用户详情Response: " + response);
-        // Response resData = gson.fromJson(response, Response.class);
-        // if (resData.getCode() == 200) {
-        // // 解析 JSON 字符串为 User 对象
-        // User login = gson.fromJson(gson.toJson(resData.getData()), User.class);
-        // String nickname = login.getNickname();
-        // infoStorage.saveString("loginName", nickname);
-        // } else {
-        // showWarningToast(resData.getMsg());
-        // ALog.e("获获取用户详情Response失败: " + gson.toJson(resData));
-        // }
-        // }
-        //
-        // @Override
-        // public void onFailure(Throwable e) {
-        // Toast.makeText(LoginActivity.this, "获获取用户详情失败", Toast.LENGTH_SHORT).show();
-        // ALog.e("Error: " + e.getMessage());
-        // }
-        // });
         GetRequest<String> request =
                 OkGo.<String> get(UrlConstants.URL_GET_USER_DETAIL).tag(UrlConstants.URL_GET_USER_DETAIL);
         request.params("timestamp", String.valueOf(System.currentTimeMillis()));
@@ -1258,57 +946,6 @@ public class LoginActivity extends BaseActivity
     private boolean getMACDetail() {
         ALog.d("获得设备详细信息: ");
         ALog.d("MACAddress: " + deviceId);
-        // // String macAdress = DeviceUtils.getMACAdress(this);
-        // Map<String, String> params = new HashMap<>();
-        // params.put("mac", deviceId);
-        // // params.put("mac", "aeceeec5577e34f2");
-        // ALog.d("MACAddress: " + deviceId);
-        // // String jsonPost = gson.toJson(params);
-        // ApiUtils.get(UrlConstants.URL_GET_MAC_DETAIL, params, new ApiUtils.ApiCallback() {
-        // @Override
-        // public void onSuccess(String response) {
-        // ALog.d("获得设备详细信息");
-        // // 解析 JSON 数据
-        // Response resData = gson.fromJson(response, Response.class);
-        //
-        // if (resData.getCode() == 200) {
-        // Type type = new TypeToken<Map<String, Object>>() {
-        // }.getType();
-        // Map<String, Object> map = gson.fromJson(gson.toJson(resData.getData()), type);
-        // // 打印解析结果
-        // for (Map.Entry<String, Object> entry : map.entrySet()) {
-        // ALog.d("Key: " + entry.getKey() + ", Value: " + entry.getValue());
-        // if (entry.getKey().equals("id")) {
-        // infoStorage.saveString("deviceId", String.valueOf(entry.getValue()));
-        // }
-        // if (entry.getKey().equals("name")) {
-        // infoStorage.saveString("deviceName", String.valueOf(entry.getValue()));
-        // }
-        // if (entry.getKey().equals("mac")) {
-        // infoStorage.saveString("deviceMac", String.valueOf(entry.getValue()));
-        // }
-        // if (entry.getKey().equals("areaDetail")) {
-        // infoStorage.saveString("deviceAreaDetail", String.valueOf(entry.getValue()));
-        // }
-        // ALog.e("deviceId:" + infoStorage.getString("deviceId", ""));
-        // ALog.e("deviceName:" + infoStorage.getString("deviceName", ""));
-        // ALog.e("deviceMac:" + infoStorage.getString("deviceMac", ""));
-        // ALog.e("deviceAreaDetail:" + infoStorage.getString("deviceAreaDetail", ""));
-        // }
-        // showSuccessToast("获得查验方式成功");
-        // } else {
-        // showWarningToast(resData.getMsg());
-        // ALog.e("获得设备详细信息失败: " + gson.toJson(resData));
-        // }
-        //
-        // }
-        //
-        // @Override
-        // public void onFailure(Throwable e) {
-        // Toast.makeText(LoginActivity.this, "获得查验方式失败", Toast.LENGTH_SHORT).show();
-        // ALog.e("Error: " + e.getMessage());
-        // }
-        // });
 
         GetRequest<String> request =
                 OkGo.<String> get(UrlConstants.URL_GET_MAC_DETAIL).tag(UrlConstants.URL_GET_MAC_DETAIL);
@@ -1368,40 +1005,6 @@ public class LoginActivity extends BaseActivity
     // 获取配置信息
     private boolean getConfigInfo() {
         ALog.d("获取配置信息: ");
-        // // URL_GETCONFIGINFO
-        // Map<String, String> params = new HashMap<>();
-        // params.put("type", "5");
-        // ApiUtils.get(UrlConstants.URL_GETCONFIGINFO, params, new ApiUtils.ApiCallback() {
-        // @Override
-        // public void onSuccess(String response) {
-        // ALog.d("获取配置信息Response: " + response);
-        // // 解析 JSON 数据
-        // Response resData = gson.fromJson(response, Response.class);
-        //
-        // if (resData.getCode() == 200) {
-        //
-        // ConfigInfo data = gson.fromJson(gson.toJson(resData.getData()), ConfigInfo.class);
-        // ALog.d("Type: " + data.type);
-        // ALog.d("Enter: " + data.params.enter);
-        // ALog.d("Out: " + data.params.out);
-        // infoStorage.saveString("devicesType", String.valueOf(data.type));
-        // infoStorage.saveString("devicesEnter", String.valueOf(data.params.enter));
-        // infoStorage.saveString("devicesOut", String.valueOf(data.params.out));
-        //
-        // showSuccessToast("获得查验方式成功");
-        // } else {
-        // showWarningToast(resData.getMsg());
-        // ALog.e("获取配置信息失败: " + gson.toJson(resData));
-        // }
-        //
-        // }
-        //
-        // @Override
-        // public void onFailure(Throwable e) {
-        // showSuccessToast("获得查验方式失败");
-        // ALog.e("Error: " + e.getMessage());
-        // }
-        // });
 
         GetRequest<String> request =
                 OkGo.<String> get(UrlConstants.URL_GETCONFIGINFO).tag(UrlConstants.URL_GETCONFIGINFO);
@@ -1534,58 +1137,74 @@ public class LoginActivity extends BaseActivity
                                 // 下载图片到本地
 
                                 for (LongPassCard longPassCard : longPassCards.list) {
-                                    ALog.i("下载图片:" + longPassCard.nickname);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            snackbar.show();
+                                    if (longPassCard.status == 2) {
+                                        ALog.e("正在删除：" + longPassCard.nickname + "，第" + updatePage + "页");
+                                        File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
+                                        boolean result = ImageDeleter.deleteImage(directory1, longPassCard.checkPhoto,
+                                                longPassCard.id, longPassCard.nickname);
+                                        if (!result) {
+                                            ALog.e("删除失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
                                         }
-                                    });
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            snackbar.setText("正在下载：" + longPassCard.nickname + "，第" + page + "页");
+                                        File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
+                                        result = ImageDeleter.deleteImage(directory2, longPassCard.photo, longPassCard.id,
+                                                longPassCard.nickname);
+                                        if (!result) {
+                                            ALog.e("删除失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
                                         }
-                                    });
-
-                                    File directory1 = new File(getActivity().getExternalFilesDir(null), "register");// 应用的私有目录
-                                    if (!directory1.exists()) {
-                                        directory1.mkdirs();
-                                    }
-                                    boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-                                            longPassCard.id, longPassCard.nickname, false);
-                                    if (!result) {
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                // snackbar.dismiss();
-                                                snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
-                                            }
-                                        });
-                                        // break;
-                                    }
-                                    File directory2 = new File(getActivity().getExternalFilesDir(null), "photo");// 应用的私有目录
-                                    if (!directory2.exists()) {
-                                        directory2.mkdirs();
-                                    }
-                                    result = ImageDownloader.downloadImage(directory2, longPassCard.photo,
-                                            longPassCard.id, longPassCard.nickname, true);
-                                    if (!result) {
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                // snackbar.dismiss();
-                                                snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
-                                            }
-                                        });
-                                        // break;
                                     } else {
+                                        ALog.i("下载图片:" + longPassCard.nickname);
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                snackbar.setText("下载成功：" + longPassCard.nickname + "，第" + page + "页");
+                                                snackbar.show();
                                             }
                                         });
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                snackbar.setText("正在下载：" + longPassCard.nickname + "，第" + page + "页");
+                                            }
+                                        });
+
+                                        File directory1 = new File(getActivity().getExternalFilesDir(null), "register");// 应用的私有目录
+                                        if (!directory1.exists()) {
+                                            directory1.mkdirs();
+                                        }
+                                        boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
+                                                longPassCard.id, longPassCard.nickname, false);
+                                        if (!result) {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // snackbar.dismiss();
+                                                    snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
+                                                }
+                                            });
+                                            // break;
+                                        }
+                                        File directory2 = new File(getActivity().getExternalFilesDir(null), "photo");// 应用的私有目录
+                                        if (!directory2.exists()) {
+                                            directory2.mkdirs();
+                                        }
+                                        result = ImageDownloader.downloadImage(directory2, longPassCard.photo,
+                                                longPassCard.id, longPassCard.nickname, true);
+                                        if (!result) {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // snackbar.dismiss();
+                                                    snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
+                                                }
+                                            });
+                                            // break;
+                                        } else {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    snackbar.setText("下载成功：" + longPassCard.nickname + "，第" + page + "页");
+                                                }
+                                            });
+                                        }
                                     }
                                 }
 
@@ -1651,12 +1270,6 @@ public class LoginActivity extends BaseActivity
                     longTermPassList.add(longTermPass);
                 }
 
-                // longPassCards.forEach(longPassCard -> {
-                // // ALog.d("接口数据longPassCard: "+gson.toJson(longPassCard));
-                // LongTermPass longTermPass = Converters.convertToLongTermPass(longPassCard);
-                // longTermPassList.add(longTermPass);
-                // });
-
                 // 将数据插入到本地数据库
                 longTermPassDao.insertAll(longTermPassList);
                 // 保存当前时间到本地
@@ -1691,28 +1304,10 @@ public class LoginActivity extends BaseActivity
      * 批量注册人脸
      */
     public void registerFace() {
-        // registerFromFile(new File(Constants.DEFAULT_REGISTER_FACES_DIR));
         // 修改为私有目录
         File directory = new File(LoginActivity.this.getExternalFilesDir(null), "register");
         registerFromFile(directory);
     }
-
-    // /**
-    // * 单个注册人脸
-    // */
-    // public void registerFaceByBitmap(Bitmap bitmap) {
-    // ThreadUtils.executeByCached(new SmallTask() {
-    // @Override
-    // public String doInBackground() throws Throwable {
-    // facePhotoViewModel.registerFace(bitmap, (facePreviewInfo, success) -> {
-    // // showLongSnackBar(binding.fabAdd, getString(success ? R.string.register_success :
-    // // R.string.register_failed));
-    // ALog.i("单个注册人脸: " + success);
-    // });
-    // return null;
-    // }
-    // });
-    // }
 
     /**
      * 批量注册
@@ -1766,37 +1361,5 @@ public class LoginActivity extends BaseActivity
             int out;
         }
     }
-
-    // void check() {
-    // UpdateUtils.update(this, new OnUpdateFailureListener() {
-    // @Override
-    // public void onFailure(UpdateError error) {
-    // ALog.e(error.toString());
-    // // 对不同错误进行处理
-    // if (error.getCode() == UpdateError.ERROR.CHECK_NO_NEW_VERSION) {
-    //// AppClient.get().postEvent(new AppInfoEvent(AppInfoEvent.UPDATE_NO_NEWER));
-    // } else if ((error.getCode() == UpdateError.ERROR.DOWNLOAD_FAILED
-    // || error.getCode() == UpdateError.ERROR.DOWNLOAD_PERMISSION_DENIED)
-    // && error.getUpdateEntity() != null && error.getUpdateEntity().isForce()) {
-    // showToast(error.toString());
-    // AppUtils.exitApp();
-    // } else if (error.getCode() == UpdateError.ERROR.PROMPT_CANCEL
-    // || error.getCode() == UpdateError.ERROR.PROMPT_IGNORE
-    // || error.getCode() == UpdateError.ERROR.CHECK_IGNORED_VERSION) {
-    // // showToast(getString(R.string.update_tips));
-    //// AppClient.get().postEvent(new AppInfoEvent(AppInfoEvent.CANCLE));
-    // } else {
-    //// AppClient.get().postEvent(new AppInfoEvent(AppInfoEvent.ERROR));
-    // showToast(error.getMessage());
-    // }
-    // }
-    // }, new DefaultInstallListener() {
-    // @Override
-    // public void onInstallApkSuccess() {
-    // super.onInstallApkSuccess();
-    // finish();
-    // }
-    // });
-    // }
 
 }
