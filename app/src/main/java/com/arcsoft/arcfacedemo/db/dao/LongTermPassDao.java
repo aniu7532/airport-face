@@ -35,7 +35,7 @@ public interface LongTermPassDao {
     LongTermPass getByCardId(String cardId);
 
     // 根据 cardId 查询数据
-    @Query("SELECT * FROM long_term_pass WHERE cardIdLong = :cardIdLong")
+    @Query("SELECT * FROM long_term_pass WHERE cardIdLong = :cardIdLong AND type = 0")
     LongTermPass getBycardIdLong(String cardIdLong);
 
     @Query("SELECT * FROM long_term_pass WHERE applyId = :applyId")
