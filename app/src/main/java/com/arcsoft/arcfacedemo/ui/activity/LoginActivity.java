@@ -1138,74 +1138,61 @@ public class LoginActivity extends BaseActivity
 
                                 for (LongPassCard longPassCard : longPassCards.list) {
                                     if (longPassCard.status == 2) {
-                                        ALog.e("正在删除：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                        File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
-                                        boolean result = ImageDeleter.deleteImage(directory1, longPassCard.checkPhoto,
-                                                longPassCard.id, longPassCard.nickname);
-                                        if (!result) {
-                                            ALog.e("删除失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                        }
-                                        File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
-                                        result = ImageDeleter.deleteImage(directory2, longPassCard.photo, longPassCard.id,
-                                                longPassCard.nickname);
-                                        if (!result) {
-                                            ALog.e("删除失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                        }
-                                    } else {
-                                        ALog.i("下载图片:" + longPassCard.nickname);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                snackbar.show();
-                                            }
-                                        });
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                snackbar.setText("正在下载：" + longPassCard.nickname + "，第" + page + "页");
-                                            }
-                                        });
-
-                                        File directory1 = new File(getActivity().getExternalFilesDir(null), "register");// 应用的私有目录
-                                        if (!directory1.exists()) {
-                                            directory1.mkdirs();
-                                        }
-                                        boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-                                                longPassCard.id, longPassCard.nickname, false);
-                                        if (!result) {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // snackbar.dismiss();
-                                                    snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
-                                                }
-                                            });
-                                            // break;
-                                        }
-                                        File directory2 = new File(getActivity().getExternalFilesDir(null), "photo");// 应用的私有目录
-                                        if (!directory2.exists()) {
-                                            directory2.mkdirs();
-                                        }
-                                        result = ImageDownloader.downloadImage(directory2, longPassCard.photo,
-                                                longPassCard.id, longPassCard.nickname, true);
-                                        if (!result) {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // snackbar.dismiss();
-                                                    snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
-                                                }
-                                            });
-                                            // break;
-                                        } else {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    snackbar.setText("下载成功：" + longPassCard.nickname + "，第" + page + "页");
-                                                }
-                                            });
-                                        }
+										continue;
                                     }
+									ALog.i("下载图片:" + longPassCard.nickname);
+									runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											snackbar.show();
+										}
+									});
+									runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											snackbar.setText("正在下载：" + longPassCard.nickname + "，第" + page + "页");
+										}
+									});
+
+									File directory1 = new File(getActivity().getExternalFilesDir(null), "register");// 应用的私有目录
+									if (!directory1.exists()) {
+										directory1.mkdirs();
+									}
+									boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
+										longPassCard.id, longPassCard.nickname, false);
+									if (!result) {
+										runOnUiThread(new Runnable() {
+											@Override
+											public void run() {
+												// snackbar.dismiss();
+												snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
+											}
+										});
+										// break;
+									}
+									File directory2 = new File(getActivity().getExternalFilesDir(null), "photo");// 应用的私有目录
+									if (!directory2.exists()) {
+										directory2.mkdirs();
+									}
+									result = ImageDownloader.downloadImage(directory2, longPassCard.photo,
+										longPassCard.id, longPassCard.nickname, true);
+									if (!result) {
+										runOnUiThread(new Runnable() {
+											@Override
+											public void run() {
+												// snackbar.dismiss();
+												snackbar.setText("下载失敗：" + longPassCard.nickname + "，第" + page + "页");
+											}
+										});
+										// break;
+									} else {
+										runOnUiThread(new Runnable() {
+											@Override
+											public void run() {
+												snackbar.setText("下载成功：" + longPassCard.nickname + "，第" + page + "页");
+											}
+										});
+									}
                                 }
 
                                 // ImageDownloader.downloadImages(longPassCards.list, LoginActivity.this);
