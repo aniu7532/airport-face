@@ -361,7 +361,7 @@ public class ArcFaceApplication extends Application {
 
     // 在 Activity 中定时监测 CPU
     private CpuMonitor cpuMonitor = new CpuMonitor();
-    private static int UPDATE_PAGE_SIZE = 100;
+    private static int UPDATE_PAGE_SIZE = 20;
     private static int updatePage = 1;
     private static boolean updateNext = true;
     InfoStorage infoStorage;
