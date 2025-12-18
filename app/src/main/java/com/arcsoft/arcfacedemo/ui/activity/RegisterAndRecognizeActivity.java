@@ -1590,7 +1590,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
         span = TimeUtils.getTimeSpan(DateUtil.string2MillisExpiryDate(longTermPass.expiryDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
-        if (span > 0) {
+        if (span < 0) {
             longTermPass.status = 3;
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "证件过期");

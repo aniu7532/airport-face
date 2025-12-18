@@ -2078,7 +2078,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
         span = TimeUtils.getTimeSpan(DateUtil.string2MillisExpiryDate(longTermPass.expiryDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
-        if (span > 0) {
+        if (span < 0) {
             longTermPass.status = 3;
             setRfidNull();
             playAudio(mediaReject);
