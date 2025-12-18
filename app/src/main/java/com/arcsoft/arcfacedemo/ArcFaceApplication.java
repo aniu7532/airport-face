@@ -361,7 +361,7 @@ public class ArcFaceApplication extends Application {
 
     // 在 Activity 中定时监测 CPU
     private CpuMonitor cpuMonitor = new CpuMonitor();
-    private static int UPDATE_PAGE_SIZE = 20;
+    private static int UPDATE_PAGE_SIZE = 100;
     private static int updatePage = 1;
     private static boolean updateNext = true;
     InfoStorage infoStorage;
@@ -525,6 +525,10 @@ public class ArcFaceApplication extends Application {
      * 获取更新通行证数据
      */
     private void getLongPassCardsUpdate() {
+		if (!updateNext) {
+			return;
+		}
+		updateNext = false;
         List<LongPassCard> longPassCardList = new ArrayList<>();
         // 获取开始时间，默认是2025年1月24日
         // String startDate = infoStorage.getString("startDate", "2025-01-24 17:20:00");
@@ -544,15 +548,10 @@ public class ArcFaceApplication extends Application {
         params.put("pageSize", String.valueOf(UPDATE_PAGE_SIZE));
         params.put("startDate", startDate);
         params.put("endDate", DeviceUtils.getCurrentTime());
-        updateNext = true;
         fetchNextPage(params, longPassCardList);
     }
 
     private synchronized void fetchNextPage(Map<String, String> params, List<LongPassCard> longPassCardList) {
-        if (!updateNext) {
-            return;
-        }
-
         GetRequest<String> request = OkGo.<String> get(UrlConstants.URL_GetLongPass).tag(UrlConstants.URL_GetLongPass);
         if (params != null) {
             // 更新或添加 timestamp 参数
@@ -569,6 +568,9 @@ public class ArcFaceApplication extends Application {
 
         // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
         Call<String> call = request.converter(new StringConvert()).adapt();
+
+		boolean needFetchNext = false;
+
         try {
             Response<String> res = call.execute();
             if (res.code() == 200) {
@@ -608,6 +610,7 @@ public class ArcFaceApplication extends Application {
 										longPassCard.id, longPassCard.nickname, false);
 									if (!result) {
 										ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
+										updateNext = true;
 										return;
 									}
 									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
@@ -618,11 +621,13 @@ public class ArcFaceApplication extends Application {
 										longPassCard.nickname, true);
 									if (!result) {
 										ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
+										updateNext = true;
 										return;
 									}
 								}
                             }
                         }
+						needFetchNext = true;
                         longPassCardList.addAll(longPassCards.getList());
                     } else {
                         ALog.i("更新通行证数据为空，当前页码: " + updatePage);
@@ -633,6 +638,7 @@ public class ArcFaceApplication extends Application {
                     Intent intent = new Intent(getApplication(), LoginActivity.class);
                     intent.putExtra("auto", true);
                     ActivityUtils.startActivity(intent);
+					updateNext = true;
                     return;
                 } else {
                     ALog.d("更新通行证线程接口非200: " + resResponse.getMsg());
@@ -642,10 +648,17 @@ public class ArcFaceApplication extends Application {
             e.printStackTrace();
             ALog.e("更新通信证接口数据失败", e);
         }
-        updateNext = false;
         if (!ArcFaceApplication.TEST) {
             handleUpdateComplete(longPassCardList);
         }
+		if (needFetchNext) {
+			String pageNo = params.get("pageNo");
+			int pageNumInt = Integer.parseInt(pageNo);
+			params.put("pageNo", String.valueOf(pageNumInt + 1));
+			fetchNextPage(params, longPassCardList);
+		} else {
+			updateNext = true;
+		}
     }
 
     private void handleUpdateComplete(List<LongPassCard> longPassCardList) {

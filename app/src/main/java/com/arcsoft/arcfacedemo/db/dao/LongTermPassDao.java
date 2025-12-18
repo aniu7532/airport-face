@@ -73,6 +73,8 @@ public interface LongTermPassDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrUpdateUsers(List<LongTermPass> longTermPasses);
 
+
+
     // 更新数据
     @Update
     void update(LongTermPass longTermPass);
@@ -80,6 +82,10 @@ public interface LongTermPassDao {
     // 批量更新数据
     @Update
     void updateAll(LongTermPass... entities);
+
+    // 根据 updateTime 删除传入时间及之后的数据
+    @Query("DELETE FROM long_term_pass WHERE updateTime >= :updateTime")
+    void deleteByUpdateTime(String updateTime);
 
     // // 删除数据
     // @Delete
