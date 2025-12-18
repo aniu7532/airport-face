@@ -429,19 +429,12 @@ public class DateUtil {
     }
 
 	public static long string2MillisStartDate(String startDate) {
-		long result = TimeUtils.string2Millis(startDate);
-		if (result == -1) {
-			result = TimeUtils.string2Millis(startDate, "yyyy-MM-dd");
-		}
-		return result;
+		return TimeUtils.string2Millis(startDate, "yyyy-MM-dd");
 	}
 
 	public static long string2MillisExpiryDate(String expiryDate) {
-		long result = TimeUtils.string2Millis(expiryDate);
-		if (result == -1) {
-			result = TimeUtils.string2Millis(expiryDate, "yyyy-MM-dd");
-			result += 24 * 60 * 60 * 1000;
-		}
+		long result = TimeUtils.string2Millis(expiryDate, "yyyy-MM-dd");
+		result += 24 * 60 * 60 * 1000;
 		return result;
 	}
 }
