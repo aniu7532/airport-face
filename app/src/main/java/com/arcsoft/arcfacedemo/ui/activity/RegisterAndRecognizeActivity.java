@@ -32,6 +32,7 @@ import com.arcsoft.arcfacedemo.ui.model.CompareResult;
 import com.arcsoft.arcfacedemo.ui.model.PreviewConfig;
 import com.arcsoft.arcfacedemo.ui.viewmodel.RecognizeViewModel;
 import com.arcsoft.arcfacedemo.util.ConfigUtil;
+import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.ErrorCodeUtil;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
@@ -1578,7 +1579,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     public boolean checkCard(LongTermPass longTermPass) {
-        long span = TimeUtils.getTimeSpan(TimeUtils.string2Millis(longTermPass.startDate), TimeUtils.getNowMills(),
+        long span = TimeUtils.getTimeSpan(DateUtil.string2MillisStartDate(longTermPass.startDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
             playAudio(R.raw.validation_failed);
@@ -1587,7 +1588,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             return false;
         }
 
-        span = TimeUtils.getTimeSpan(TimeUtils.string2Millis(longTermPass.expiryDate), TimeUtils.getNowMills(),
+        span = TimeUtils.getTimeSpan(DateUtil.string2MillisExpiryDate(longTermPass.expiryDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
             longTermPass.status = 3;

@@ -40,6 +40,7 @@ import com.arcsoft.arcfacedemo.ui.fragment.Document3;
 import com.arcsoft.arcfacedemo.ui.model.PreviewConfig;
 import com.arcsoft.arcfacedemo.ui.viewmodel.LivenessDetectViewModel;
 import com.arcsoft.arcfacedemo.util.ConfigUtil;
+import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
@@ -2065,7 +2066,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     public boolean checkCard() {
-        long span = TimeUtils.getTimeSpan(TimeUtils.string2Millis(longTermPass.startDate), TimeUtils.getNowMills(),
+        long span = TimeUtils.getTimeSpan(DateUtil.string2MillisStartDate(longTermPass.startDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
             setRfidNull();
@@ -2075,7 +2076,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
             return false;
         }
 
-        span = TimeUtils.getTimeSpan(TimeUtils.string2Millis(longTermPass.expiryDate), TimeUtils.getNowMills(),
+        span = TimeUtils.getTimeSpan(DateUtil.string2MillisExpiryDate(longTermPass.expiryDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
             longTermPass.status = 3;
