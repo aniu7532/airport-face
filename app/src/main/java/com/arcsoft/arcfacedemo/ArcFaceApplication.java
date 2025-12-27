@@ -529,7 +529,6 @@ public class ArcFaceApplication extends Application {
 			return;
 		}
 		updateNext = false;
-        List<LongPassCard> longPassCardList = new ArrayList<>();
         // 获取开始时间，默认是2025年1月24日
         // String startDate = infoStorage.getString("startDate", "2025-01-24 17:20:00");
 
@@ -548,10 +547,11 @@ public class ArcFaceApplication extends Application {
         params.put("pageSize", String.valueOf(UPDATE_PAGE_SIZE));
         params.put("startDate", startDate);
         params.put("endDate", DeviceUtils.getCurrentTime());
-        fetchNextPage(params, longPassCardList);
+        fetchNextPage(params);
     }
 
-    private synchronized void fetchNextPage(Map<String, String> params, List<LongPassCard> longPassCardList) {
+    private synchronized void fetchNextPage(Map<String, String> params) {
+        List<LongPassCard> longPassCardList = new ArrayList<>();
         GetRequest<String> request = OkGo.<String> get(UrlConstants.URL_GetLongPass).tag(UrlConstants.URL_GetLongPass);
         if (params != null) {
             // 更新或添加 timestamp 参数
@@ -655,7 +655,7 @@ public class ArcFaceApplication extends Application {
 			String pageNo = params.get("pageNo");
 			int pageNumInt = Integer.parseInt(pageNo);
 			params.put("pageNo", String.valueOf(pageNumInt + 1));
-			fetchNextPage(params, longPassCardList);
+			fetchNextPage(params);
 		} else {
 			updateNext = true;
 		}
