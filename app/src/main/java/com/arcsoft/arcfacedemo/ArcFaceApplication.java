@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.arcsoft.arcfacedemo.data.FaceRepository;
 import com.arcsoft.arcfacedemo.data.http.HttpInitUtils;
@@ -652,10 +653,19 @@ public class ArcFaceApplication extends Application {
             handleUpdateComplete(longPassCardList);
         }
 		if (needFetchNext) {
-			String pageNo = params.get("pageNo");
-			int pageNumInt = Integer.parseInt(pageNo);
-			params.put("pageNo", String.valueOf(pageNumInt + 1));
-			fetchNextPage(params);
+			// 等待5分钟后再获取下一页
+			ALog.d("等待5分钟后获取下一页数据...");
+            int interval = infoStorage.getInt("interval", UPDATE_DELAY_TIME);
+			ThreadUtils.executeByCachedWithDelay(new SmallTask() {
+				@Override
+				public String doInBackground() throws Throwable {
+					String pageNo = params.get("pageNo");
+					int pageNumInt = Integer.parseInt(pageNo);
+					params.put("pageNo", String.valueOf(pageNumInt + 1));
+					fetchNextPage(params);
+					return null;
+				}
+			}, interval * 60 * 1000, TimeUnit.MILLISECONDS); // 延迟5分钟执行
 		} else {
 			updateNext = true;
 		}
@@ -699,12 +709,21 @@ public class ArcFaceApplication extends Application {
      * 更新人脸数据库,先删除，再注册
      */
     public void updateFace(List<LongPassCard> longPassCardList) {
+
+        // 注销的不用处理
+        List<LongPassCard> finalLongPassCardList = longPassCardList
+                .stream()
+                .filter(value->value.status != 2)
+                .collect(Collectors.toList());
+
+        if (finalLongPassCardList.isEmpty()) { return; }
+
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
             @Override
             public String doInBackground() throws Throwable {
 
                 List<FaceEntity> faceEntityList = FaceDatabase.getInstance(getApplication()).faceDao().getAllFaces();
-                for (LongPassCard longPassCard : longPassCardList) {
+                for (LongPassCard longPassCard : finalLongPassCardList) {
                     for (FaceEntity faceEntity : faceEntityList) {
                         if (faceEntity.getUserName().equals(longPassCard.id)) {
                             if (FaceServer.getInstance().getFaceEngine() == null
