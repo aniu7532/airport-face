@@ -23,27 +23,23 @@ public class AESUtils {
     private static final byte[] FIXED_IV = "1Hbfh667adfDEJ78".getBytes(StandardCharsets.UTF_8);
 
     // 加密 Bitmap 并保存到文件
-    public static void encryptBitmapToFile(Bitmap bitmap, File outputFile, SecretKey key) {
-        try {
-            // 将 Bitmap 转换为字节流
-            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
-            byte[] imageData = byteStream.toByteArray();
+    public static void encryptBitmapToFile(Bitmap bitmap, File outputFile, SecretKey key) throws Exception {
+		// 将 Bitmap 转换为字节流
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
+		byte[] imageData = byteStream.toByteArray();
 
-            // 初始化加密器
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(FIXED_IV));
+		// 初始化加密器
+		Cipher cipher = Cipher.getInstance("AES");
+		cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(FIXED_IV));
 
-            // 加密数据
-            byte[] encryptedData = cipher.doFinal(imageData);
+		// 加密数据
+		byte[] encryptedData = cipher.doFinal(imageData);
 
-            // 保存加密数据到文件
-            FileOutputStream fos = new FileOutputStream(outputFile);
-            fos.write(encryptedData);
-            fos.close();
-        } catch (Exception e) {
-            Log.e("AESUtils", "加密失败", e);
-        }
+		// 保存加密数据到文件
+		FileOutputStream fos = new FileOutputStream(outputFile);
+		fos.write(encryptedData);
+		fos.close();
     }
 
     public static Bitmap decryptRegisterFileToBitmap(String fileName) {
