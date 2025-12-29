@@ -70,6 +70,10 @@ public interface LongTermPassDao {
     @Query("SELECT * FROM long_term_pass WHERE idCode = :idCode")
     List<LongTermPass> getAllByIdCode(String idCode);
 
+    // 查询 status != 2 (非注销) 的记录
+    @Query("SELECT * FROM long_term_pass WHERE status != 2")
+    List<LongTermPass> getByStatusNotCancelled();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrUpdateUsers(List<LongTermPass> longTermPasses);
 
