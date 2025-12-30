@@ -4,12 +4,14 @@ import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 
 import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.ui.activity.BaseActivity;
+import com.arcsoft.arcfacedemo.ui.activity.FaceManageActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LoginActivity;
 import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
+import com.arcsoft.arcfacedemo.ui.callback.BatchRegisterCallback;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
@@ -38,6 +40,8 @@ import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
+
+import java.io.File;
 
 /**
  * Description: 自定义抽屉弹窗
@@ -455,11 +459,62 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                                                 @Override
                                                 public void run() {
                                                     if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
-                                                        snackbarRef[0].setText(String.format("当前第%d个/共%d个，失败%d个", currentIndex, totalCount, failedCount));
+                                                        snackbarRef[0].setText(String.format("下载当前第%d个/共%d个，失败%d个", currentIndex, totalCount, failedCount));
                                                     }
                                                 }
                                             });
                                         }
+                                    }
+
+                                    @Override
+                                    public void end() {
+
+                                        if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
+                                            activity.runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
+                                                        snackbarRef[0].setText("查询未注册人脸中");
+                                                    }
+                                                }
+                                            });
+                                        }
+
+                                        File directory = new File(activity.getExternalFilesDir(null), "register");
+                                        LongPassCardsRemedialMeasuresUtils.getInstance().registerFromFile(activity, directory, new LongPassCardsRemedialMeasuresUtils.BatchRegisterCallback1() {
+                                            @Override
+                                            public void onProcess(int current, int failed, int total, String msg) {
+                                                if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
+                                                    activity.runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            if (snackbarRef[0] == null || !snackbarRef[0].isShown()) {
+                                                                return;
+                                                            }
+                                                            if (!msg.isEmpty()) {
+                                                                snackbarRef[0].setText(msg);
+                                                                return;
+                                                            }
+                                                            snackbarRef[0].setText(String.format("注册当前第%d个/共%d个，失败%d个", current, total, failed));
+                                                        }
+                                                    });
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onFinish(int current, int failed, int total, String errMsg) {
+                                                if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
+                                                    activity.runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
+                                                                snackbarRef[0].dismiss();
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        });
                                     }
                                 });
                             }
