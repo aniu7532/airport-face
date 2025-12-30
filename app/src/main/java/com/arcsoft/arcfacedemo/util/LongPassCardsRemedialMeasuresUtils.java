@@ -222,13 +222,13 @@ public class LongPassCardsRemedialMeasuresUtils {
 		// 获取图片
 		// Bitmap bitmap = ImageDownloader.loadAndDecryptImage(longPassCard.id, getInstance());
 		// 注册人脸
-		registerFaceByBitmap(bitmap, longPassCard.id);
+		registerFaceByBitmap(bitmap, longPassCard);
 	}
 
 	/**
 	 * 单个注册人脸
 	 */
-	private void registerFaceByBitmap(Bitmap bitmap, String applyId) {
+	private void registerFaceByBitmap(Bitmap bitmap, LongPassCard longPassCard) {
 		ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
 			@Override
 			public String doInBackground() throws Throwable {
@@ -236,9 +236,9 @@ public class LongPassCardsRemedialMeasuresUtils {
 				registerFace(bitmap, new OnRegisterFinishedCallback() {
 					@Override
 					public void onRegisterFinished(FacePreviewInfo facePreviewInfo, boolean success) {
-						ALog.i("单个注册人脸: " + success);
+						ALog.i("单个注册人脸: " + success + ", name：" + longPassCard.nickname + ", id：" + longPassCard.id);
 					}
-				}, applyId);
+				}, longPassCard.id);
 				return null;
 			}
 		});
