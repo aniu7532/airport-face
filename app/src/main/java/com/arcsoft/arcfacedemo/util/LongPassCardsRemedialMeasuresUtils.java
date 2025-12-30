@@ -24,6 +24,7 @@ import com.blankj.utilcode.util.ThreadUtils;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -64,7 +65,9 @@ public class LongPassCardsRemedialMeasuresUtils {
 	 * 开始补救下载缺失的图片
 	 */
 	public void start() {
-		ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
+		InfoStorage infoStorage = new InfoStorage(ArcFaceApplication.getApplication());
+		int interval = infoStorage.getInt("interval", ArcFaceApplication.UPDATE_DELAY_TIME);
+		ThreadUtils.executeByFixedAtFixRate(ArcFaceApplication.POOL_SIZE, new SmallTask() {
 			@Override
 			public String doInBackground() throws Throwable {
 				LongTermPassDao dao = ArcFaceApplication.getApplication().getDb().longTermPassDao();
@@ -121,7 +124,7 @@ public class LongPassCardsRemedialMeasuresUtils {
 				ALog.i(String.format("补救下载结束 - 成功: %d, 失败: %d, 跳过: %d", successCount, failCount, skipCount));
 				return null;
 			}
-		});
+		}, interval * 60 * 1000, TimeUnit.MILLISECONDS);
 	}
 
 	/**

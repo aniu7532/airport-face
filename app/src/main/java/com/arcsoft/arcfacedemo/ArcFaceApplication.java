@@ -38,6 +38,7 @@ import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
+import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.debug.DebugInfoDumper;
 import com.arcsoft.arcfacedemo.util.face.model.FacePreviewInfo;
@@ -520,6 +521,7 @@ public class ArcFaceApplication extends Application {
         };
         ThreadUtils.executeByFixedAtFixRate(POOL_SIZE, task1, PING_DELAY_TIME, TimeUnit.MILLISECONDS);
 
+		LongPassCardsRemedialMeasuresUtils.getInstance().start();
     }
 
     /**
