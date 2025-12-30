@@ -87,8 +87,8 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         // getString(R.string.page_single_image), ImageFaceAttrDetectActivity.class));
         // activityHomeBinding.llRootView.addView(new NavigateItemView(this, R.drawable.ic_face_compare,
         // getString(R.string.page_face_compare), FaceCompareActivity.class));
-        // activityHomeBinding.llRootView.addView(new NavigateItemView(this, R.drawable.ic_face_manage,
-        // getString(R.string.page_face_manage), FaceManageActivity.class));
+         activityHomeBinding.llRootView.addView(new NavigateItemView(this, R.drawable.ic_face_manage,
+         getString(R.string.page_face_manage), FaceManageActivity.class));
 
         activityHomeBinding.llRootView.addView(new NavigateItemView(this, R.drawable.ic_settings,
                 getString(R.string.page_settings), RecognizeSettingsActivity.class));

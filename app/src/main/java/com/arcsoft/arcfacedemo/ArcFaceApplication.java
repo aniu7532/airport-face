@@ -520,8 +520,6 @@ public class ArcFaceApplication extends Application {
             }
         };
         ThreadUtils.executeByFixedAtFixRate(POOL_SIZE, task1, PING_DELAY_TIME, TimeUnit.MILLISECONDS);
-
-		LongPassCardsRemedialMeasuresUtils.getInstance().start();
     }
 
     /**
@@ -712,20 +710,14 @@ public class ArcFaceApplication extends Application {
      */
     public void updateFace(List<LongPassCard> longPassCardList) {
 
-        // 注销的不用处理
-        List<LongPassCard> finalLongPassCardList = longPassCardList
-                .stream()
-                .filter(value->value.status != 2)
-                .collect(Collectors.toList());
-
-        if (finalLongPassCardList.isEmpty()) { return; }
+        if (longPassCardList.isEmpty()) { return; }
 
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
             @Override
             public String doInBackground() throws Throwable {
 
                 List<FaceEntity> faceEntityList = FaceDatabase.getInstance(getApplication()).faceDao().getAllFaces();
-                for (LongPassCard longPassCard : finalLongPassCardList) {
+                for (LongPassCard longPassCard : longPassCardList) {
                     for (FaceEntity faceEntity : faceEntityList) {
                         if (faceEntity.getUserName().equals(longPassCard.id)) {
                             if (FaceServer.getInstance().getFaceEngine() == null

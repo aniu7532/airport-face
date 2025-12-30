@@ -142,7 +142,8 @@ public class FaceManageActivity extends BaseActivity
                             getImageFromAlbum(FaceManageActivity.this);
                             break;
                         case 1:
-                            registerFromFile(new File(Constants.DEFAULT_REGISTER_FACES_DIR));
+							File directory = new File(FaceManageActivity.this.getExternalFilesDir(null), "register");
+                            registerFromFile(directory);
                             break;
                         case 2:
                             facePhotoViewModel.clearAllFaces();
@@ -235,7 +236,8 @@ public class FaceManageActivity extends BaseActivity
     protected void afterRequestPermission(int requestCode, boolean isAllGranted) {
         if (requestCode == ACTION_REQUEST_PERMISSIONS) {
             if (isAllGranted) {
-                registerFromFile(new File(Constants.DEFAULT_REGISTER_FACES_DIR));
+				File directory = new File(FaceManageActivity.this.getExternalFilesDir(null), "register");
+                registerFromFile(directory);
             } else {
                 showLongToast(getString(R.string.permission_denied));
             }

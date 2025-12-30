@@ -196,14 +196,19 @@ public class FacePhotoViewModel extends ViewModel {
         final int[] failed = { 0 };
         final int[] success = { 0 };
         Observable.fromArray(files).flatMap((Function<File, ObservableSource<Boolean>>) file -> {
-            byte[] bytes = FileUtil.fileToData(file);
+            byte[] decryptedBytes = AESUtils.decryptFileToByte(file);
+			if (decryptedBytes == null) {
+				Log.e(TAG, "解密文件失败: " + file.getName());
+				failed[0]++;
+				return observer -> observer.onNext(true);
+			}
             String name = file.getName();
             int suffixIndex = name.indexOf(".");
             if (suffixIndex > 0) {
                 name = name.substring(0, suffixIndex);
             }
             FaceEntity faceEntity;
-            faceEntity = faceRepository.registerJpeg(context, bytes, name);
+            faceEntity = faceRepository.registerJpeg(context, decryptedBytes, name);
             success[0]++;
             if (faceEntity == null) {
                 failed[0]++;

@@ -1,54 +1,39 @@
 package com.arcsoft.arcfacedemo.util;
 
-import android.graphics.Bitmap;
-
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
-import com.arcsoft.arcfacedemo.data.FaceRepository;
 import com.arcsoft.arcfacedemo.db.dao.LongTermPassDao;
 import com.arcsoft.arcfacedemo.db.entity.LongTermPass;
-import com.arcsoft.arcfacedemo.entity.LongPassCard;
-import com.arcsoft.arcfacedemo.facedb.FaceDatabase;
-import com.arcsoft.arcfacedemo.facedb.dao.FaceDao;
-import com.arcsoft.arcfacedemo.facedb.entity.FaceEntity;
 import com.arcsoft.arcfacedemo.faceserver.FaceServer;
-import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
-import com.arcsoft.arcfacedemo.ui.callback.OnRegisterFinishedCallback;
-import com.arcsoft.arcfacedemo.util.face.model.FacePreviewInfo;
-import com.arcsoft.arcfacedemo.util.glide.AESUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
-import com.arcsoft.imageutil.ArcSoftImageFormat;
-import com.arcsoft.imageutil.ArcSoftImageUtil;
-import com.arcsoft.imageutil.ArcSoftImageUtilError;
-import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
 
 public class LongPassCardsRemedialMeasuresUtils {
 
+	/**
+	 * 补救措施进度回调接口
+	 */
+	public interface RemedialProgressCallback {
+		/**
+		 * 进度更新回调
+		 *
+		 * @param currentIndex 当前处理的序号（第几个）
+		 * @param failedCount  失败数量
+		 * @param totalCount   总数量
+		 */
+		void onProgress(int currentIndex, int failedCount, int totalCount);
+	}
+
 	private static volatile LongPassCardsRemedialMeasuresUtils instance = null;
 
-	private final FaceRepository faceRepository;
 	private static final String FILE_EXTENSION = ".jpg";
 	private static final String DIR_REGISTER = "register";
 	private static final String DIR_PHOTO = "photo";
+	private boolean doing = false;
 
-	private LongPassCardsRemedialMeasuresUtils() {
-		FaceDao faceDao = FaceDatabase.getInstance(ArcFaceApplication.getApplication()).faceDao();
-		faceRepository = new FaceRepository(20, faceDao, FaceServer.getInstance());
-	}
+	private LongPassCardsRemedialMeasuresUtils() { }
 
 	public static LongPassCardsRemedialMeasuresUtils getInstance() {
 		if (instance == null) {
@@ -63,68 +48,101 @@ public class LongPassCardsRemedialMeasuresUtils {
 
 	/**
 	 * 开始补救下载缺失的图片
+	 *
+	 * @param callback 进度回调，返回已注册数量和总数
 	 */
-	public void start() {
-		InfoStorage infoStorage = new InfoStorage(ArcFaceApplication.getApplication());
-		int interval = infoStorage.getInt("interval", ArcFaceApplication.UPDATE_DELAY_TIME);
-		ThreadUtils.executeByFixedAtFixRate(ArcFaceApplication.POOL_SIZE, new SmallTask() {
+	public void start(RemedialProgressCallback callback) {
+		ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
 			@Override
 			public String doInBackground() throws Throwable {
+
+				if (doing) return null;
+
+				doing = true;
+
 				LongTermPassDao dao = ArcFaceApplication.getApplication().getDb().longTermPassDao();
 				List<LongTermPass> longTermPassList = dao.getByStatusNotCancelled();
 
 				if (longTermPassList == null || longTermPassList.isEmpty()) {
 					ALog.i("没有需要补救下载的通行证");
+					if (callback != null) {
+						callback.onProgress(0, 0, 0);
+					}
+					doing = false;
 					return null;
 				}
+
+				final int totalCount = longTermPassList.size();
+				final int[] currentIndex = {0};  // 当前处理的序号
+				final int[] failedCount = {0};   // 失败数量
+
+				// 初始回调
+				if (callback != null) {
+					callback.onProgress(0, 0, totalCount);
+				}
+
+				ALog.i(String.format("开始下载 - 总数: %d", totalCount));
 
 				File registerDir = ensureDirectoryExists(DIR_REGISTER);
 				File photoDir = ensureDirectoryExists(DIR_PHOTO);
 
 				if (registerDir == null || photoDir == null) {
 					ALog.e("创建目录失败，无法继续下载");
+					doing = false;
 					return null;
 				}
-
-				ALog.i("开始补救下载，共 " + longTermPassList.size() + " 条记录");
-				int successCount = 0;
-				int failCount = 0;
-				int skipCount = 0;
 
 				for (LongTermPass longTermPass : longTermPassList) {
 					if (longTermPass == null || longTermPass.id == null) {
 						continue;
 					}
 
+					currentIndex[0]++;  // 当前处理的序号+1
+
+					boolean hasFailure = false;  // 本次是否有失败
+
 					// 下载注册照片
 					Boolean registerResult = downloadImageIfNotExists(
 						registerDir, longTermPass.checkPhoto, longTermPass.id, longTermPass.nickname, false, "注册照片");
 					if (registerResult == null) {
-						skipCount++; // 文件已存在，跳过
+						ALog.i("registerDir文件已存在，跳过");
 					} else if (registerResult) {
-						successCount++; // 下载成功
+						ALog.i("registerDir文件下载成功");
 					} else {
-						failCount++; // 下载失败
+						ALog.i("registerDir文件下载失败");
+						hasFailure = true;
 					}
 
 					// 下载普通照片
 					Boolean photoResult = downloadImageIfNotExists(
 						photoDir, longTermPass.photo, longTermPass.id, longTermPass.nickname, true, "普通照片");
 					if (photoResult == null) {
-						skipCount++; // 文件已存在，跳过
+						ALog.i("photoDir文件已存在，跳过");
 					} else if (photoResult) {
-						successCount++; // 下载成功
+						ALog.i("photoDir文件下载成功");
 					} else {
-						failCount++; // 下载失败
+						ALog.i("photoDir文件下载失败");
+						hasFailure = true;
 					}
 
-					updateFace(Converters.convertToLongPassCard(longTermPass));
+					// 如果本次有失败，增加失败计数
+					if (hasFailure) {
+						failedCount[0]++;
+					}
+
+					// 更新进度回调
+					if (callback != null) {
+						final int current = currentIndex[0];
+						final int failed = failedCount[0];
+						callback.onProgress(current, failed, totalCount);
+					}
 				}
 
-				ALog.i(String.format("补救下载结束 - 成功: %d, 失败: %d, 跳过: %d", successCount, failCount, skipCount));
+				ALog.i(String.format("下载完成 - 总数: %d, 当前: %d, 失败: %d", totalCount, currentIndex[0], failedCount[0]));
+				doing = false;
 				return null;
 			}
-		}, interval * 60 * 1000, TimeUnit.MILLISECONDS);
+		});
 	}
 
 	/**
@@ -179,139 +197,6 @@ public class LongPassCardsRemedialMeasuresUtils {
 			ALog.e(String.format("补救下载失败 - %s: %s (%s)", nickname, imageType, imageId));
 		}
 		return result;
-	}
-
-	/**
-	 * 更新人脸数据库,先删除，再注册
-	 */
-	private void updateFace(LongPassCard longPassCard) {
-
-		List<FaceEntity> faceEntityList = FaceDatabase.getInstance(ArcFaceApplication.getApplication()).faceDao().getAllFaces();
-		for (FaceEntity faceEntity : faceEntityList) {
-			if (faceEntity.getUserName().equals(longPassCard.id)) {
-				if (FaceServer.getInstance().getFaceEngine() == null
-					&& FaceServer.getInstance().getFrEngine() == null) {
-					ALog.e("FaceServer.getInstance().getFaceEngine() == null");
-					continue;
-				}
-
-				ALog.e(longPassCard.nickname + ", " + faceEntity.toString2());
-				if (ActivityUtils.getTopActivity() instanceof RegisterAndRecognizeActivity) {
-					int flag1 = FaceServer.getInstance().getFrEngine()
-						.removeFaceFeature((int) faceEntity.getFaceId());
-					ALog.e("getFrEngine deleteFace removeFaceFeature：" + flag1);
-				} else {
-					int flag1 = FaceServer.getInstance().getFaceEngine()
-						.removeFaceFeature((int) faceEntity.getFaceId());
-					ALog.e("getFaceEngine deleteFace removeFaceFeature：" + flag1);
-				}
-
-				boolean flag = FaceServer.getInstance().removeOneFace(faceEntity);
-
-				ALog.e("deleteFace removeOneFace：" + flag);
-				// 删除人脸
-				int result = FaceDatabase.getInstance(ArcFaceApplication.getApplication()).faceDao().deleteFace(faceEntity);
-				ALog.e("deleteFace result：" + result);
-				ALog.e("FaceDatabase.getInstance(getApplication()).faceDao().deleteFace(faceEntity)："
-					+ faceEntity.toString2());
-
-			}
-		}
-
-		Bitmap bitmap = AESUtils.decryptRegisterFileToBitmap(longPassCard.id);
-		// 获取图片
-		// Bitmap bitmap = ImageDownloader.loadAndDecryptImage(longPassCard.id, getInstance());
-		// 注册人脸
-		registerFaceByBitmap(bitmap, longPassCard);
-	}
-
-	/**
-	 * 单个注册人脸
-	 */
-	private void registerFaceByBitmap(Bitmap bitmap, LongPassCard longPassCard) {
-		ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
-			@Override
-			public String doInBackground() throws Throwable {
-
-				registerFace(bitmap, new OnRegisterFinishedCallback() {
-					@Override
-					public void onRegisterFinished(FacePreviewInfo facePreviewInfo, boolean success) {
-						ALog.i("单个注册人脸: " + success + ", name：" + longPassCard.nickname + ", id：" + longPassCard.id);
-					}
-				}, longPassCard.id);
-				return null;
-			}
-		});
-	}
-
-	public void registerFace(Bitmap bitmap, OnRegisterFinishedCallback callback, String applyId) {
-		Bitmap alignedBitmap = ArcSoftImageUtil.getAlignedBitmap(bitmap, true);
-		ALog.e("alignedBitmap.getWidth():" + alignedBitmap.getWidth() + ",alignedBitmap.getHeight():"
-			+ alignedBitmap.getHeight());
-		if (FaceServer.getInstance().getFaceEngine() == null) {
-			ALog.e("FaceServer.getInstance().getFaceEngine() == null");
-			return;
-		}
-		Observable.create(new ObservableOnSubscribe<byte[]>() {
-			@Override
-			public void subscribe(ObservableEmitter<byte[]> emitter) throws Exception {
-				byte[] bgr24Data = ArcSoftImageUtil.createImageData(alignedBitmap.getWidth(), alignedBitmap.getHeight(),
-					ArcSoftImageFormat.BGR24);
-				int transformCode =
-					ArcSoftImageUtil.bitmapToImageData(alignedBitmap, bgr24Data, ArcSoftImageFormat.BGR24);
-				if (transformCode == ArcSoftImageUtilError.CODE_SUCCESS) {
-					emitter.onNext(bgr24Data);
-				} else {
-					emitter.onError(new Exception("transform failed, code is " + transformCode));
-				}
-			}
-		}).flatMap(new Function<byte[], ObservableSource<FaceEntity>>() {
-
-			@Override
-			public ObservableSource<FaceEntity> apply(byte[] bgr24Data) throws Exception {
-				Observable<FaceEntity> faceEntityObservable;
-				if (ActivityUtils.getTopActivity() instanceof RegisterAndRecognizeActivity) {
-					ALog.e("ActivityUtils.getTopActivity() instanceof RegisterAndRecognizeActivity");
-					faceEntityObservable =
-						Observable.just(faceRepository.registerBgr24(ArcFaceApplication.getApplication(), bgr24Data,
-							alignedBitmap.getWidth(), alignedBitmap.getHeight(), applyId, true));
-
-				} else {
-					faceEntityObservable =
-						Observable.just(faceRepository.registerBgr24(ArcFaceApplication.getApplication(), bgr24Data,
-							alignedBitmap.getWidth(), alignedBitmap.getHeight(), applyId));
-				}
-
-//				loadData(true);
-				// 注册成功时，数据也同步更新下
-				return faceEntityObservable;
-			}
-		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<FaceEntity>() {
-			@Override
-			public void onSubscribe(Disposable d) {
-
-			}
-
-			@Override
-			public void onNext(FaceEntity faceEntity) {
-				if (faceEntity != null) {
-					callback.onRegisterFinished(null, true);
-				} else {
-					callback.onRegisterFinished(null, false);
-				}
-			}
-
-			@Override
-			public void onError(Throwable e) {
-				e.printStackTrace();
-				callback.onRegisterFinished(null, false);
-			}
-
-			@Override
-			public void onComplete() {
-
-			}
-		});
 	}
 
 }

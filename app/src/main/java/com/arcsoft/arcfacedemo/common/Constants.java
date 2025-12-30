@@ -34,7 +34,7 @@ public class Constants {
     /**
      * 注册图所在路径
      */
-    public static final String DEFAULT_REGISTER_FACES_DIR = "sdcard/arcfacedemo/register";
+    public static final String DEFAULT_REGISTER_FACES_DIR = "/sdcard/Android/data/com.arcsoft.arcfacedemo/files/register";
 
     public static final String BASE_VPN = "https://kzqtxzvpn.caacsri.com:9998";
     // public static final String ZERO_USERNAME = "17628486201";

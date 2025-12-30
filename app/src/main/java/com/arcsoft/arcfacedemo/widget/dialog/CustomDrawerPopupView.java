@@ -3,6 +3,7 @@ package com.arcsoft.arcfacedemo.widget.dialog;
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 
 import com.arcsoft.arcfacedemo.R;
+import com.arcsoft.arcfacedemo.ui.activity.BaseActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
@@ -10,6 +11,7 @@ import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LoginActivity;
 import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
+import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ActivityUtils;
@@ -32,6 +34,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 
@@ -66,6 +70,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
         TextView tvWenan = findViewById(R.id.tvWenan);
         TextView tvVersion = findViewById(R.id.tvVersion);
         TextView tvUploadLog = findViewById(R.id.tvUploadLog);
+        TextView tvRemedial = findViewById(R.id.tvRemedial);
         TextView tvGotoLuancher = findViewById(R.id.tvGotoLuancher);
 
         TextView tvGotoSetting = findViewById(R.id.tvGotoSetting);
@@ -414,6 +419,55 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                     }
                 });
 
+            }
+        });
+
+        tvRemedial.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DialogUtils.startConfirmDialog(getContext(), "", "确认执行数据完整性检查功能？", new DialogUtils.ConfirmListener() {
+                    @Override
+                    public void onConfirm() {
+                        dismiss();
+                        // 获取当前Activity
+                        android.app.Activity activity = ActivityUtils.getTopActivity();
+                        if (activity != null && activity instanceof BaseActivity) {
+                            View rootView = activity.findViewById(android.R.id.content);
+                            if (rootView != null) {
+                                final Snackbar[] snackbarRef = new Snackbar[1];
+                                snackbarRef[0] = Snackbar.make(rootView, "开始执行数据完整性检查功能...", Snackbar.LENGTH_INDEFINITE);
+                                snackbarRef[0].setAction("关闭", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        if (snackbarRef[0] != null) {
+                                            snackbarRef[0].dismiss();
+                                        }
+                                    }
+                                });
+                                snackbarRef[0].show();
+
+                                // 执行挽救功能
+                                LongPassCardsRemedialMeasuresUtils.getInstance().start(new LongPassCardsRemedialMeasuresUtils.RemedialProgressCallback() {
+                                    @Override
+                                    public void onProgress(int currentIndex, int failedCount, int totalCount) {
+                                        if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
+                                            activity.runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
+                                                        snackbarRef[0].setText(String.format("当前第%d个/共%d个，失败%d个", currentIndex, totalCount, failedCount));
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            ToastUtils.showLong("无法获取Activity，数据完整性检查功能启动失败");
+                        }
+                    }
+                });
             }
         });
 
