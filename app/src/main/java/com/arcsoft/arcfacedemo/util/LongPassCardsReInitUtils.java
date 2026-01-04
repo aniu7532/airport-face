@@ -73,7 +73,6 @@ public class LongPassCardsReInitUtils {
     private int getOnlineCount() {
         GetRequest<String> request =
                 OkGo.<String>get(UrlConstants.passCount).tag(UrlConstants.passCount);
-        Map<String, String> params = new HashMap<>();
         request.headers("tenant-id", "1");
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {

@@ -7,27 +7,39 @@ import android.view.View;
 
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
 import com.arcsoft.arcfacedemo.data.FaceRepository;
+import com.arcsoft.arcfacedemo.data.http.JsonCallback;
 import com.arcsoft.arcfacedemo.db.dao.LongTermPassDao;
 import com.arcsoft.arcfacedemo.db.entity.LongTermPass;
+import com.arcsoft.arcfacedemo.entity.Base;
 import com.arcsoft.arcfacedemo.facedb.FaceDatabase;
 import com.arcsoft.arcfacedemo.facedb.dao.FaceDao;
 import com.arcsoft.arcfacedemo.facedb.entity.FaceEntity;
 import com.arcsoft.arcfacedemo.faceserver.FaceServer;
+import com.arcsoft.arcfacedemo.network.ApiUtils;
+import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.ui.activity.BaseActivity;
 import com.arcsoft.arcfacedemo.util.glide.AESUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.ObjectUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
+import com.lzy.okgo.OkGo;
+import com.lzy.okgo.model.Response;
+import com.lzy.okgo.request.PostRequest;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -461,6 +473,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                                     ALog.e(TAG, "批量注册结束", failFileNames);
                                     if (!failFileNames.isEmpty()) {
                                         ToastUtils.showLong(failFileNames.toString());
+                                        tellServer(failFileNames);
                                     }
                                     callback.onFinish(success[0], failed[0], total, null);
                                 } else {
@@ -608,6 +621,56 @@ public class LongPassCardsRemedialMeasuresUtils {
             ALog.e(TAG, "解析图片失败: " + fileId, e);
             return null;
         }
+    }
+
+    private void tellServer(List<String> passIds) {
+        if (passIds.isEmpty()) {
+            return;
+        }
+        passIds = passIds
+                .stream()
+                .map((fileName) -> {
+                    int suffixIndex = fileName.indexOf(".");
+                    if (suffixIndex > 0) {
+                        fileName = fileName.substring(0, suffixIndex);
+                    }
+                    return fileName;
+                })
+                .collect(Collectors.toList());
+        String passIdsString = String.join(",", passIds);
+        ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
+            @Override
+            public String doInBackground() throws Throwable {
+                PostRequest<Base<String>> request =
+                        OkGo.<Base<String>>post(UrlConstants.checkAbnormalCreate).tag(UrlConstants.checkAbnormalCreate);
+                Map<String, String> params = new HashMap<>();
+                InfoStorage infoStorage = new InfoStorage(ArcFaceApplication.getApplication());
+                String loginName = infoStorage.getString("loginName", "");
+                params.put("accountName", loginName);
+                params.put("detail", "[" + passIdsString + "]");
+                request.headers("tenant-id", "1");
+                // 检查是否有 accessToken，如果有则添加 Authorization 头
+                if (ApiUtils.accessToken != null) {
+                    request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
+                }
+                // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
+                request.upJson(new Gson().toJson(params)).execute(new JsonCallback<Base<String>>() {
+                    @Override
+                    public void onSuccess(Response<Base<String>> response) {
+                        if (ObjectUtils.isEmpty(response.body())) {
+                            return;
+                        }
+                        Base<String> res = response.body();
+                        if (res.getCode() == 200) {
+                            ALog.d("请求成功", res.getData());
+                        } else {
+                            ALog.d("接口报错", res.getCode());
+                        }
+                    }
+                });
+                return "";
+            }
+        });
     }
 
 }
