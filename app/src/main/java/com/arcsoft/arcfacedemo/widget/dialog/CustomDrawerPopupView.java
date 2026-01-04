@@ -13,6 +13,7 @@ import com.arcsoft.arcfacedemo.ui.activity.LoginActivity;
 import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
 import com.arcsoft.arcfacedemo.ui.callback.BatchRegisterCallback;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
+import com.arcsoft.arcfacedemo.util.LongPassCardsReInitUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
@@ -74,6 +75,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
         TextView tvWenan = findViewById(R.id.tvWenan);
         TextView tvVersion = findViewById(R.id.tvVersion);
         TextView tvUploadLog = findViewById(R.id.tvUploadLog);
+        TextView tvReInit = findViewById(R.id.tvReInit);
         TextView tvRemedial = findViewById(R.id.tvRemedial);
         TextView tvGotoLuancher = findViewById(R.id.tvGotoLuancher);
 
@@ -426,6 +428,19 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        tvReInit.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DialogUtils.startConfirmDialog(getContext(), "", "确认执行在线数据完整性检查功能？", new DialogUtils.ConfirmListener() {
+                    @Override
+                    public void onConfirm() {
+                        dismiss();
+                        LongPassCardsReInitUtils.getInstance().start();
+                    }
+                });
+            }
+        });
+
         tvRemedial.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -433,94 +448,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                     @Override
                     public void onConfirm() {
                         dismiss();
-                        // 获取当前Activity
-                        android.app.Activity activity = ActivityUtils.getTopActivity();
-                        if (activity != null && activity instanceof BaseActivity) {
-                            View rootView = activity.findViewById(android.R.id.content);
-                            if (rootView != null) {
-                                final Snackbar[] snackbarRef = new Snackbar[1];
-                                snackbarRef[0] = Snackbar.make(rootView, "开始执行数据完整性检查功能...", Snackbar.LENGTH_INDEFINITE);
-                                snackbarRef[0].setAction("关闭", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        if (snackbarRef[0] != null) {
-                                            snackbarRef[0].dismiss();
-                                        }
-                                    }
-                                });
-                                snackbarRef[0].show();
-
-                                // 执行挽救功能
-                                LongPassCardsRemedialMeasuresUtils.getInstance().start(new LongPassCardsRemedialMeasuresUtils.RemedialProgressCallback() {
-                                    @Override
-                                    public void onProgress(int currentIndex, int failedCount, int totalCount) {
-                                        if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
-                                            activity.runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
-                                                        snackbarRef[0].setText(String.format("下载当前第%d个/共%d个，失败%d个", currentIndex, totalCount, failedCount));
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    }
-
-                                    @Override
-                                    public void end() {
-
-                                        if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
-                                            activity.runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
-                                                        snackbarRef[0].setText("查询未注册人脸中");
-                                                    }
-                                                }
-                                            });
-                                        }
-
-                                        File directory = new File(activity.getExternalFilesDir(null), "register");
-                                        LongPassCardsRemedialMeasuresUtils.getInstance().registerFromFile(activity, directory, new LongPassCardsRemedialMeasuresUtils.BatchRegisterCallback1() {
-                                            @Override
-                                            public void onProcess(int current, int failed, int total, String msg) {
-                                                if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
-                                                    activity.runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            if (snackbarRef[0] == null || !snackbarRef[0].isShown()) {
-                                                                return;
-                                                            }
-                                                            if (!msg.isEmpty()) {
-                                                                snackbarRef[0].setText(msg);
-                                                                return;
-                                                            }
-                                                            snackbarRef[0].setText(String.format("注册当前第%d个/共%d个，失败%d个", current, total, failed));
-                                                        }
-                                                    });
-                                                }
-                                            }
-
-                                            @Override
-                                            public void onFinish(int current, int failed, int total, String errMsg) {
-                                                if (activity != null && !activity.isFinishing() && snackbarRef[0] != null) {
-                                                    activity.runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            if (snackbarRef[0] != null && snackbarRef[0].isShown()) {
-                                                                snackbarRef[0].dismiss();
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        } else {
-                            ToastUtils.showLong("无法获取Activity，数据完整性检查功能启动失败");
-                        }
+                        LongPassCardsRemedialMeasuresUtils.getInstance().start();
                     }
                 });
             }

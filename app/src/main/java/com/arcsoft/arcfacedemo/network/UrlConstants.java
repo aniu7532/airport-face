@@ -34,4 +34,7 @@ public class UrlConstants {
 
     public static final String heartbeat = URL + "/app-api/check/device/heartbeat";
 
+    //获取通行证总数
+    public static final String passCount = URL + "/app-api/check/pass/pass-count";
+
 }
