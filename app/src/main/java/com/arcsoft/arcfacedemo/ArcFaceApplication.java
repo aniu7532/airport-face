@@ -38,7 +38,7 @@ import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
-import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
+import com.arcsoft.arcfacedemo.util.LongPassCardsReInitUtils;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.debug.DebugInfoDumper;
 import com.arcsoft.arcfacedemo.util.face.model.FacePreviewInfo;
@@ -451,15 +451,28 @@ public class ArcFaceApplication extends Application {
                 }
 
                 if (DateUtil.getHour(TimeUtils.getNowDate()) == 10) {
-                    // 2点重启，并设置重启标致为false，防止继续重启
+                    // 10点上传日志，并设置上传标致为false，防止继续上传
                     boolean flag = SPUtils.getInstance().getBoolean("upload_log", true);
                     if (flag) {
                         LogUploadUtils.upload(getApplication());
                         SPUtils.getInstance().put("upload_log", false);
                     }
                 } else {
-                    // 2点过后，设置重启标致为true，到2点时自动重启
+                    // 10点过后，设置上传标致为true，到10点时自动上传
                     SPUtils.getInstance().put("upload_log", true);
+                }
+
+                // 每天凌晨1点执行数据完整性检查
+                if (DateUtil.getHour(TimeUtils.getNowDate()) == 1) {
+                    boolean flag = SPUtils.getInstance().getBoolean("reinit_check", true);
+                    if (flag) {
+                        ALog.d("凌晨1点，开始执行数据完整性检查");
+                        LongPassCardsReInitUtils.getInstance().start();
+                        SPUtils.getInstance().put("reinit_check", false);
+                    }
+                } else {
+                    // 1点过后，设置检查标致为true，到1点时自动检查
+                    SPUtils.getInstance().put("reinit_check", true);
                 }
 
                 // 执行任务逻辑
