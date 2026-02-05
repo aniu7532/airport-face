@@ -41,9 +41,10 @@ public class Document3 extends Fragment {
     private ImageView card_img;
     private ImageView or_code;
     private ImageView img_color;
-    private TextView card_status;
     private TextView faceSimilar;
     private View faceSimilarLayout;
+    private View statusOverlay;
+    private TextView statusText;
     String idCode;
     String passid;
     String photo;
@@ -89,9 +90,10 @@ public class Document3 extends Fragment {
         card_img = view.findViewById(R.id.card_img);
         or_code = view.findViewById(R.id.or_code);
         img_color = view.findViewById(R.id.img_color);
-        card_status = view.findViewById(R.id.card_status);
         faceSimilar = view.findViewById(R.id.faceSimilar);
         faceSimilarLayout = view.findViewById(R.id.faceSimilarLayout);
+        statusOverlay = view.findViewById(R.id.statusOverlay);
+        statusText = view.findViewById(R.id.statusText);
         // if (listener != null) {
         // listener.onDataReceived(""); // 触发接口回调
         // }
@@ -251,18 +253,25 @@ public class Document3 extends Fragment {
         if (expiryDateTextView != null) {
             expiryDateTextView.setText(startDate + "-" + expiryDate);
         }
-        if (card_status != null) {
-            // status==1 正常 status==2 注销 status==3 过期 status==4 挂失
-            String status = "正常";
-            if (status == "1")
-                status = "正常";
-            if (status == "2")
-                status = "注销";
-            if (status == "3")
-                status = "过期";
-            if (status == "4")
-                status = "挂失";
-            card_status.setText(status);
+        // 证件状态盖章显示逻辑：status==1 正常，其它为异常状态
+        if (statusOverlay != null && statusText != null) {
+            String sealText = null;
+            if ("2".equals(status)) {
+//                sealText = "已注销";
+            } else if ("3".equals(status)) {
+                sealText = "已过期";
+            } else if ("4".equals(status)) {
+//                sealText = "已挂失";
+            } else if ("5".equals(status)) {
+                sealText = "已停用";
+            }
+
+            if (sealText != null) {
+                statusOverlay.setVisibility(View.VISIBLE);
+                statusText.setText(sealText);
+            } else {
+                statusOverlay.setVisibility(View.GONE);
+            }
         }
 
         if (ObjectUtils.isEmpty(similar) || similar.equals("0") || similar.equals("0.0")) {

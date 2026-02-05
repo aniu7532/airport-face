@@ -3,14 +3,19 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <LinearLayout
+    <!-- 使用 FrameLayout 包裹卡片内容和状态盖章，实现盖章整体覆盖效果 -->
+    <FrameLayout
         android:layout_width="360dp"
         android:layout_height="220dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/card_bacground"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="5dp">
+        android:layout_gravity="center_horizontal">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/card_bacground"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="5dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -244,30 +249,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="证件状态："
-                        android:textColor="@color/color_black"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/card_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text=""
-                        android:textColor="@color/color_black"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
                     android:id="@+id/faceSimilarLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -293,6 +274,33 @@
             </LinearLayout>
         </LinearLayout>
 
+        </LinearLayout>
 
-    </LinearLayout>
+        <FrameLayout
+            android:id="@+id/statusOverlay"
+            android:layout_width="120dp"
+            android:layout_height="105dp"
+            android:layout_gravity="bottom|end"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_seal" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:text="已停用"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:rotation="-32"
+                android:layout_gravity="center"
+                android:layout_marginBottom="8dp"/>
+        </FrameLayout>
+
+    </FrameLayout>
 </LinearLayout>
