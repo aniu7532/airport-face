@@ -637,17 +637,20 @@ public class LongPassCardsRemedialMeasuresUtils {
                     return fileName;
                 })
                 .collect(Collectors.toList());
-        String passIdsString = String.join(",", passIds);
-        ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
+		List<String> finalPassIds = passIds;
+		ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
             @Override
             public String doInBackground() throws Throwable {
                 PostRequest<Base<String>> request =
                         OkGo.<Base<String>>post(UrlConstants.checkAbnormalCreate).tag(UrlConstants.checkAbnormalCreate);
-                Map<String, String> params = new HashMap<>();
+                Map<String, Object> params = new HashMap<>();
                 InfoStorage infoStorage = new InfoStorage(ArcFaceApplication.getApplication());
                 String loginName = infoStorage.getString("loginName", "");
+                params.put("deviceId", DeviceUtils.getDeviceId(ArcFaceApplication.getApplication()));
+                params.put("deviceName", infoStorage.getString("deviceName", "立式查验终端"));
                 params.put("accountName", loginName);
-                params.put("detail", "[" + passIdsString + "]");
+                params.put("accountId", infoStorage.getString("userId", ""));
+                params.put("detail", finalPassIds);
                 request.headers("tenant-id", "1");
                 // 检查是否有 accessToken，如果有则添加 Authorization 头
                 if (ApiUtils.accessToken != null) {

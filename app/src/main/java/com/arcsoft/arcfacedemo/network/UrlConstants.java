@@ -37,6 +37,6 @@ public class UrlConstants {
     //获取通行证总数
     public static final String passCount = URL + "/app-api/check/pass/pass-count";
     //存储没注册成功的通行证
-    public static final String checkAbnormalCreate = URL + "/app-api/base/check-abnormal/create";
+    public static final String checkAbnormalCreate = URL + "/app-api/check/check-abnormal/create";
 
 }
