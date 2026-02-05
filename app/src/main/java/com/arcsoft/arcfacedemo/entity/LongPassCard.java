@@ -39,4 +39,5 @@ public class LongPassCard {
     public String businessScope;
     public int sex;
     public String updateTime;
+    public TimeControl[] timeControl; // 时间控制数组
 }

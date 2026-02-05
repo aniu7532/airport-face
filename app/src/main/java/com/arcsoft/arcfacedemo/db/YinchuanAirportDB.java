@@ -15,11 +15,11 @@ import androidx.room.TypeConverters;
 
 //exportSchema = false
 @Database(entities = { LongTermPass.class, LongTermRecords.class,
-        TemporaryCardRecords.class }, version = 17, exportSchema = true, autoMigrations = {
+        TemporaryCardRecords.class }, version = 18, exportSchema = true, autoMigrations = {
                 @AutoMigration(from = 10, to = 11), @AutoMigration(from = 11, to = 12),
                 @AutoMigration(from = 12, to = 13), @AutoMigration(from = 13, to = 14),
                 @AutoMigration(from = 14, to = 15), @AutoMigration(from = 15, to = 16),
-                @AutoMigration(from = 16, to = 17)
+                @AutoMigration(from = 16, to = 17), @AutoMigration(from = 17, to = 18)
         // , @AutoMigration(from = 1, to = 10, spec= YinchuanAirportDB.RenameColumnSpec.class // 关联自定义的 Spec )
 })
 @TypeConverters({ Converters.class })

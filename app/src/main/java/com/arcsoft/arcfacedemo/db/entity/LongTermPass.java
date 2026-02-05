@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 
 import com.arcsoft.arcfacedemo.entity.LeadingPeople;
+import com.arcsoft.arcfacedemo.entity.TimeControl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -53,6 +54,7 @@ public class LongTermPass {
     public String businessScope;
     public int sex;
     public String updateTime;
+    public String timeControl; // 时间控制，存储为 JSON 字符串
     // 数组类型暂时先按字符串数组定义，后续添加类型转换器处理util.Converters
 
     // 类型转换器：将 SomeObject[] 转换为 JSON 字符串
@@ -67,6 +69,27 @@ public class LongTermPass {
         Type type = new TypeToken<LeadingPeople[]>() {
         }.getType();
         return gson.fromJson(leadingPeople, type);
+    }
+
+    // 类型转换器：将 TimeControl[] 转换为 JSON 字符串
+    public void setTimeControl(TimeControl[] timeControlArray) {
+        if (timeControlArray == null) {
+            this.timeControl = null;
+            return;
+        }
+        Gson gson = new Gson();
+        this.timeControl = gson.toJson(timeControlArray);
+    }
+
+    // 类型转换器：将 JSON 字符串转换为 TimeControl[]
+    public TimeControl[] getTimeControl() {
+        if (timeControl == null || timeControl.isEmpty()) {
+            return null;
+        }
+        Gson gson = new Gson();
+        Type type = new TypeToken<TimeControl[]>() {
+        }.getType();
+        return gson.fromJson(timeControl, type);
     }
 
     @Override

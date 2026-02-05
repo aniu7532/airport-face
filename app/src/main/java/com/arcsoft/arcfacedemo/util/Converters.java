@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import com.arcsoft.arcfacedemo.db.entity.LongTermPass;
 import com.arcsoft.arcfacedemo.entity.LeadingPeople;
 import com.arcsoft.arcfacedemo.entity.LongPassCard;
+import com.arcsoft.arcfacedemo.entity.TimeControl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -112,6 +113,7 @@ public class Converters {
         longTermPass.businessScope = longPassCard.businessScope;
         longTermPass.sex = longPassCard.sex;
         longTermPass.updateTime = longPassCard.updateTime;
+        longTermPass.setTimeControl(longPassCard.timeControl); // 使用类型转换器设置 timeControl
         return longTermPass;
     }
 
@@ -155,6 +157,7 @@ public class Converters {
         longPassCard.businessScope = longTermPass1.businessScope;
         longPassCard.sex = longTermPass1.sex;
         longPassCard.updateTime = longTermPass1.updateTime;
+        longPassCard.timeControl = longTermPass1.getTimeControl(); // 使用类型转换器获取 timeControl
         return longPassCard;
     }
 

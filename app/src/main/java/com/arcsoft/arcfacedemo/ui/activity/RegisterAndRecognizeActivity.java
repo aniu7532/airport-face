@@ -41,6 +41,7 @@ import com.arcsoft.arcfacedemo.util.PlayerUtil;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
+import com.arcsoft.arcfacedemo.util.TimeControlUtil;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.camera.CameraListener;
 import com.arcsoft.arcfacedemo.util.camera.DualCameraHelper;
@@ -1649,6 +1650,16 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             return false;
 
         }
+
+        // 检查时间控制
+        TimeControlUtil.TimeControlResult timeControlResult = TimeControlUtil.checkTimeControl(longTermPass);
+        if (!timeControlResult.isAllowed()) {
+            playAudio(R.raw.validation_failed);
+            showCustomDialog(2, timeControlResult.getErrorMessage());
+            stopChecking();
+            return false;
+        }
+
         return true;
     }
 
