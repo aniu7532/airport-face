@@ -23,7 +23,7 @@ public class UrlConstants {
     // 获得用户详情
     public static final String URL_GET_USER_DETAIL = URL + "/app-api/check/user/get";
     // 上传文件
-    public static final String URL_UPLOAD_FILE = URL + "/admin-api/infra/file/upload";
+    public static final String URL_UPLOAD_FILE = URL + "/app-api/infra/file/upload-encrypt-url";
 
     // 获取系统时间
     public static final String URL_GET_SYSTEM_TIME = URL + "/app-api/check/configInfo/sync-time";

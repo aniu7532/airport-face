@@ -5,11 +5,15 @@ import java.util.List;
 
 import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.entity.CardRecords;
+import com.arcsoft.arcfacedemo.network.ApiUtils;
+import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.util.glide.GlideApp;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ObjectUtils;
 import com.blankj.utilcode.util.Utils;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.bumptech.glide.load.model.LazyHeaders;
 import com.yuyh.easyadapter.recyclerview.EasyRVAdapter;
 import com.yuyh.easyadapter.recyclerview.EasyRVHolder;
 
@@ -32,7 +36,19 @@ public class RecordsListAdapter extends EasyRVAdapter<CardRecords.ListDTO> {
         ALog.e(item.getSitePhoto() + "");
         if (ObjectUtils.isNotEmpty(item.getCheckPhoto())) {
             if (item.getCheckPhoto().startsWith("http")) {
-                Glide.with(mContext).load(item.getCheckPhoto()).into((ImageView) viewHolder.getView(R.id.img));
+
+                // 拼接基础下载地址
+                String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + item.getCheckPhoto();
+
+                // 构造带有 Authorization 头的 GlideUrl
+                LazyHeaders.Builder headersBuilder = new LazyHeaders.Builder();
+                // 携带 accessToken（如果存在）
+                if (ApiUtils.getAccessToken() != null) {
+                    headersBuilder.addHeader("Authorization", "Bearer " + ApiUtils.getAccessToken());
+                }
+                GlideUrl glideUrl = new GlideUrl(baseUrl, headersBuilder.build());
+
+                Glide.with(mContext).load(glideUrl).into((ImageView) viewHolder.getView(R.id.img));
             } else {
 
                 File file = new File(item.getCheckPhoto());
