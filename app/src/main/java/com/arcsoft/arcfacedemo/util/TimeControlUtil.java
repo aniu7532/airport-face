@@ -11,7 +11,7 @@ import java.util.Date;
 
 /**
  * 时间控制工具类
- * 用于检查通行证是否在允许的通行时间段内
+ * 用于检查通行证是否在禁止通行的时间或时间段内（在配置的时间/时间段内为不允许通行）
  * 支持两种类型：
  * 1. week - 按星期几控制（day: 1-7，1=周一，7=周日）
  * 2. date - 按日期范围控制（startDate, endDate）
@@ -36,7 +36,7 @@ public class TimeControlUtil {
 
         Calendar calendar = Calendar.getInstance();
         
-        // 遍历timeControl数组，检查是否有匹配的配置
+        // 遍历timeControl数组，检查是否落在禁止通行的时间/时间段内
         for (TimeControl timeControl : timeControlArray) {
             if (timeControl == null) {
                 continue;
@@ -62,20 +62,20 @@ public class TimeControlUtil {
             }
             
             if (isMatch) {
-                // 找到匹配的时间段，允许通行
-                return new TimeControlResult(true, null);
+                // 当前时间在配置的禁止通行时间段内，不允许通行
+                return new TimeControlResult(false, "在禁止通行的时间段内");
             }
         }
 
-        // 没有找到匹配的时间段，不允许通行
-        return new TimeControlResult(false, "不在通行时间段内");
+        // 没有落在任何禁止通行的时间段内，允许通行
+        return new TimeControlResult(true, null);
     }
 
     /**
-     * 检查 week 类型的时间控制
+     * 检查 week 类型的时间控制（是否落在配置的禁止通行星期+时间段内）
      * @param timeControl 时间控制配置
      * @param calendar 当前时间日历
-     * @return 是否匹配
+     * @return 是否匹配（匹配则表示当前处于禁止通行时间段）
      */
     private static boolean checkWeekType(TimeControl timeControl, Calendar calendar) {
         // 获取当前星期几（1-7，1=周一，7=周日）
@@ -89,15 +89,15 @@ public class TimeControlUtil {
             return false;
         }
         
-        // 检查时间是否在允许的时间段内
+        // 检查时间是否在配置的时间段内
         return checkTimeRange(timeControl.startTime, timeControl.endTime, calendar);
     }
 
     /**
-     * 检查 date 类型的时间控制
+     * 检查 date 类型的时间控制（是否落在配置的禁止通行日期范围+时间段内）
      * @param timeControl 时间控制配置
      * @param calendar 当前时间日历
-     * @return 是否匹配
+     * @return 是否匹配（匹配则表示当前处于禁止通行时间段）
      */
     private static boolean checkDateType(TimeControl timeControl, Calendar calendar) {
         // 检查日期是否在范围内
@@ -139,7 +139,7 @@ public class TimeControlUtil {
                 return false;
             }
             
-            // 日期在范围内，检查时间是否在允许的时间段内
+            // 日期在范围内，检查时间是否在配置的时间段内
             return checkTimeRange(timeControl.startTime, timeControl.endTime, calendar);
             
         } catch (ParseException e) {
@@ -243,15 +243,15 @@ public class TimeControlUtil {
         LongTermPass testPass = new LongTermPass();
         testPass.id = "test_id";
         
-        // 测试1: 空 timeControl - 应该允许通行
+        // 测试1: 空 timeControl - 不限制，应允许通行
         ALog.i("--- 测试1: 空 timeControl ---");
         testPass.setTimeControl(null);
         TimeControlResult result1 = checkTimeControl(testPass);
         ALog.i("结果: " + (result1.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result1.getErrorMessage() != null ? " - " + result1.getErrorMessage() : ""));
         
-        // 测试2: week 类型 - 匹配当前星期和时间
-        ALog.i("--- 测试2: week 类型 - 匹配当前星期和时间 ---");
+        // 测试2: week 类型 - 匹配当前星期和时间 → 在禁止时间段内，应不允许通行
+        ALog.i("--- 测试2: week 类型 - 匹配当前星期和时间（禁止通行） ---");
         TimeControl[] weekMatch = new TimeControl[1];
         weekMatch[0] = new TimeControl();
         weekMatch[0].type = "week";
@@ -264,7 +264,7 @@ public class TimeControlUtil {
         ALog.i("结果: " + (result2.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result2.getErrorMessage() != null ? " - " + result2.getErrorMessage() : ""));
         
-        // 测试3: week 类型 - 不匹配星期
+        // 测试3: week 类型 - 不匹配星期 → 不在禁止时间段内，应允许通行
         ALog.i("--- 测试3: week 类型 - 不匹配星期 ---");
         TimeControl[] weekNotMatch = new TimeControl[1];
         weekNotMatch[0] = new TimeControl();
@@ -279,7 +279,7 @@ public class TimeControlUtil {
         ALog.i("结果: " + (result3.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result3.getErrorMessage() != null ? " - " + result3.getErrorMessage() : ""));
         
-        // 测试4: week 类型 - 匹配星期但不匹配时间
+        // 测试4: week 类型 - 匹配星期但不匹配时间 → 不在禁止时间段内，应允许通行
         ALog.i("--- 测试4: week 类型 - 匹配星期但不匹配时间 ---");
         TimeControl[] weekTimeNotMatch = new TimeControl[1];
         weekTimeNotMatch[0] = new TimeControl();
@@ -295,8 +295,8 @@ public class TimeControlUtil {
         ALog.i("结果: " + (result4.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result4.getErrorMessage() != null ? " - " + result4.getErrorMessage() : ""));
         
-        // 测试5: date 类型 - 匹配日期和时间
-        ALog.i("--- 测试5: date 类型 - 匹配日期和时间 ---");
+        // 测试5: date 类型 - 匹配日期和时间 → 在禁止时间段内，应不允许通行
+        ALog.i("--- 测试5: date 类型 - 匹配日期和时间（禁止通行） ---");
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         String today = dateFormat.format(now.getTime());
         Calendar tomorrowCal = Calendar.getInstance();
@@ -316,7 +316,7 @@ public class TimeControlUtil {
         ALog.i("结果: " + (result5.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result5.getErrorMessage() != null ? " - " + result5.getErrorMessage() : ""));
         
-        // 测试6: date 类型 - 不匹配日期
+        // 测试6: date 类型 - 不匹配日期 → 不在禁止时间段内，应允许通行
         ALog.i("--- 测试6: date 类型 - 不匹配日期 ---");
         Calendar futureCal = Calendar.getInstance();
         futureCal.add(Calendar.DAY_OF_MONTH, 10);
@@ -337,16 +337,16 @@ public class TimeControlUtil {
         ALog.i("结果: " + (result6.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result6.getErrorMessage() != null ? " - " + result6.getErrorMessage() : ""));
         
-        // 测试7: 混合类型 - week 和 date
+        // 测试7: 混合类型 - week 不匹配、date 匹配 → 落在 date 禁止段内，应不允许通行
         ALog.i("--- 测试7: 混合类型 - week 和 date ---");
         TimeControl[] mixed = new TimeControl[2];
-        // week 类型 - 不匹配
+        // week 类型 - 不匹配（不禁止）
         mixed[0] = new TimeControl();
         mixed[0].type = "week";
         mixed[0].day = otherDay;
         mixed[0].startTime = "00:00";
         mixed[0].endTime = "23:59";
-        // date 类型 - 匹配
+        // date 类型 - 匹配（禁止通行）
         mixed[1] = new TimeControl();
         mixed[1].type = "date";
         mixed[1].startDate = today;
@@ -359,7 +359,7 @@ public class TimeControlUtil {
         ALog.i("结果: " + (result7.isAllowed() ? "允许通行 ✓" : "不允许通行 ✗") + 
                 (result7.getErrorMessage() != null ? " - " + result7.getErrorMessage() : ""));
         
-        // 测试8: 兼容旧数据 - 没有 type 字段
+        // 测试8: 兼容旧数据 - 没有 type 字段，匹配 → 在禁止时间段内，应不允许通行
         ALog.i("--- 测试8: 兼容旧数据 - 没有 type 字段 ---");
         TimeControl[] legacy = new TimeControl[1];
         legacy[0] = new TimeControl();
