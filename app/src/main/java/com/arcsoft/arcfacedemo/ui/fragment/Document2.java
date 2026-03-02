@@ -2,12 +2,20 @@ package com.arcsoft.arcfacedemo.ui.fragment;
 
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
 import com.arcsoft.arcfacedemo.R;
+import com.arcsoft.arcfacedemo.network.ApiUtils;
+import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.util.glide.AESUtils;
 import com.arcsoft.arcfacedemo.util.glide.GlideApp;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ObjectUtils;
+import com.blankj.utilcode.util.Utils;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.bumptech.glide.load.model.LazyHeaders;
+import com.bumptech.glide.request.FutureTarget;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -165,7 +173,17 @@ public class Document2 extends Fragment {
         if (ArcFaceApplication.getApplication().isOffLine() || ObjectUtils.isEmpty(photo)) { // 加载本地加密文件
             GlideApp.with(getActivity()).load(AESUtils.getPhotoPath(passid)).into(card_img);
         } else {
-            Glide.with(getActivity()).load(photo).into(card_img);
+            // 拼接基础下载地址
+            String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + photo;
+
+            // 构造带有 Authorization 头的 GlideUrl
+            LazyHeaders.Builder headersBuilder = new LazyHeaders.Builder();
+            // 携带 accessToken（如果存在）
+            if (ApiUtils.getAccessToken() != null) {
+                headersBuilder.addHeader("Authorization", "Bearer " + ApiUtils.getAccessToken());
+            }
+            GlideUrl glideUrl = new GlideUrl(baseUrl, headersBuilder.build());
+            Glide.with(getActivity()).load(glideUrl).into(card_img);
         }
     }
 
