@@ -35,7 +35,7 @@ public class RecordsListAdapter extends EasyRVAdapter<CardRecords.ListDTO> {
         viewHolder.setText(R.id.tvTime, item.getCheckTime());
         ALog.e(item.getSitePhoto() + "");
         if (ObjectUtils.isNotEmpty(item.getCheckPhoto())) {
-            if (item.getCheckPhoto().startsWith("http")) {
+            if (item.getCheckPhoto().startsWith("http") || item.getCheckPhoto().startsWith("encrypted/")) {
 
                 // 拼接基础下载地址
                 String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + item.getCheckPhoto();
