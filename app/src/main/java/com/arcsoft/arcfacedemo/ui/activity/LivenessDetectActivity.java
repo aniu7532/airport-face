@@ -47,6 +47,7 @@ import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
+import com.arcsoft.arcfacedemo.util.CardSerialConfigUtil;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.camera.CameraListener;
 import com.arcsoft.arcfacedemo.util.camera.DualCameraHelper;
@@ -817,8 +818,10 @@ public class LivenessDetectActivity extends BaseActivity
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    int portSate = BasicOper.dc_open("COM", LivenessDetectActivity.this, "/dev/ttyS3", 115200);
-                    ALog.d("ttyS3读卡串口portSate:" + portSate);
+                    String path = CardSerialConfigUtil.getCardSerialPath();
+                    int baudrate = CardSerialConfigUtil.getCardSerialBaudRate();
+                    int portSate = BasicOper.dc_open("COM", LivenessDetectActivity.this, path, baudrate);
+                    ALog.d("读卡串口[" + path + "] portSate:" + portSate);
                     if (portSate >= 0) {
                         BasicOper.dc_beep(5);
                     }
@@ -878,8 +881,8 @@ public class LivenessDetectActivity extends BaseActivity
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String path = "/dev/ttyS3";
-                    int band = 115200;
+                    String path = CardSerialConfigUtil.getCardSerialPath();
+                    int band = CardSerialConfigUtil.getCardSerialBaudRate();
                     byte protocol = 0; // 非接触式协议
                     Card card = new AndroidSerialPort(LivenessDetectActivity.this);
                     short st = card.OpenReader(path, band);
@@ -1261,8 +1264,8 @@ public class LivenessDetectActivity extends BaseActivity
         try {
             ALog.e("getCarIDMini: " + rfid);
             byte protocol = 0; // 非接触式协议
-            String path = "/dev/ttyS3";
-            int band = 115200;
+            String path = CardSerialConfigUtil.getCardSerialPath();
+            int band = CardSerialConfigUtil.getCardSerialBaudRate();
             byte[] cardUID = new byte[12];
             byte[] rst = new byte[64];
 

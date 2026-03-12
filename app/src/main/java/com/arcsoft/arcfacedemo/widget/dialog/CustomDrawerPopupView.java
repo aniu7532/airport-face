@@ -28,6 +28,7 @@ import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.core.DrawerPopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnSelectListener;
+import com.arcsoft.arcfacedemo.widget.dialog.CardSerialConfigPopDialog;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -68,7 +69,8 @@ public class CustomDrawerPopupView extends DrawerPopupView {
         tvPhone.setText(SPUtils.getInstance().getString("mobile", ""));
         TextView tvInOut = findViewById(R.id.tvInOut);
         TextView tvChayan = findViewById(R.id.tvChayan);
-		TextView tvCanshu = findViewById(R.id.tvCanshu);
+        TextView tvCanshu = findViewById(R.id.tvCanshu);
+        TextView tvCardSerial = findViewById(R.id.tvCardSerial);
         TextView tvTipsLoc = findViewById(R.id.tvTipsLoc);
 
         TextView tvDelete = findViewById(R.id.tvDelete);
@@ -165,6 +167,13 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             public void onClick(View view) {
                 new XPopup.Builder(getContext()).isDestroyOnDismiss(true) // 对于只使用一次的弹窗，推荐设置这个
                         .asCustom(new AppKeyPopDialog(getContext())).show();
+            }
+        });
+        tvCardSerial.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new XPopup.Builder(getContext()).isDestroyOnDismiss(true)
+                        .asCustom(new CardSerialConfigPopDialog(getContext())).show();
             }
         });
         tvDelete.setOnClickListener(new OnClickListener() {

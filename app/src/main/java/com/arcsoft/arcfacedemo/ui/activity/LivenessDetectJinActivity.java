@@ -43,6 +43,7 @@ import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
+import com.arcsoft.arcfacedemo.util.CardSerialConfigUtil;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
@@ -783,8 +784,10 @@ public class LivenessDetectJinActivity extends BaseActivity
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    int portSate = BasicOper.dc_open("COM", getActivity(), "/dev/ttyS3", 115200);
-                    ALog.d("ttyS3读卡串口portSate:" + portSate);
+                    String path = CardSerialConfigUtil.getCardSerialPath();
+                    int baudrate = CardSerialConfigUtil.getCardSerialBaudRate();
+                    int portSate = BasicOper.dc_open("COM", getActivity(), path, baudrate);
+                    ALog.d("读卡串口[" + path + "] portSate:" + portSate);
                     if (portSate >= 0) {
                         BasicOper.dc_beep(5);
                     }
@@ -844,8 +847,8 @@ public class LivenessDetectJinActivity extends BaseActivity
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String path = "/dev/ttyS3";
-                    int band = 115200;
+                    String path = CardSerialConfigUtil.getCardSerialPath();
+                    int band = CardSerialConfigUtil.getCardSerialBaudRate();
                     byte protocol = 0; // 非接触式协议
                     Card card = new AndroidSerialPort(getActivity());
                     short st = card.OpenReader(path, band);
@@ -1242,8 +1245,8 @@ public class LivenessDetectJinActivity extends BaseActivity
         try {
             ALog.e("getCarIDMini: " + rfid);
             byte protocol = 0; // 非接触式协议
-            String path = "/dev/ttyS3";
-            int band = 115200;
+            String path = CardSerialConfigUtil.getCardSerialPath();
+            int band = CardSerialConfigUtil.getCardSerialBaudRate();
             byte[] cardUID = new byte[12];
             byte[] rst = new byte[64];
 

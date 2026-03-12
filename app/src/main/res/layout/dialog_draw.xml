@@ -74,6 +74,18 @@
         android:textSize="18sp" />
 
     <TextView
+        android:id="@+id/tvCardSerial"
+        android:layout_width="260dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="16dp"
+        android:background="@mipmap/draw_btn_bg"
+        android:gravity="center_vertical"
+        android:paddingLeft="16dp"
+        android:text="读卡串口配置"
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+
+    <TextView
         android:id="@+id/tvDelete"
         android:layout_width="260dp"
         android:layout_height="56dp"
