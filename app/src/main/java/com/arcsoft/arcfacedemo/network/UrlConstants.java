@@ -39,4 +39,6 @@ public class UrlConstants {
     //存储没注册成功的通行证
     public static final String checkAbnormalCreate = URL + "/app-api/check/check-abnormal/create";
 
+    // 施工人员有进无出信息
+    public static final String checkRecordPageNeedVerifyNoOut = URL + "/app-api/check/record/page-need-verify-no-out";
 }

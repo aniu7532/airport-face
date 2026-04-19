@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace 'com.sz.zysx.autoupdate'
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.sz.zysx.autoupdate"

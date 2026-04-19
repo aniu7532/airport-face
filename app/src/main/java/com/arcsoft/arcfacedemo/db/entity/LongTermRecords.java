@@ -47,6 +47,8 @@ public class LongTermRecords extends Records {
     public String leadingPeopleld;// 引领人id，C类证件进出需要校验，查验不需要校验
     // public int upstate;// 上传与否0:未上传，1:上传了
 
+    public Boolean needVerify;
+
     public void setleadingPeople(LeadingPeople[] someObjectArray) {
         Gson gson = new Gson();
         this.leadingPeople = gson.toJson(someObjectArray);
@@ -90,6 +92,7 @@ public class LongTermRecords extends Records {
                 ", faceSimilar='" + faceSimilar + '\'' +
                 ", faceQuality='" + faceQuality + '\'' +
                 ", leadingPeopleld='" + leadingPeopleld + '\'' +
+                ", needVerify='" + needVerify + '\'' +
                 '}';
     }
 }

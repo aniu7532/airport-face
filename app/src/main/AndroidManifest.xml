@@ -7,16 +7,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!--允许管理所有文件,在 Android 11（API 级别 30）及以上版本中引入，用于替代之前的 WRITE_EXTERNAL_STORAGE 权限-->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 允许管理所有文件,在 Android 11（API 级别 30）及以上版本中引入，用于替代之前的 WRITE_EXTERNAL_STORAGE 权限 -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".ArcFaceApplication"
@@ -29,20 +27,24 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:replace="android:icon">
-
+        <activity
+            android:name=".ui.activity.ConstructionWorkersActivity"
+            android:theme="@style/FullScreenTheme"
+            android:exported="false" />
         <!-- Move the service element inside the application element -->
-        <!--<service-->
-        <!--    android:name=".service.TokenRefreshJobService"-->
-        <!--    android:permission="android.permission.BIND_JOB_SERVICE" />-->
-
+        <!-- <service -->
+        <!-- android:name=".service.TokenRefreshJobService" -->
+        <!-- android:permission="android.permission.BIND_JOB_SERVICE" /> -->
         <activity
             android:name=".ui.activity.StartActivity"
             android:exported="true">
-            <!--            <intent-filter>-->
-            <!--                <action android:name="android.intent.action.MAIN" />-->
 
-            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
-            <!--            </intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
         <activity
             android:name=".ui.activity.LoginActivity"
@@ -55,14 +57,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
-
             </intent-filter>
         </activity>
         <activity
             android:name=".ui.activity.ActivationActivity"
             android:label="@string/active_engine" />
-
-
         <activity
             android:name=".ui.activity.LivenessDetectYuanAndJinActivity"
             android:launchMode="singleTop"
@@ -71,7 +70,6 @@
             android:name=".ui.activity.LivenessDetectYuanActivity"
             android:launchMode="singleTop"
             android:theme="@style/FullScreenTheme" />
-
         <activity
             android:name=".ui.activity.LivenessDetectJinActivity"
             android:launchMode="singleTop"
@@ -89,11 +87,13 @@
             android:label="@string/page_settings"
             android:launchMode="singleTop" />
         <activity android:name=".ui.activity.HomeActivity">
-            <!--<intent-filter>-->
-            <!--    <action android:name="android.intent.action.MAIN" />-->
 
-            <!--    <category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
         <activity
             android:name=".ui.activity.FaceManageActivity"
@@ -102,7 +102,7 @@
         <activity
             android:name=".ui.activity.RegisterAndRecognizeActivity"
             android:launchMode="singleTop"
-            android:theme="@style/FullScreenTheme"></activity>
+            android:theme="@style/FullScreenTheme" />
         <activity
             android:name=".ui.activity.RecognizeDebugActivity"
             android:launchMode="singleTop"
@@ -127,7 +127,7 @@
         </provider>
 
         <receiver
-            android:name="com.arcsoft.arcfacedemo.receiver.BootReceiver"
+            android:name=".receiver.BootReceiver"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">

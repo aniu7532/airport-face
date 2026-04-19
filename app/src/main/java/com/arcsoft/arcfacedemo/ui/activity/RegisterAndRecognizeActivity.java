@@ -389,6 +389,17 @@ public class RegisterAndRecognizeActivity extends BaseActivity
                 countdownHandler.sendEmptyMessageDelayed(1111, 5000);
             }
         });
+        binding.tvTime.setOnClickListener(v->{
+            clickCount++; // 每次点击时增加计数
+            // 检测点击次数是否达到目标
+            if (clickCount >= REQUIRED_CLICKS) {
+                // 达到目标后可以触发某项操作
+                clickCount = 0; // 重置计数
+                startActivity(new Intent(this, ConstructionWorkersActivity.class));
+            }
+            countdownHandler.removeMessages(1111);
+            countdownHandler.sendEmptyMessageDelayed(1111, 5000);
+        });
 
         mListAdapter.setOnItemClickListener(new EasyRVAdapter.OnItemClickListener<Records>() {
             @Override

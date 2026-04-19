@@ -1,5 +1,7 @@
 package com.arcsoft.arcfacedemo.entity;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
@@ -62,6 +64,17 @@ public class CardRecords implements Serializable {
 
         @SerializedName("checkPhoto")
         private String checkPhoto;
+
+        @SerializedName("faceSimilar")
+        private double faceSimilar;
+        @SerializedName("checkUserName")
+        private String checkUserName;
+        @SerializedName("verifyRemark")
+        private String verifyRemark;
+        @SerializedName("deviceName")
+        private String deviceName;
+        @SerializedName("deviceCode")
+        private String deviceCode;
 
 
         public String getId() {
@@ -190,6 +203,51 @@ public class CardRecords implements Serializable {
 
         public void setCheckPhoto(String checkPhoto) {
             this.checkPhoto = checkPhoto;
+        }
+
+        public double getFaceSimilar() {
+            return faceSimilar;
+        }
+
+        public void setFaceSimilar(double faceSimilar) {
+            this.faceSimilar = faceSimilar;
+        }
+
+        public String getCheckUserName() {
+            return checkUserName;
+        }
+
+        public void setCheckUserName(String checkUserName) {
+            this.checkUserName = checkUserName;
+        }
+
+        public String getVerifyRemark() {
+            return verifyRemark;
+        }
+
+        public void setVerifyRemark(String verifyRemark) {
+            this.verifyRemark = verifyRemark;
+        }
+
+        public String getDeviceName() {
+            return deviceName;
+        }
+
+        public void setDeviceName(String deviceName) {
+            this.deviceName = deviceName;
+        }
+
+        public String getDeviceCode() {
+            return deviceCode;
+        }
+
+        public void setDeviceCode(String deviceCode) {
+            this.deviceCode = deviceCode;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            return super.equals(obj);
         }
     }
 }

@@ -62,15 +62,12 @@ public class ThresholdPreferenceDialogFragmentCompat extends EditTextPreferenceD
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.iv_increase:
-                increase();
-                break;
-            case R.id.iv_decrease:
-                decrease();
-                break;
-            default:
-                break;
+        int id = v.getId();
+        // AGP 8+ 下 R.id 非编译期常量，不能用 switch-case
+        if (id == R.id.iv_increase) {
+            increase();
+        } else if (id == R.id.iv_decrease) {
+            decrease();
         }
     }
 

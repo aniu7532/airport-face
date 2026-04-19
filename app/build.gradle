@@ -1,8 +1,10 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
 }
 android {
-    compileSdk 33
+    namespace 'com.arcsoft.arcfacedemo'
+    compileSdk 36
     defaultConfig {
         applicationId "com.arcsoft.arcfacedemo"
         minSdk 26
@@ -27,6 +29,11 @@ android {
 
     dataBinding {
         enabled = true
+    }
+
+    buildFeatures {
+        buildConfig true // AGP 8+ 默认不生成 BuildConfig，需开启后才有 com.arcsoft.arcfacedemo.BuildConfig
+        viewBinding true
     }
 
     signingConfigs {
@@ -65,6 +72,9 @@ android {
     compileOptions {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 
     android.applicationVariants.all { variant ->
@@ -126,7 +136,13 @@ dependencies {
 
 
     implementation 'com.github.bumptech.glide:glide:4.16.0'
-    implementation 'com.github.bumptech.glide:okhttp3-integration:4.16.0' // OkHttp 集成库
+    implementation 'com.github.bumptech.glide:okhttp3-integration:4.16.0'
+    implementation 'androidx.activity:activity:1.13.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0'
+    implementation 'androidx.fragment:fragment-ktx:1.8.9'// OkHttp 集成库
+    implementation 'androidx.paging:paging-runtime-ktx:3.4.2'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0' // Glide 注解处理器
 
 //    //room数据库

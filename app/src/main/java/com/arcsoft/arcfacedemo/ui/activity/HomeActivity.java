@@ -119,23 +119,21 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (v instanceof NavigateItemView) {
-            switch (((NavigateItemView) v).getImgRes()) {
-            case R.drawable.ic_online_active:
-                navigateToNewPageForResult(((Class) ((NavigateItemView) v).getExtraData()), REQUEST_ACTIVE_CODE);
-                break;
-            case R.drawable.ic_readme:
-                navigateToNewPage(((Class) ((NavigateItemView) v).getExtraData()));
-                break;
-            default:
-
+            NavigateItemView nav = (NavigateItemView) v;
+            int imgRes = nav.getImgRes();
+            // AGP 8+ 下 R 字段非编译期常量，不能用 switch-case，改为 if-else
+            if (imgRes == R.drawable.ic_online_active) {
+                navigateToNewPageForResult((Class) nav.getExtraData(), REQUEST_ACTIVE_CODE);
+            } else if (imgRes == R.drawable.ic_readme) {
+                navigateToNewPage((Class) nav.getExtraData());
+            } else {
                 boolean activated = homeViewModel.isActivated(this);
                 if (!activated) {
                     showLongToast(getString(R.string.notice_please_active_before_use));
                     activeView.performClick();
                 } else {
-                    navigateToNewPage(((Class) ((NavigateItemView) v).getExtraData()));
+                    navigateToNewPage((Class) nav.getExtraData());
                 }
-                break;
             }
         }
     }

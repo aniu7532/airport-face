@@ -47,6 +47,7 @@ public class TemporaryCardRecords extends Records {
     public String faceQuality;// 质量
 
     // 类型转换器：将 SomeObject[] 转换为 JSON 字符串
+    public Boolean needVerify;
 
     public void setleadingPeople(LeadingPeople[] someObjectArray) {
         Gson gson = new Gson();
@@ -73,6 +74,6 @@ public class TemporaryCardRecords extends Records {
                 + ", areaName='" + areaName + '\'' + ", status='" + status + '\'' + ", reason='" + reason + '\''
                 + ", parentId='" + parentId + '\'' + ", leadingPeopleId='" + leadingPeopleId + '\'' + ", sitePhoto='"
                 + sitePhoto + '\'' + ", checkTime='" + checkTime + '\'' + ", faceSimilar='" + faceSimilar + '\''
-                + ", faceQuality='" + faceQuality + '\'' + '}';
+                + ", faceQuality='" + faceQuality + '\'' + ", needVerify='" + needVerify + '\'' + '}';
     }
 }

@@ -56,15 +56,12 @@ public class ThresholdLivePreferenceDialogFragmentCompat extends EditTextPrefere
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.iv_live_increase:
-                increaseLive();
-                break;
-            case R.id.iv_live_decrease:
-                decreaseLive();
-                break;
-            default:
-                break;
+        int id = v.getId();
+        // AGP 8+ 下 R.id 非编译期常量，不能用 switch-case
+        if (id == R.id.iv_live_increase) {
+            increaseLive();
+        } else if (id == R.id.iv_live_decrease) {
+            decreaseLive();
         }
     }
 

@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
-import com.arcsoft.arcfacedemo.BuildConfig;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.https.HttpsUtils;

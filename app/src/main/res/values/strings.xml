@@ -7,6 +7,14 @@
     <string name="please_wait">请稍等…</string>
     <string name="ok">确认</string>
     <string name="cancel">取消</string>
+    <!-- 日期时间选择（年月日时分秒）-->
+    <string name="datetime_picker_title">选择日期时间</string>
+    <string name="label_year">年</string>
+    <string name="label_month">月</string>
+    <string name="label_day">日</string>
+    <string name="label_hour">时</string>
+    <string name="label_minute">分</string>
+    <string name="label_second">秒</string>
     <string name="delete">删除</string>
     <string name="undo">撤销</string>
     <string name="stopped">已停止</string>
