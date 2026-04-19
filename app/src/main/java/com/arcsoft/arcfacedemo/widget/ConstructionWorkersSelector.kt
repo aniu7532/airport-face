@@ -7,21 +7,14 @@ import android.widget.LinearLayout
 import androidx.core.content.withStyledAttributes
 import com.arcsoft.arcfacedemo.R
 import com.arcsoft.arcfacedemo.databinding.ActivityConstructionWorkersSelectorBinding
-import com.arcsoft.arcfacedemo.widget.dialog.DateTimePickerDialogHelper
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
-class ConstructionWorkersSelector @JvmOverloads constructor(
+open class ConstructionWorkersSelector @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
-    private var onTimeChangedCb: (calendar: Calendar) -> Unit = {}
-    private var currentCalendar: Calendar? = null
-
-    private val binding by lazy {
+    protected val binding by lazy {
         ActivityConstructionWorkersSelectorBinding.inflate(
             LayoutInflater.from(
                 context
@@ -34,28 +27,20 @@ class ConstructionWorkersSelector @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.ConstructionWorkersSelector) {
             val title = getString(R.styleable.ConstructionWorkersSelector_title)
             binding.title.text = title
-            val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            binding.selector.setOnClickListener {
-                DateTimePickerDialogHelper.show(
-                    context,
-                    currentCalendar
-                ) { calendar: Calendar? ->
-                    if (calendar == null) return@show
-                    currentCalendar = calendar.clone() as Calendar
-                    val format = simpleDateFormat.format(currentCalendar!!.time)
-                    binding.selectorValue.text = format
-                    onTimeChangedCb(currentCalendar!!)
-                }
-            }
+            val placeholder = getString(R.styleable.ConstructionWorkersSelector_placeholder)
+            binding.selectorValue.hint = placeholder
         }
     }
 
-    fun addOnTimeChangedListener(cb: (calendar: Calendar) -> Unit) {
-        onTimeChangedCb = cb
+    override fun setOnClickListener(l: OnClickListener?) {
+        binding.selector.setOnClickListener(l)
     }
 
-    fun clear() {
-        currentCalendar = null
+    fun setValue(value: String) {
+        binding.selectorValue.text = value
+    }
+
+    open fun clear() {
         binding.selectorValue.text = ""
     }
 

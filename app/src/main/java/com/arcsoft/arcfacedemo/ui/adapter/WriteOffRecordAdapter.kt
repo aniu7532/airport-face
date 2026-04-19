@@ -12,11 +12,14 @@ import com.arcsoft.arcfacedemo.databinding.WriteOffRecordListHeaderBinding
 import com.arcsoft.arcfacedemo.entity.CardRecords
 import com.arcsoft.arcfacedemo.network.ApiUtils
 import com.arcsoft.arcfacedemo.network.UrlConstants
+import com.arcsoft.arcfacedemo.widget.dialog.AppKeyPopDialog
+import com.arcsoft.arcfacedemo.widget.dialog.VerifyAndConfirmDialog
 import com.blankj.utilcode.util.ObjectUtils
 import com.blankj.utilcode.util.Utils
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.model.LazyHeaders
+import com.lxj.xpopup.XPopup
 import java.io.File
 
 /**
@@ -73,6 +76,11 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
                     tvMark.visibility = View.VISIBLE
                 }
                 tvMark.text = "核实备注：${value.verifyRemark}"
+
+                btnVerify.setOnClickListener {
+                    XPopup.Builder(btnVerify.context).isDestroyOnDismiss(true) // 对于只使用一次的弹窗，推荐设置这个
+                        .asCustom(VerifyAndConfirmDialog(btnVerify.context, value)).show()
+                }
 
                 if (ObjectUtils.isEmpty(value.checkPhoto)) {
                     return

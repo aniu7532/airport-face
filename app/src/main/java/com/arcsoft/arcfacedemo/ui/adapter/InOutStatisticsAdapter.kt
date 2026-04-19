@@ -14,7 +14,7 @@ import com.arcsoft.arcfacedemo.entity.InOutStatisticsResult
 class InOutStatisticsAdapter : RecyclerView.Adapter<InOutStatisticsAdapter.VH>() {
 
     fun withListHeader(): ConcatAdapter =
-        ConcatAdapter(InOutStatisticsHeader(), this, InOutStatisticsTitle())
+        ConcatAdapter(InOutStatisticsHeader(), InOutStatisticsTitle(), this)
 
     val list = mutableListOf<InOutStatisticsResult>()
 

@@ -29,7 +29,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersSelector
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersTimeSelector
             android:id="@+id/selector_start_time"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             app:layout_constraintTop_toBottomOf="@id/title"
             app:title="开始时间" />
 
-        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersSelector
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersTimeSelector
             android:id="@+id/selector_end_time"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

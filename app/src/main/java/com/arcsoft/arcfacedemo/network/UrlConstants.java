@@ -45,4 +45,10 @@ public class UrlConstants {
     public static final String checkRecordPageNeedVerify = URL + "/app-api/check/record/page-need-verify";
     // 施工人员每日进入统计
     public static final String checkRecordStatisticNeedVerify = URL + "/app-api/check/record/statistic-need-verify";
+    // 获得所有管制区域树形详情
+    public static final String checkAreaGetDetailChannelTree = URL + "/app-api/check/area/get-detail-channel-tree";
+    // 获取设备列表
+    public static final String checkDeviceList = URL + "/app-api/check/device/list";
+    // 核实
+    public static final String checkRecordVerify = URL + "/app-api/check/record/verify";
 }

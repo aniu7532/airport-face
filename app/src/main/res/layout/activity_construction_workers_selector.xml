@@ -26,7 +26,7 @@
             android:layout_weight="1"
             android:maxLines="1"
             android:textColor="#FFF"
-            tools:text="小明" />
+            android:textColorHint="#CECECE" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="10dp"
