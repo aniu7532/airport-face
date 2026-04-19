@@ -19,7 +19,7 @@ class ConstructionWorkersSelector @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
     private var onTimeChangedCb: (calendar: Calendar) -> Unit = {}
-    private var currentCalendar = Calendar.getInstance()
+    private var currentCalendar: Calendar? = null
 
     private val binding by lazy {
         ActivityConstructionWorkersSelectorBinding.inflate(
@@ -42,9 +42,9 @@ class ConstructionWorkersSelector @JvmOverloads constructor(
                 ) { calendar: Calendar? ->
                     if (calendar == null) return@show
                     currentCalendar = calendar.clone() as Calendar
-                    val format = simpleDateFormat.format(currentCalendar.time)
+                    val format = simpleDateFormat.format(currentCalendar!!.time)
                     binding.selectorValue.text = format
-                    onTimeChangedCb(currentCalendar)
+                    onTimeChangedCb(currentCalendar!!)
                 }
             }
         }
@@ -52,6 +52,11 @@ class ConstructionWorkersSelector @JvmOverloads constructor(
 
     fun addOnTimeChangedListener(cb: (calendar: Calendar) -> Unit) {
         onTimeChangedCb = cb
+    }
+
+    fun clear() {
+        currentCalendar = null
+        binding.selectorValue.text = ""
     }
 
 }

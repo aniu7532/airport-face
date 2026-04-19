@@ -16,16 +16,16 @@ import java.util.Locale
 
 class AccessRecordViewModel : ViewModel() {
 
-    val _name = MutableStateFlow("")
+    private val _name = MutableStateFlow("")
     val name = _name.asStateFlow()
 
-    val _cardNo = MutableStateFlow("")
+    private val _cardNo = MutableStateFlow("")
     val cardNo = _cardNo.asStateFlow()
 
-    val _startTime = MutableStateFlow<Calendar?>(null)
+    private val _startTime = MutableStateFlow<Calendar?>(null)
     val startTime = _startTime.asStateFlow()
 
-    val _endTime = MutableStateFlow<Calendar?>(null)
+    private val _endTime = MutableStateFlow<Calendar?>(null)
     val endTime = _endTime.asStateFlow()
 
     private val pagingConfig = PagingConfig(

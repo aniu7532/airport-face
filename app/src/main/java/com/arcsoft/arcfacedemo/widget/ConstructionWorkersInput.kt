@@ -61,4 +61,8 @@ class ConstructionWorkersInput @JvmOverloads constructor(
         onTextChangedCb = cb
     }
 
+    fun clear() {
+        binding.input.text?.clear()
+    }
+
 }

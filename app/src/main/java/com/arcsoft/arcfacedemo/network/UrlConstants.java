@@ -43,4 +43,6 @@ public class UrlConstants {
     public static final String checkRecordPageNeedVerifyNoOut = URL + "/app-api/check/record/page-need-verify-no-out";
     // 施工人员通行证记录
     public static final String checkRecordPageNeedVerify = URL + "/app-api/check/record/page-need-verify";
+    // 施工人员每日进入统计
+    public static final String checkRecordStatisticNeedVerify = URL + "/app-api/check/record/statistic-need-verify";
 }

@@ -86,6 +86,26 @@ class AccessRecordFragment : Fragment() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.name.collect {
+                        if (it.isEmpty()) { binding.inputName.clear() }
+                    }
+                }
+                launch {
+                    viewModel.cardNo.collect {
+                        if (it.isEmpty()) { binding.inputCardNo.clear() }
+                    }
+                }
+                launch {
+                    viewModel.startTime.collect {
+                        if (it == null) { binding.selectorStartTime.clear() }
+                    }
+                }
+                launch {
+                    viewModel.endTime.collect {
+                        if (it == null) { binding.selectorEndTime.clear() }
+                    }
+                }
                 viewModel.cardRecords.collect {
                     adapter.submitData(it)
                 }
