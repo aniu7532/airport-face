@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.metaso.ui.pagingsource.CheckRecordQuery
-import com.metaso.ui.pagingsource.TopicPagingSource
+import com.arcsoft.arcfacedemo.ui.pagingsource.CheckRecordQuery
+import com.arcsoft.arcfacedemo.ui.pagingsource.WriteOffRecordPagingSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +51,7 @@ class WriteOffRecordViewModel : ViewModel() {
         Pager(
             config = pagingConfig,
             pagingSourceFactory = {
-                TopicPagingSource(q) { total ->
+                WriteOffRecordPagingSource(q) { total ->
                     _listTotal.value = total
                 }
             },

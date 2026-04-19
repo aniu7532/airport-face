@@ -1,4 +1,4 @@
-package com.metaso.ui.pagingsource
+package com.arcsoft.arcfacedemo.ui.pagingsource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
@@ -22,7 +22,7 @@ data class CheckRecordQuery(
     val endCheckTime: String = "",
 )
 
-class TopicPagingSource(
+class WriteOffRecordPagingSource(
     private val query: CheckRecordQuery = CheckRecordQuery(),
     /** 仅第一页会带上接口里的总条数，用于 UI（如列表 header）。 */
     private val onQueryTotal: ((Int) -> Unit)? = null,

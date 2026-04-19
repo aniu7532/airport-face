@@ -1,13 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.fragment.AccessRecordFragment">
+    android:orientation="vertical"
+    tools:context=".ui.fragment.WriteOffRecordFragment">
 
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Hello" />
+        android:layout_height="wrap_content"
+        android:background="@mipmap/draw_bg"
+        android:padding="10dp">
 
-</FrameLayout>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="记录查询"
+            android:textColor="#FFF"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.arcsoft.arcfacedemo.widget.FoldView
+            android:id="@+id/fold_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersInput
+            android:id="@+id/input_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toStartOf="@id/input_card_no"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title"
+            app:title="姓名" />
+
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersInput
+            android:id="@+id/input_card_no"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@id/input_name"
+            app:layout_constraintTop_toTopOf="@id/input_name"
+            app:title="证件编号" />
+
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersSelector
+            android:id="@+id/selector_start_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toStartOf="@id/selector_end_time"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="@id/input_name"
+            app:layout_constraintTop_toBottomOf="@id/input_name"
+            app:title="开始时间" />
+
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersSelector
+            android:id="@+id/selector_end_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@id/selector_start_time"
+            app:layout_constraintTop_toTopOf="@id/selector_start_time"
+            app:title="结束时间" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_reset"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn_bg2"
+            android:text="重置"
+            android:textColor="#FFF"
+            app:layout_constraintEnd_toStartOf="@id/btn_search"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="@id/selector_start_time"
+            app:layout_constraintTop_toBottomOf="@id/selector_start_time" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/btn_bg"
+            android:text="查询"
+            android:textColor="#FFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toEndOf="@id/btn_reset"
+            app:layout_constraintTop_toTopOf="@id/btn_reset" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/fold_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="input_name,input_card_no,selector_start_time,selector_end_time,btn_reset,btn_search" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@mipmap/draw_bg"
+        android:padding="10dp" />
+
+</LinearLayout>

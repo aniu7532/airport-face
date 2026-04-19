@@ -1,13 +1,22 @@
 package com.arcsoft.arcfacedemo.ui.fragment
 
-import androidx.fragment.app.viewModels
+import android.graphics.Rect
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.arcsoft.arcfacedemo.R
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.arcsoft.arcfacedemo.databinding.FragmentAccessRecordBinding
+import com.arcsoft.arcfacedemo.ui.adapter.AccessRecordAdapter
+import com.arcsoft.arcfacedemo.ui.adapter.AccessRecordHeaderAdapter
 import com.arcsoft.arcfacedemo.ui.viewmodel.AccessRecordViewModel
+import kotlinx.coroutines.launch
 
 class AccessRecordFragment : Fragment() {
 
@@ -15,18 +24,73 @@ class AccessRecordFragment : Fragment() {
         fun newInstance() = AccessRecordFragment()
     }
 
+    private val binding by lazy { FragmentAccessRecordBinding.inflate(layoutInflater) }
+
     private val viewModel: AccessRecordViewModel by viewModels()
+
+    private val headerAdapter by lazy { AccessRecordHeaderAdapter() }
+
+    private val adapter by lazy { AccessRecordAdapter() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // TODO: Use the ViewModel
+        initView()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.fragment_access_record, container, false)
+    ) = binding.root
+
+    fun initView() {
+        binding.apply {
+            inputName.addTextChangedListener {
+                viewModel.setName(it)
+            }
+            inputCardNo.addTextChangedListener {
+                viewModel.setCardNo(it)
+            }
+            selectorStartTime.addOnTimeChangedListener {
+                viewModel.setStartTime(it)
+            }
+            selectorEndTime.addOnTimeChangedListener {
+                viewModel.setEndTime(it)
+            }
+            foldView.setOnFoldListener {
+                foldGroup.visibility = if (it) View.GONE else View.VISIBLE
+            }
+            btnReset.setOnClickListener {
+                viewModel.reset()
+            }
+            btnSearch.setOnClickListener {
+                viewModel.search()
+            }
+            listView.adapter = adapter.withListHeader(headerAdapter)
+            listView.layoutManager = LinearLayoutManager(
+                context, LinearLayoutManager.VERTICAL, false
+            )
+            listView.addItemDecoration(object : RecyclerView.ItemDecoration() {
+                override fun getItemOffsets(
+                    outRect: Rect,
+                    view: View,
+                    parent: RecyclerView,
+                    state: RecyclerView.State
+                ) {
+                    val pos = parent.getChildAdapterPosition(view)
+                    if (pos == RecyclerView.NO_POSITION) return
+                    // position 0 为列表 header，间距略小
+                    outRect.bottom = if (pos == 0) 8 else 20
+                }
+            })
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.cardRecords.collect {
+                    adapter.submitData(it)
+                }
+            }
+        }
     }
+
 }

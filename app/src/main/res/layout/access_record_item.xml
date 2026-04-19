@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            tools:text="马鹏飞" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/btn_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg1"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:text="通过"
+            android:textColor="#65d2d5"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_card_no"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="证件编号：YC-TX-202604-0093" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_check_by"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="查验人员：刘晨" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_area"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="通行道口：T2施工通道B" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="通行时间：2026-04-14 07:46:11" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_device_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="设备编号：T1-GATE-03" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_direction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="通行方向：进" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_avatar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="查验照片："
+            android:textColor="#FFF" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/img_avatar"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
+    </LinearLayout>
+
+
+</LinearLayout>

@@ -1,14 +1,13 @@
 package com.arcsoft.arcfacedemo.ui.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.arcsoft.arcfacedemo.databinding.WriteOffRecordItemBinding
-import com.arcsoft.arcfacedemo.databinding.WriteOffRecordListHeaderBinding
+import com.arcsoft.arcfacedemo.databinding.AccessRecordItemBinding
+import com.arcsoft.arcfacedemo.databinding.AccessRecordListHeaderBinding
 import com.arcsoft.arcfacedemo.entity.CardRecords
 import com.arcsoft.arcfacedemo.network.ApiUtils
 import com.arcsoft.arcfacedemo.network.UrlConstants
@@ -19,21 +18,17 @@ import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.model.LazyHeaders
 import java.io.File
 
-/**
- * 分页列表适配器。列表顶部 header 请用 [withListHeader] 与 [WriteOffRecordHeaderAdapter] 通过 [ConcatAdapter] 拼接，
- * 不要在本 Adapter 里伪造 position 偏移（Paging 的 position 与数据一一对应）。
- */
-class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRecordAdapter.VH>(
+class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordAdapter.VH>(
     DiffCallback()
 ) {
 
-    fun withListHeader(header: WriteOffRecordHeaderAdapter): ConcatAdapter =
+    fun withListHeader(header: AccessRecordHeaderAdapter): ConcatAdapter =
         ConcatAdapter(header, this)
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
         position: Int
-    ) = VH(WriteOffRecordItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    ) = VH(AccessRecordItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
     override fun onBindViewHolder(
         vh: VH,
@@ -58,21 +53,25 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
 
     }
 
-    class VH(val binding: WriteOffRecordItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class VH(val binding: AccessRecordItemBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(value: CardRecords.ListDTO) {
             binding.apply {
                 tvName.text = value.nickname
                 tvCardNo.text = "证件编号：${value.idCode}"
-                tvArea.text = "通行区域：${value.areaName}"
-                tvTime.text = "通行时间：${value.checkTime}"
                 tvCheckBy.text = "查验人员：${value.checkUserName}"
-                if (ObjectUtils.isEmpty(value.verifyRemark)) {
-                    tvMark.visibility = View.GONE
-                } else {
-                    tvMark.visibility = View.VISIBLE
-                }
-                tvMark.text = "核实备注：${value.verifyRemark}"
+                tvArea.text = "通行道口：${value.areaName}"
+                tvTime.text = "通行时间：${value.checkTime}"
+                tvDeviceCode.text = "设备编号：${value.deviceCode}"
+                // 通行方向（1：进，-1出，2：核验)
+                tvDirection.text = "通行方向：${
+                    when (value.direction) {
+                        1 -> "进"
+                        -1 -> "出"
+                        2 -> "核验"
+                        else -> ""
+                    }
+                }";
 
                 if (ObjectUtils.isEmpty(value.checkPhoto)) {
                     return
@@ -115,11 +114,7 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
 
 }
 
-/**
- * 核销记录列表顶部说明行，固定 1 条，放在 [WriteOffRecordAdapter] 之上。
- * 总条数通过 [setTotal] 更新（来自接口 [com.arcsoft.arcfacedemo.entity.CardRecords.getTotal]）。
- */
-class WriteOffRecordHeaderAdapter : RecyclerView.Adapter<WriteOffRecordHeaderAdapter.HeaderVH>() {
+class AccessRecordHeaderAdapter : RecyclerView.Adapter<AccessRecordHeaderAdapter.HeaderVH>() {
 
     private var total: Int? = null
 
@@ -132,7 +127,7 @@ class WriteOffRecordHeaderAdapter : RecyclerView.Adapter<WriteOffRecordHeaderAda
     override fun getItemCount(): Int = 1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderVH {
-        val binding = WriteOffRecordListHeaderBinding.inflate(
+        val binding = AccessRecordListHeaderBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false,
@@ -141,12 +136,9 @@ class WriteOffRecordHeaderAdapter : RecyclerView.Adapter<WriteOffRecordHeaderAda
     }
 
     override fun onBindViewHolder(holder: HeaderVH, position: Int) {
-        holder.binding.tvHeaderTitle.text = when (val t = total) {
-            null -> "有进无出列表"
-            else -> "有进无出列表（总数：$t）"
-        }
+        holder.binding.tvHeaderTitle.text = "通行记录列表"
     }
 
-    class HeaderVH(val binding: WriteOffRecordListHeaderBinding) :
+    class HeaderVH(val binding: AccessRecordListHeaderBinding) :
         RecyclerView.ViewHolder(binding.root)
 }
