@@ -28,6 +28,9 @@ class InOutStatisticsFragment : Fragment() {
 
     private val viewModel: InOutStatisticsViewModel by viewModels()
 
+    /** 首次加载已在 initView 末尾 request；之后每次回到本页再 request。 */
+    private var hasResumedOnce = false
+
     private val adapter by lazy { InOutStatisticsAdapter() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +42,15 @@ class InOutStatisticsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = binding.root
+
+    override fun onResume() {
+        super.onResume()
+        if (hasResumedOnce) {
+            viewModel.request()
+        } else {
+            hasResumedOnce = true
+        }
+    }
 
     fun initView() {
         binding.apply {

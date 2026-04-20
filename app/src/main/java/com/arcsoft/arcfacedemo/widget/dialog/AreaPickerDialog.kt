@@ -25,17 +25,21 @@ import com.lzy.okgo.model.Response
 /**
  * 管制区域树选择器：从 [UrlConstants.checkAreaGetDetailChannelTree] 拉取数据，
  * 支持逐级进入子区域；「选中」始终可选中当前行对应 [Area]（含非叶子节点）。
+ *
+ * 确定时回调 [onAreaPathSelected]，参数为 **从根到选中节点** 的 [Area] 列表（含所有父节点与当前选中项，至少 1 个元素）。
  */
 @SuppressLint("ViewConstructor")
 class AreaPickerDialog(
     context: Context,
     private val title: String?,
-    private val onAreaSelected: (Area) -> Unit,
+    private val onAreaPathSelected: (List<Area>) -> Unit,
     private val onCancel: (() -> Unit)? = null
 ) : CenterPopupView(context) {
 
     private var currentNodes: List<Area> = emptyList()
     private val stack: ArrayDeque<List<Area>> = ArrayDeque()
+    /** 从根到当前层之前，已选中的各级父节点（与 stack 同步） */
+    private val pathAncestors: ArrayDeque<Area> = ArrayDeque()
     private val pathLabels: ArrayDeque<String> = ArrayDeque()
 
     private lateinit var listView: ListView
@@ -135,6 +139,7 @@ class AreaPickerDialog(
                 }
                 currentNodes = list
                 stack.clear()
+                pathAncestors.clear()
                 pathLabels.clear()
                 showList()
                 listAdapter.notifyDataSetChanged()
@@ -150,6 +155,7 @@ class AreaPickerDialog(
 
     private fun enterLevel(area: Area, kids: List<Area>) {
         stack.addLast(currentNodes)
+        pathAncestors.addLast(area)
         pathLabels.addLast(area.displayLabel())
         currentNodes = kids
         listAdapter.notifyDataSetChanged()
@@ -159,13 +165,15 @@ class AreaPickerDialog(
     private fun goBackLevel() {
         if (stack.isEmpty()) return
         currentNodes = stack.removeLast()
+        pathAncestors.removeLast()
         pathLabels.removeLast()
         listAdapter.notifyDataSetChanged()
         updateNavUi()
     }
 
     private fun pickArea(area: Area) {
-        onAreaSelected(area)
+        val path = pathAncestors.toList() + area
+        onAreaPathSelected(path)
         dismiss()
     }
 
@@ -214,14 +222,14 @@ class AreaPickerDialog(
         fun show(
             context: Context,
             title: String?,
-            onAreaSelected: (Area) -> Unit,
+            onAreaPathSelected: (List<Area>) -> Unit,
             onCancel: (() -> Unit)? = null
         ) {
             XPopup.Builder(context)
                 .isDestroyOnDismiss(true)
                 .dismissOnTouchOutside(true)
                 .asCustom(
-                    AreaPickerDialog(context, title, onAreaSelected, onCancel)
+                    AreaPickerDialog(context, title, onAreaPathSelected, onCancel)
                 )
                 .show()
         }

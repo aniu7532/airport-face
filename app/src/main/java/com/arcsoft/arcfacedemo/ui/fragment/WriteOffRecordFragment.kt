@@ -28,6 +28,9 @@ class WriteOffRecordFragment : Fragment() {
 
     private val viewModel: WriteOffRecordViewModel by viewModels()
 
+    /** 首次 onResume 已由 ViewModel 初始 paging 加载，避免重复请求；之后每次回到本页再 search。 */
+    private var hasResumedOnce = false
+
     private val headerAdapter by lazy { WriteOffRecordHeaderAdapter() }
 
     private val adapter by lazy { WriteOffRecordAdapter() }
@@ -41,6 +44,15 @@ class WriteOffRecordFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (hasResumedOnce) {
+            viewModel.search()
+        } else {
+            hasResumedOnce = true
+        }
     }
 
     fun initView() {

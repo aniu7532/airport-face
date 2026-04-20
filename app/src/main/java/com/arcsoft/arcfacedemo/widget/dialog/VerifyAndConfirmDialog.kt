@@ -18,6 +18,7 @@ import com.arcsoft.arcfacedemo.widget.ConstructionWorkersTimeSelector
 import com.lxj.xpopup.XPopup
 import com.lxj.xpopup.core.CenterPopupView
 import android.widget.Toast
+import com.blankj.utilcode.util.GsonUtils
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.model.Response
 import java.text.SimpleDateFormat
@@ -25,7 +26,7 @@ import java.util.Calendar
 import java.util.Locale
 
 @SuppressLint("ViewConstructor")
-class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRecords.ListDTO) :
+class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRecords.ListDTO, val successCb: ()-> Unit) :
     CenterPopupView(context) {
 
     private lateinit var etMark: AppCompatEditText
@@ -33,7 +34,8 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
     private var devices = emptyList<DeviceResult>()
     private var device: DeviceResult? = null
     private var calendar: Calendar? = null
-    private var selectedArea: Area? = null
+    /** 自根节点至选中节点的完整路径（含父级与当前选中项） */
+    private var selectedAreaPath: List<Area> = emptyList()
 
     override fun getImplLayoutId(): Int {
         return R.layout.verify_and_confirm_dialog
@@ -60,9 +62,11 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         }
 
         selectorArea.setOnClickListener {
-            AreaPickerDialog.show(context, "请选择通行区域", { area ->
-                selectedArea = area
-                selectorArea.setValue(formatAreaLabel(area))
+            AreaPickerDialog.show(context, "请选择通行区域", { path ->
+                selectedAreaPath = path
+                selectorArea.setValue(
+                    path.joinToString(" / ") { formatAreaLabel(it) }
+                )
             })
         }
 
@@ -140,26 +144,29 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
         }
-        // query：id 必填；其余有值再传，避免 null 被当成字符串 "null"
-        request.params("id", recordId)
-//        etMark.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }?.let {
-//            request.params("verifyRemark", it)
-//        }
-//        device?.id?.trim()?.takeIf { it.isNotEmpty() }?.let { request.params("deviceId", it) }
-//        device?.name?.trim()?.takeIf { it.isNotEmpty() }?.let { request.params("deviceName", it) }
-//        formatCheckTime(calendar)?.let { request.params("checkTime", it) }
-//        selectedArea?.id?.trim()?.takeIf { it.isNotEmpty() }?.let { request.params("area", it) }
-//        formatAreaNameForApi(selectedArea)?.trim()?.takeIf { it.isNotEmpty() }?.let {
-//            request.params("areaName", it)
-//        }
+        val body = LinkedHashMap<String, Any>()
+        body["id"] = recordId
+        etMark.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }?.let { body["verifyRemark"] = it }
+        device?.id?.trim()?.takeIf { it.isNotEmpty() }?.let { body["deviceId"] = it }
+        device?.name?.trim()?.takeIf { it.isNotEmpty() }?.let { body["deviceName"] = it }
+        formatCheckTime(calendar)?.let { body["checkTime"] = it }
+        val selectedArea = selectedAreaPath.lastOrNull()
+        selectedArea?.id?.trim()?.takeIf { it.isNotEmpty() }?.let { body["area"] = it }
+        formatAreaNameForApi(selectedAreaPath)?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            body["areaName"] = it
+        }
+        request.upJson(GsonUtils.toJson(body))
         request.execute(object : JsonCallback<Base<Boolean?>?>() {
             override fun onSuccess(response: Response<Base<Boolean?>?>?) {
                 println(response)
                 popupView.dismiss()
+                dismiss()
+                successCb()
             }
 
             override fun onError(response: Response<Base<Boolean?>?>) {
                 popupView.dismiss()
+                dismiss()
             }
         })
     }
@@ -170,13 +177,19 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(cal.time)
     }
 
-    /** 通行区域名称须包含区域编码，例如：名称(编码) */
-    private fun formatAreaNameForApi(area: Area?): String? {
-        if (area == null) return null
+    /** 整段路径的名称（每层「编码 名称」，层间用 /），末级仍含编码要求 */
+    private fun formatAreaNameForApi(path: List<Area>): String? {
+        if (path.isEmpty()) return null
+        val segments = path.mapNotNull { segmentNameWithCode(it) }
+        if (segments.isEmpty()) return null
+        return segments.joinToString("")
+    }
+
+    private fun segmentNameWithCode(area: Area): String? {
         val name = area.name?.trim().orEmpty()
         val code = area.code?.trim().orEmpty()
         return when {
-            name.isNotEmpty() && code.isNotEmpty() -> "$name($code)"
+            name.isNotEmpty() && code.isNotEmpty() -> "$code$name"
             name.isNotEmpty() -> name
             code.isNotEmpty() -> code
             else -> area.id?.trim()?.takeIf { it.isNotEmpty() }

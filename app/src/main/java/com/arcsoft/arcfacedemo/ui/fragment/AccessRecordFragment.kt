@@ -28,6 +28,9 @@ class AccessRecordFragment : Fragment() {
 
     private val viewModel: AccessRecordViewModel by viewModels()
 
+    /** 首次 onResume 已由 ViewModel 初始 paging 加载；之后每次回到本页再 search。 */
+    private var hasResumedOnce = false
+
     private val headerAdapter by lazy { AccessRecordHeaderAdapter() }
 
     private val adapter by lazy { AccessRecordAdapter() }
@@ -41,6 +44,15 @@ class AccessRecordFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = binding.root
+
+    override fun onResume() {
+        super.onResume()
+        if (hasResumedOnce) {
+            viewModel.search()
+        } else {
+            hasResumedOnce = true
+        }
+    }
 
     fun initView() {
         binding.apply {

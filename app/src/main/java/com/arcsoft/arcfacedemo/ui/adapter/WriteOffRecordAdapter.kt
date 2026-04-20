@@ -79,7 +79,9 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
 
                 btnVerify.setOnClickListener {
                     XPopup.Builder(btnVerify.context).isDestroyOnDismiss(true) // 对于只使用一次的弹窗，推荐设置这个
-                        .asCustom(VerifyAndConfirmDialog(btnVerify.context, value)).show()
+                        .asCustom(VerifyAndConfirmDialog(btnVerify.context, value, {
+                            (bindingAdapter as WriteOffRecordAdapter).refresh()
+                        })).show()
                 }
 
                 if (ObjectUtils.isEmpty(value.checkPhoto)) {
