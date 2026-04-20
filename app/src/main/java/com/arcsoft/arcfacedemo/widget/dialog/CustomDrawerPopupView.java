@@ -29,6 +29,7 @@ import com.lxj.xpopup.core.DrawerPopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnSelectListener;
 import com.arcsoft.arcfacedemo.widget.dialog.CardSerialConfigPopDialog;
+import com.arcsoft.arcfacedemo.widget.dialog.VerifyFeatureSettingsDialog;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -69,6 +70,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
         tvPhone.setText(SPUtils.getInstance().getString("mobile", ""));
         TextView tvInOut = findViewById(R.id.tvInOut);
         TextView tvChayan = findViewById(R.id.tvChayan);
+        TextView tvVerifyFeature = findViewById(R.id.tvVerifyFeature);
         TextView tvCanshu = findViewById(R.id.tvCanshu);
         TextView tvCardSerial = findViewById(R.id.tvCardSerial);
         TextView tvTipsLoc = findViewById(R.id.tvTipsLoc);
@@ -135,6 +137,13 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                                 dismiss();
                             }
                         }).show();
+            }
+        });
+
+        tvVerifyFeature.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                VerifyFeatureSettingsDialog.show(getContext());
             }
         });
 

@@ -48,6 +48,7 @@ import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
+import com.arcsoft.arcfacedemo.util.VerifyFeatureSettings;
 import com.arcsoft.arcfacedemo.util.TimeControlUtil;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.camera.CameraListener;
@@ -1654,6 +1655,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             // longTermRecords.id = UUID.randomUUID().toString();
             // longTermRecords.id = SnowflakeIdUtil.getApplication().nextId() + "";
             SnowFlake worker = new SnowFlake(1, 1, 1);
+            longTermRecords.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
             longTermRecords.id = worker.nextId() + "";
             longTermRecords.checkTime = TimeUtils.getNowString();
             longTermRecords.status = String.valueOf(status);
@@ -2107,6 +2109,7 @@ public class LivenessDetectJinActivity extends BaseActivity
 
             long time = System.currentTimeMillis();
             TemporaryCardRecords temporaryCardRecords = new TemporaryCardRecords();
+            temporaryCardRecords.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
             // temporaryCardRecords.id = UUID.randomUUID().toString();
             // temporaryCardRecords.id = SnowflakeIdUtil.getApplication().nextId() + "";
             SnowFlake worker = new SnowFlake(1, 1, 1);

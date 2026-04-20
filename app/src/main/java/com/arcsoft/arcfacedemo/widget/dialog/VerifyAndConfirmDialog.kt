@@ -13,6 +13,7 @@ import com.arcsoft.arcfacedemo.entity.CardRecords
 import com.arcsoft.arcfacedemo.entity.DeviceResult
 import com.arcsoft.arcfacedemo.network.ApiUtils
 import com.arcsoft.arcfacedemo.network.UrlConstants
+import com.arcsoft.arcfacedemo.util.VerifyFeatureSettings
 import com.arcsoft.arcfacedemo.widget.ConstructionWorkersSelector
 import com.arcsoft.arcfacedemo.widget.ConstructionWorkersTimeSelector
 import com.lxj.xpopup.XPopup
@@ -62,7 +63,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         }
 
         selectorArea.setOnClickListener {
-            AreaPickerDialog.show(context, "请选择通行区域", { path ->
+            AreaPickerDialog.show(context, "请选择通行道口", { path ->
                 selectedAreaPath = path
                 selectorArea.setValue(
                     path.joinToString(" / ") { formatAreaLabel(it) }
@@ -134,6 +135,26 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         if (recordId.isEmpty()) {
             Toast.makeText(context, "记录 id 无效，无法提交", Toast.LENGTH_SHORT).show()
             return
+        }
+        if (VerifyFeatureSettings.isVerifyFeatureEnabled()) {
+            if (VerifyFeatureSettings.isRequirePassage() && selectedAreaPath.isEmpty()) {
+                Toast.makeText(context, "请选择通行道口", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (VerifyFeatureSettings.isRequirePassTime() && calendar == null) {
+                Toast.makeText(context, "请选择通行时间", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (VerifyFeatureSettings.isRequireDevice() && device == null) {
+                Toast.makeText(context, "请选择设备编号", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (VerifyFeatureSettings.isRequireRemark() &&
+                etMark.text?.toString()?.trim().isNullOrEmpty()
+            ) {
+                Toast.makeText(context, "请填写备注", Toast.LENGTH_SHORT).show()
+                return
+            }
         }
         val popupView = XPopup.Builder(activity).isDestroyOnDismiss(true) // 对于只使用一次的弹窗，推荐设置这个
             .asCustom(LoadingPopDialog(activity, "提交中，请稍后......")).show()

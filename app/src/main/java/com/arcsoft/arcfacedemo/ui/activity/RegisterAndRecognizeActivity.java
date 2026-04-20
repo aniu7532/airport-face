@@ -41,6 +41,7 @@ import com.arcsoft.arcfacedemo.util.PlayerUtil;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
+import com.arcsoft.arcfacedemo.util.VerifyFeatureSettings;
 import com.arcsoft.arcfacedemo.util.TimeControlUtil;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.camera.CameraListener;
@@ -1702,6 +1703,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             // longTermRecords.id = UUID.randomUUID().toString();
             // longTermRecords.id = SnowflakeIdUtil.getInstance().nextId() + "";
             SnowFlake worker = new SnowFlake(1, 1, 1);
+            longTermRecords.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
             longTermRecords.id = worker.nextId() + "";
             longTermRecords.status = String.valueOf(isPass);
             if (!isPass) {
@@ -1874,6 +1876,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         quality = qualityvalue;
         try {
             TemporaryCardRecords temporaryCardRecords = new TemporaryCardRecords();
+            temporaryCardRecords.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
             // temporaryCardRecords.id = UUID.randomUUID().toString();
             // temporaryCardRecords.id = SnowflakeIdUtil.getInstance().nextId() + "";
             // temporaryCardRecords.sitePhoto = imgUrl;

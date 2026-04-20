@@ -4,6 +4,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
+import com.arcsoft.arcfacedemo.BuildConfig;
 import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.Serial.SerialInter;
 import com.arcsoft.arcfacedemo.Serial.SerialManage;
@@ -46,6 +48,7 @@ import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
+import com.arcsoft.arcfacedemo.util.VerifyFeatureSettings;
 import com.arcsoft.arcfacedemo.util.TimeControlUtil;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.camera.CameraListener;
@@ -91,6 +94,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
@@ -432,6 +436,11 @@ public class LivenessDetectYuanActivity extends BaseActivity
         ////// Glide.with(LivenessDetectActivity.this).load("https://obs-digitalpass-prod.caacsri.com/09ad8eb824009f717fc3f8d863b59ce2aa4a7d6a0875fa821e390d2a3a106104.jpg").into(iv_face2);
         // }
         // });
+
+        // 调试：上传几条假通行记录（需已登录且有 token）。需要时取消下面三行注释。
+//         if (BuildConfig.DEBUG) {
+////             testUploadSamplePassRecords();
+//         }
     }
 
     private void callApi() {
@@ -1485,6 +1494,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
             // longTermRecords.id = UUID.randomUUID().toString();
             // longTermRecords.id = SnowflakeIdUtil.getInstance().nextId() + "";
             SnowFlake worker = new SnowFlake(1, 1, 1);
+            longTermRecords.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
             longTermRecords.id = worker.nextId() + "";
             longTermRecords.checkTime = TimeUtils.getNowString();
             longTermRecords.status = String.valueOf(status);
@@ -1853,6 +1863,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
 
             long time = System.currentTimeMillis();
             TemporaryCardRecords temporaryCardRecords = new TemporaryCardRecords();
+            temporaryCardRecords.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
             // temporaryCardRecords.id = UUID.randomUUID().toString();
             // temporaryCardRecords.id = SnowflakeIdUtil.getInstance().nextId() + "";
             SnowFlake worker = new SnowFlake(1, 1, 1);
@@ -2074,6 +2085,245 @@ public class LivenessDetectYuanActivity extends BaseActivity
 
             }
         });
+    }
+
+    /** 测试上传：从 {@code long_term_pass} 最多取条数 */
+    private static final int TEST_UPLOAD_MAX_PASS_ROWS = 50;
+
+    /**
+     * 调试：从 {@code long_term_pass}（证件底库，非通行记录表）读 {@link LongTermPass}，
+     * 按业务类型封装为 {@link LongTermRecords}（type==0）或 {@link TemporaryCardRecords}（type==1）再上传。
+     * 现场图：优先底库注册照 {@link AESUtils#decryptRegisterFileToBitmap(String)} 上传，失败则用占位图。
+     */
+    private void testUploadSamplePassRecords() {
+        if (!BuildConfig.DEBUG) {
+            return;
+        }
+        if (infoStorage == null) {
+            ALog.e("testUploadSamplePassRecords: infoStorage 未初始化");
+            return;
+        }
+        ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
+            @Override
+            public String doInBackground() throws Throwable {
+                List<LongTermPass> passes =
+                        ArcFaceApplication.getApplication().getDb().longTermPassDao().getAll();
+                if (ObjectUtils.isEmpty(passes)) {
+                    runOnUiThread(() -> showToast("long_term_pass 无证件数据"));
+                    return null;
+                }
+                Collections.sort(passes,
+                        (a, b) -> compareCheckTimeDesc(a.updateTime, b.updateTime));
+
+                int limit = Math.min(TEST_UPLOAD_MAX_PASS_ROWS, passes.size());
+                int nLong = 0;
+                int nTemp = 0;
+                for (int i = 0; i < limit; i++) {
+                    LongTermPass p = passes.get(i);
+                    String photoUrl = buildSitePhotoUrlFromRegisterPass(p);
+                    if (p.type == 0) {
+                        LongTermRecords r = buildLongTermRecordsFromPassForTest(p);
+                        r.sitePhoto = photoUrl;
+                        ALog.i("testUpload 封装长期 passId=" + p.id + " recordId=" + r.id);
+                        uploadLongTermRecords(r);
+                        nLong++;
+                    } else if (p.type == 1) {
+                        TemporaryCardRecords r = buildTemporaryRecordsFromPassForTest(p);
+                        r.sitePhoto = photoUrl;
+                        ALog.i("testUpload 封装临时 passId=" + p.id + " recordId=" + r.id);
+                        uploadTemporaryRecords(r);
+                        nTemp++;
+                    } else {
+                        ALog.e("testUpload 跳过未知 type=" + p.type + " passId=" + p.id);
+                    }
+                }
+                final int total = nLong + nTemp;
+                ALog.e("testUploadSamplePassRecords: 底库条数=" + limit + " 实际上传 长期=" + nLong + " 临时=" + nTemp);
+                runOnUiThread(() -> showToast("已从 long_term_pass 封装并触发上传 " + total + " 条"));
+                return null;
+            }
+
+            @Override
+            public void onSuccess(String result) {
+            }
+        });
+    }
+
+    /**
+     * 解析通行证区域 id、名称：优先本机查验区域 {@code deviceAreaDetail}；否则用证件底库上的区域字段；
+     * 仍缺省则给非空占位，避免接口报「通行证区域不能为空」。
+     */
+    private String[] resolveAreaIdAndNameForUpload(LongTermPass p) {
+        String areaId = "";
+        String name = "";
+        String areaDetail = infoStorage.getString("deviceAreaDetail", "");
+        Area area = gson.fromJson(areaDetail, Area.class);
+        if (area != null && ObjectUtils.isNotEmpty(area.getId())) {
+            areaId = area.getId();
+            name = (area.getCode() != null ? area.getCode() : "") + (area.getName() != null ? area.getName() : "");
+            if (area.getChildren() != null && ObjectUtils.isNotEmpty(area.getChildren())) {
+                for (Area item : area.getChildren()) {
+                    name += (item.getCode() != null ? item.getCode() : "")
+                            + (item.getName() != null ? item.getName() : "");
+                }
+            }
+        }
+        if (ObjectUtils.isEmpty(areaId) && p != null) {
+            if (p.areaIds != null && p.areaIds.length > 0 && ObjectUtils.isNotEmpty(p.areaIds[0])) {
+                areaId = p.areaIds[0];
+            } else if (p.areaRootIds != null && p.areaRootIds.length > 0 && ObjectUtils.isNotEmpty(p.areaRootIds[0])) {
+                areaId = p.areaRootIds[0];
+            }
+        }
+        if (ObjectUtils.isEmpty(name) && p != null) {
+            if (p.areaDisplayCode != null && p.areaDisplayCode.length > 0) {
+                StringBuilder sb = new StringBuilder();
+                for (String s : p.areaDisplayCode) {
+                    if (ObjectUtils.isNotEmpty(s)) {
+                        sb.append(s);
+                    }
+                }
+                name = sb.toString();
+            }
+            if (ObjectUtils.isEmpty(name) && p.areaCodes != null && p.areaCodes.length > 0) {
+                StringBuilder sb = new StringBuilder();
+                for (String s : p.areaCodes) {
+                    if (ObjectUtils.isNotEmpty(s)) {
+                        sb.append(s);
+                    }
+                }
+                name = sb.toString();
+            }
+        }
+        if (ObjectUtils.isEmpty(areaId)) {
+            areaId = "-";
+        }
+        if (ObjectUtils.isEmpty(name)) {
+            name = "默认通行区域";
+        }
+        return new String[] { areaId, name };
+    }
+
+    /** 与页面保存长期记录时字段来源一致（无底库照时用占位图 URL）。 */
+    private LongTermRecords buildLongTermRecordsFromPassForTest(LongTermPass p) {
+        SnowFlake worker = new SnowFlake(1, 1, 1);
+        LongTermRecords r = new LongTermRecords();
+        r.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
+        r.id = worker.nextId() + "";
+        r.checkTime = TimeUtils.getNowString();
+        r.status = "true";
+        r.reason = "";
+        r.passid = p.id;
+        r.idCode = p.idCode;
+        r.cardId = p.cardId;
+        r.applyId = p.applyId;
+        r.direction = String.valueOf(direction);
+        r.nickname = p.nickname;
+        r.photo = p.photo;
+        r.leadingPeople = p.leadingPeople;
+        r.deviceId = infoStorage.getString("deviceId", "");
+        r.deviceName = infoStorage.getString("deviceName", "立式查验终端");
+        r.checkUserId = ApiUtils.userId;
+        r.checkUserName = infoStorage.getString("loginName", "");
+        r.companyName = p.companyName;
+        r.expiryDate = p.expiryDate;
+        r.templateType = p.templateType;
+        r.areaDisplayCode = p.areaDisplayCode;
+        r.faceSimilar = "0.99";
+        r.faceQuality = "0.95";
+        r.parentld = "";
+        r.leadingPeopleld = "";
+        if (p.idCode != null && p.idCode.startsWith("C") && ObjectUtils.isNotEmpty(p.leadingPeopleId)) {
+            r.parentld = ObjectUtils.isNotEmpty(localLongId) ? localLongId : "";
+            r.leadingPeopleld = infoStorage.getString("linshiID", "");
+        }
+        String[] areaPair = resolveAreaIdAndNameForUpload(p);
+        r.area = areaPair[0];
+        r.areaName = areaPair[1];
+        return r;
+    }
+
+    private TemporaryCardRecords buildTemporaryRecordsFromPassForTest(LongTermPass p) {
+        SnowFlake worker = new SnowFlake(1, 1, 1);
+        TemporaryCardRecords r = new TemporaryCardRecords();
+        r.needVerify = VerifyFeatureSettings.needVerifyForNewRecord();
+        r.id = worker.nextId() + "";
+        r.checkTime = TimeUtils.getNowString();
+        r.status = "true";
+        r.reason = "";
+        r.passid = p.id;
+        r.idCode = p.idCode;
+        r.cardId = p.cardId;
+        r.applyId = p.applyId;
+        r.direction = String.valueOf(direction);
+        r.nickname = p.nickname;
+        r.photo = p.photo;
+        r.leadingPeople = p.leadingPeople;
+        r.deviceId = infoStorage.getString("deviceId", "");
+        r.deviceName = infoStorage.getString("deviceName", "立式查验终端");
+        r.checkUserId = ApiUtils.userId;
+        r.checkUserName = infoStorage.getString("loginName", "");
+        r.companyName = p.companyName;
+        r.expiryDate = p.expiryDate;
+        r.templateType = p.templateType;
+        r.areaDisplayCode = p.areaDisplayCode;
+        r.faceSimilar = "0.99";
+        r.faceQuality = "0.95";
+        r.parentId = ObjectUtils.isNotEmpty(localLongId) ? localLongId : "";
+        r.leadingPeopleId = infoStorage.getString("linshiID", "");
+        String[] areaPair = resolveAreaIdAndNameForUpload(p);
+        r.area = areaPair[0];
+        r.areaName = areaPair[1];
+        return r;
+    }
+
+    /** 优先注册目录下证件照上传为 URL，失败则走占位图 */
+    private String buildSitePhotoUrlFromRegisterPass(LongTermPass p) {
+        if (p == null || ObjectUtils.isEmpty(p.id)) {
+            return resolveSitePhotoUrlForUpload("");
+        }
+        Bitmap reg = AESUtils.decryptRegisterFileToBitmap(p.id);
+        if (reg != null) {
+            String url = imageUploader.uploadBitmap2(reg);
+            if (ObjectUtils.isNotEmpty(url)) {
+                return url;
+            }
+            ALog.e("testUpload: 注册照上传失败 passId=" + p.id);
+        }
+        return resolveSitePhotoUrlForUpload("");
+    }
+
+    private static int compareCheckTimeDesc(String a, String b) {
+        String sa = a != null ? a : "";
+        String sb = b != null ? b : "";
+        return sb.compareTo(sa);
+    }
+
+    /**
+     * 为接口准备 {@code sitePhoto}：网络地址直接返回；本地加密文件解密后上传；否则用应用图标占位上传。
+     */
+    private String resolveSitePhotoUrlForUpload(String sitePhoto) {
+        if (ObjectUtils.isNotEmpty(sitePhoto) && (sitePhoto.startsWith("http://") || sitePhoto.startsWith("https://"))) {
+            return sitePhoto;
+        }
+        if (ObjectUtils.isNotEmpty(sitePhoto)) {
+            Bitmap bmp = AESUtils.decryptFileToBitmap(sitePhoto);
+            if (bmp != null) {
+                String url = imageUploader.uploadBitmap2(bmp);
+                if (ObjectUtils.isNotEmpty(url)) {
+                    return url;
+                }
+                ALog.e("testUpload: 现场图上传失败 path=" + sitePhoto);
+            } else {
+                ALog.e("testUpload: 现场图解密失败 path=" + sitePhoto);
+            }
+        }
+        Bitmap fallback = BitmapFactory.decodeResource(getResources(), R.drawable.app_logo);
+        if (fallback != null) {
+            String url = imageUploader.uploadBitmap2(fallback);
+            return url != null ? url : "";
+        }
+        return "";
     }
 
     public void saveRecord(LongTermPass longTermPass) {

@@ -67,7 +67,7 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
             binding.apply {
                 tvName.text = value.nickname
                 tvCardNo.text = "证件编号：${value.idCode}"
-                tvArea.text = "通行区域：${value.areaName}"
+                tvArea.text = "通行道口：${value.areaName}"
                 tvTime.text = "通行时间：${value.checkTime}"
                 tvCheckBy.text = "查验人员：${value.checkUserName}"
                 if (ObjectUtils.isEmpty(value.verifyRemark)) {
