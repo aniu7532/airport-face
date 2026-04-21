@@ -379,6 +379,13 @@
             android:textColor="@android:color/white"
             android:textSize="22sp"
             android:visibility="invisible" />
+
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersEntrance
+            android:layout_width="69dp"
+            android:layout_height="69dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="240dp" />
     </FrameLayout>
 
 

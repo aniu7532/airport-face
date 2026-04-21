@@ -40,7 +40,7 @@ class VerifyFeatureSettingsDialog(context: Context) : CenterPopupView(context) {
         load()
 
         switchMaster.setOnCheckedChangeListener { _, checked ->
-            sp.put(VerifyFeatureSettings.KEY_VERIFY_FEATURE_ENABLED, checked)
+            VerifyFeatureSettings.setVerifyFeatureEnabled(checked)
             updateSubEnabled(checked, group, switchPassage, switchTime, switchDevice, switchRemark)
         }
         switchPassage.setOnCheckedChangeListener { _, v ->
