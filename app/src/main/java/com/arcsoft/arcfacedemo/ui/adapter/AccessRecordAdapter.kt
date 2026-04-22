@@ -71,7 +71,8 @@ class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordA
                         2 -> "核验"
                         else -> ""
                     }
-                }";
+                }"
+                tvMark.text = "核实备注：${value.verifyRemark ?: ""}"
 
                 val photo =
                     if (value.sitePhoto.isNullOrEmpty()) value.checkPhoto else value.sitePhoto
