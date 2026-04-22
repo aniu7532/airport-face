@@ -21,6 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFF"
+        android:textSize="18sp"
         tools:text="证件编号：YC-TX-202604-0093" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -28,6 +29,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFF"
+        android:textSize="18sp"
         tools:text="通行道口：T2施工通道B" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -35,6 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFF"
+        android:textSize="18sp"
         tools:text="通行时间：2026-04-14 07:46:11" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -42,6 +45,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFF"
+        android:textSize="18sp"
         tools:text="查验人员：刘晨" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -49,6 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFF"
+        android:textSize="18sp"
         tools:text="核实备注：预计11:30离场" />
 
     <LinearLayout
@@ -60,8 +65,9 @@
             android:id="@+id/tv_avatar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="查验照片："
             android:textColor="#FFF"
-            android:text="查验照片：" />
+            android:textSize="18sp" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/img_avatar"
@@ -81,7 +87,7 @@
             android:layout_height="30dp"
             android:background="@drawable/btn_bg"
             android:text="核实"
-            android:textColor="#FFF"/>
+            android:textColor="#FFF" />
 
     </LinearLayout>
 
