@@ -7,6 +7,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.arcsoft.arcfacedemo.ui.pagingsource.AccessRecordPagingSource
 import com.arcsoft.arcfacedemo.ui.pagingsource.CheckRecordQuery
+import com.arcsoft.arcfacedemo.util.dayEnd
+import com.arcsoft.arcfacedemo.util.dayStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -22,10 +24,10 @@ class AccessRecordViewModel : ViewModel() {
     private val _cardNo = MutableStateFlow("")
     val cardNo = _cardNo.asStateFlow()
 
-    private val _startTime = MutableStateFlow<Calendar?>(null)
+    private val _startTime = MutableStateFlow(Calendar.getInstance().dayStart)
     val startTime = _startTime.asStateFlow()
 
-    private val _endTime = MutableStateFlow<Calendar?>(null)
+    private val _endTime = MutableStateFlow(Calendar.getInstance().dayEnd)
     val endTime = _endTime.asStateFlow()
 
     private val pagingConfig = PagingConfig(
@@ -52,8 +54,8 @@ class AccessRecordViewModel : ViewModel() {
     fun reset() {
         _name.value = ""
         _cardNo.value = ""
-        _startTime.value = null
-        _endTime.value = null
+        _startTime.value = Calendar.getInstance().dayStart
+        _endTime.value = Calendar.getInstance().dayEnd
         search()
     }
 

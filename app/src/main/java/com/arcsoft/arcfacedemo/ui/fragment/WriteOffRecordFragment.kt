@@ -111,12 +111,12 @@ class WriteOffRecordFragment : Fragment() {
                 }
                 launch {
                     viewModel.startTime.collect {
-                        if (it == null) { binding.selectorStartTime.clear() }
+                        binding.selectorStartTime.setValue(it)
                     }
                 }
                 launch {
                     viewModel.endTime.collect {
-                        if (it == null) { binding.selectorEndTime.clear() }
+                        binding.selectorEndTime.setValue(it)
                     }
                 }
                 launch {

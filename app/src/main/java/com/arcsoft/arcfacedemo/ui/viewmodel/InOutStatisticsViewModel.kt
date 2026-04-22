@@ -6,6 +6,8 @@ import com.arcsoft.arcfacedemo.entity.Base
 import com.arcsoft.arcfacedemo.entity.InOutStatisticsResult
 import com.arcsoft.arcfacedemo.network.ApiUtils
 import com.arcsoft.arcfacedemo.network.UrlConstants
+import com.arcsoft.arcfacedemo.util.dayBefore
+import com.arcsoft.arcfacedemo.util.dayEnd
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.model.Response
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,10 +18,10 @@ import java.util.Locale
 
 class InOutStatisticsViewModel : ViewModel() {
 
-    private val _startTime = MutableStateFlow<Calendar?>(null)
+    private val _startTime = MutableStateFlow(Calendar.getInstance().dayBefore(7))
     val startTime = _startTime.asStateFlow()
 
-    private val _endTime = MutableStateFlow<Calendar?>(null)
+    private val _endTime = MutableStateFlow(Calendar.getInstance().dayEnd)
     val endTime = _endTime.asStateFlow()
 
     private val _list = MutableStateFlow<List<InOutStatisticsResult>>(emptyList())
@@ -62,8 +64,8 @@ class InOutStatisticsViewModel : ViewModel() {
         SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).format(cal.time)
 
     fun reset() {
-        _startTime.value = null
-        _endTime.value = null
+        _startTime.value = Calendar.getInstance().dayBefore(7)
+        _endTime.value = Calendar.getInstance().dayEnd
         request()
     }
 

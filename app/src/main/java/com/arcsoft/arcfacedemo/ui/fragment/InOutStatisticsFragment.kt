@@ -91,12 +91,12 @@ class InOutStatisticsFragment : Fragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.startTime.collect {
-                        if (it == null) { binding.selectorStartTime.clear() }
+                        binding.selectorStartTime.setValue(it)
                     }
                 }
                 launch {
                     viewModel.endTime.collect {
-                        if (it == null) { binding.selectorEndTime.clear() }
+                        binding.selectorEndTime.setValue(it)
                     }
                 }
                 viewModel.list.collectLatest {

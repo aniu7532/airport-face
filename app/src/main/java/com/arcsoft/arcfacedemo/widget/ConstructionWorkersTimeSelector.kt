@@ -24,10 +24,12 @@ class ConstructionWorkersTimeSelector @JvmOverloads constructor(
     private val format: String
         get() = if (withoutHMS) "yyyy-MM-dd" else "yyyy-MM-dd HH:mm:ss"
 
+    private lateinit var simpleDateFormat: SimpleDateFormat
+
     init {
         context.withStyledAttributes(attrs, R.styleable.ConstructionWorkersTimeSelector) {
             withoutHMS = getBoolean(R.styleable.ConstructionWorkersTimeSelector_withoutHMS, false)
-            val simpleDateFormat = SimpleDateFormat(format, Locale.getDefault())
+            simpleDateFormat = SimpleDateFormat(format, Locale.getDefault())
             setOnClickListener {
                 DateTimePickerDialogHelper.show(
                     context,
@@ -35,9 +37,7 @@ class ConstructionWorkersTimeSelector @JvmOverloads constructor(
                     withoutHMS
                 ) { calendar: Calendar? ->
                     if (calendar == null) return@show
-                    currentCalendar = calendar.clone() as Calendar
-                    val format = simpleDateFormat.format(currentCalendar!!.time)
-                    setValue(format)
+                    setValue(calendar)
                     onTimeChangedCb(currentCalendar!!)
                 }
             }
@@ -51,6 +51,13 @@ class ConstructionWorkersTimeSelector @JvmOverloads constructor(
 
     fun addOnTimeChangedListener(cb: (calendar: Calendar) -> Unit) {
         onTimeChangedCb = cb
+    }
+
+    fun setValue(calendar: Calendar) {
+        if (calendar.time.time == currentCalendar?.time?.time) { return }
+        currentCalendar = calendar.clone() as Calendar
+        val format = simpleDateFormat.format(currentCalendar!!.time)
+        setValue(format)
     }
 
 
