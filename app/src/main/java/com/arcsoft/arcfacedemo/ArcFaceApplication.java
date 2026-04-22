@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.arcsoft.arcfacedemo.data.FaceRepository;
@@ -194,12 +195,16 @@ public class ArcFaceApplication extends Application {
         return application;
     }
 
-    public static int UPLOAD_LOG_TIME = 10 * 60 * 1000;
+//    public static int UPLOAD_LOG_TIME = 10 * 60 * 1000;
+    public static int UPLOAD_LOG_TIME = 30 * 1000;
     public static int UPDATE_DELAY_TIME = 5;
     public static int PING_DELAY_TIME = 10 * 1000;
     public static int POOL_SIZE = 15;
     private ImageUploader imageUploader;
     private SmallTask task;
+
+    private final AtomicBoolean isUploadingRecord = new AtomicBoolean(false);
+
 
     public void startUpDataToServer() {
         // if (ArcFaceApplication.TEST) {
@@ -208,138 +213,146 @@ public class ArcFaceApplication extends Application {
         task = new SmallTask() {
             @Override
             public String doInBackground() throws Throwable {
-                ALog.d("SimpleTask startGetDataFromServer ");
-                // List<LongTermPass> list1 = db.longTermPassDao().getAll();
-                int count = db.longTermPassDao().getCount();
-                ALog.e("通行证数量 count:" + count);
 
-                if (faceRepository != null) {
-                    ALog.e("faceRepository.getTotalFaceCount():" + faceRepository.getTotalFaceCount());
+                if (!isUploadingRecord.compareAndSet(false, true)) {
+                    return "";
                 }
 
-                List<LongTermRecords> list2 = db.longTermRecordsDao().getAll();
-                if (ObjectUtils.isNotEmpty(list2)) {
-                    ALog.e("list2.size():" + list2.size());
-                    for (LongTermRecords item : list2) {
-                        ALog.e(item.toString());
-                        if (ObjectUtils.isNotEmpty(item.sitePhoto)
-                                && (item.sitePhoto.startsWith("/") || item.sitePhoto.startsWith("storage/"))) {
-                            // Bitmap bitmap = ImageUtils.getBitmap(item.sitePhoto);
-                            Bitmap bitmap = AESUtils.decryptFileToBitmap(item.sitePhoto);
-                            if (bitmap == null) {
-                                ALog.d("bitmap == null");
-                                item.sitePhoto = "";
-                            } else {
-                                // 上传通行图片到服务器
-                                String imgUrl = imageUploader.uploadBitmap2(bitmap);
-                                ALog.i("上传图片路径: " + imgUrl);
-                                if (ObjectUtils.isEmpty(imgUrl)) {
-                                    continue;
-                                }
-                                FileUtils.delete(item.sitePhoto);
-                                item.sitePhoto = imgUrl;
-                            }
-                        }
-
-                        // String oldId = item.id;
-                        // item.id = SnowflakeIdUtil.getInstance().nextId() + "";
-                        PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_CREATE_LONG_RECORD)
-                                .tag(UrlConstants.URL_CREATE_LONG_RECORD);
-                        request.headers("tenant-id", "1");
-                        // 检查是否有 accessToken，如果有则添加 Authorization 头
-                        if (ApiUtils.accessToken != null) {
-                            request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-                        }
-                        request.upJson(GsonUtils.toJson(item));
-                        // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
-                        Call<String> call = request.converter(new StringConvert()).adapt();
-                        try {
-                            Response<String> res = call.execute();
-                            if (res.code() == 200) {
-                                ALog.d("上传长期证件成功返回");
-                                // item.id = oldId;
-                                db.longTermRecordsDao().delete(item);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            ALog.e("上传长期证件日志失败返回: " + e.getMessage());
-                        }
-                    }
-                }
-
-                List<TemporaryCardRecords> list3 = db.temporaryCardRecordsDao().getAll();
-                if (ObjectUtils.isNotEmpty(list3)) {
-                    ALog.e("list3.size():" + list3.size());
-                    for (TemporaryCardRecords item : list3) {
-                        ALog.e(item.toString());
-                        if (ObjectUtils.isNotEmpty(item.sitePhoto)
-                                && (item.sitePhoto.startsWith("/") || item.sitePhoto.startsWith("storage/"))) {
-                            // Bitmap bitmap = ImageUtils.getBitmap(item.sitePhoto);
-                            Bitmap bitmap = AESUtils.decryptFileToBitmap(item.sitePhoto);
-                            if (bitmap == null) {
-                                ALog.d("bitmap == null");
-                                item.sitePhoto = "";
-                            } else {
-                                // 上传通行图片到服务器
-                                String imgUrl = imageUploader.uploadBitmap2(bitmap);
-                                ALog.i("上传图片路径: " + imgUrl);
-                                if (ObjectUtils.isEmpty(imgUrl)) {
-                                    continue;
-                                }
-                                FileUtils.delete(item.sitePhoto);
-                                item.sitePhoto = imgUrl;
-                            }
-
-                        }
-
-                        PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_CREATE_TEMP_RECORD)
-                                .tag(UrlConstants.URL_CREATE_TEMP_RECORD);
-                        request.headers("tenant-id", "1");
-                        // 检查是否有 accessToken，如果有则添加 Authorization 头
-                        if (ApiUtils.accessToken != null) {
-                            request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-                        }
-                        request.upJson(GsonUtils.toJson(item));
-                        // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
-                        Call<String> call = request.converter(new StringConvert()).adapt();
-                        try {
-                            Response<String> res = call.execute();
-                            if (res.code() == 200) {
-                                ALog.d("上传临时证件日志成功返回");
-                                db.temporaryCardRecordsDao().delete(item);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            ALog.e("上传临时证件日志失败返回: " + e.getMessage());
-                        }
-                    }
-                }
-
-                // final SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH", Locale.getDefault());
                 try {
-                    long max = 3 * 86400000L;
-                    long cur = TimeUtils.getNowMills();
-                    File directory = new File(getExternalFilesDir(null), "records");
-                    if (!directory.exists()) {
-                        directory.mkdirs();
+                    ALog.d("SimpleTask startGetDataFromServer ");
+                    // List<LongTermPass> list1 = db.longTermPassDao().getAll();
+                    int count = db.longTermPassDao().getCount();
+                    ALog.e("通行证数量 count:" + count);
+
+                    if (faceRepository != null) {
+                        ALog.e("faceRepository.getTotalFaceCount():" + faceRepository.getTotalFaceCount());
                     }
-                    List<File> list = FileUtils.listFilesInDir(directory.getAbsolutePath());
-                    if (ObjectUtils.isNotEmpty(list)) {
-                        for (int i = 0; i < list.size(); i++) {
-                            long temp = cur - list.get(i).lastModified();
-                            ALog.e("temp:" + temp);
-                            if (temp > max) {
-                                boolean delete = list.get(i).delete();
-                                ALog.e(list.get(i).getAbsolutePath() + "，delete:" + delete);
+
+                    List<LongTermRecords> list2 = db.longTermRecordsDao().getAll();
+                    if (ObjectUtils.isNotEmpty(list2)) {
+                        ALog.e("list2.size():" + list2.size());
+                        for (LongTermRecords item : list2) {
+                            ALog.e(item.toString());
+                            if (ObjectUtils.isNotEmpty(item.sitePhoto)
+                                    && (item.sitePhoto.startsWith("/") || item.sitePhoto.startsWith("storage/"))) {
+                                // Bitmap bitmap = ImageUtils.getBitmap(item.sitePhoto);
+                                Bitmap bitmap = AESUtils.decryptFileToBitmap(item.sitePhoto);
+                                if (bitmap == null) {
+                                    ALog.d("bitmap == null");
+                                    item.sitePhoto = "";
+                                } else {
+                                    // 上传通行图片到服务器
+                                    String imgUrl = imageUploader.uploadBitmap2(bitmap);
+                                    ALog.i("上传图片路径: " + imgUrl);
+                                    if (ObjectUtils.isEmpty(imgUrl)) {
+                                        continue;
+                                    }
+                                    FileUtils.delete(item.sitePhoto);
+                                    item.sitePhoto = imgUrl;
+                                }
+                            }
+
+                            // String oldId = item.id;
+                            // item.id = SnowflakeIdUtil.getInstance().nextId() + "";
+                            PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_CREATE_LONG_RECORD)
+                                    .tag(UrlConstants.URL_CREATE_LONG_RECORD);
+                            request.headers("tenant-id", "1");
+                            // 检查是否有 accessToken，如果有则添加 Authorization 头
+                            if (ApiUtils.accessToken != null) {
+                                request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
+                            }
+                            request.upJson(GsonUtils.toJson(item));
+                            // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
+                            Call<String> call = request.converter(new StringConvert()).adapt();
+                            try {
+                                Response<String> res = call.execute();
+                                if (res.code() == 200) {
+                                    ALog.d("上传长期证件成功返回");
+                                    // item.id = oldId;
+                                    db.longTermRecordsDao().delete(item);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                ALog.e("上传长期证件日志失败返回: " + e.getMessage());
                             }
                         }
                     }
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                    List<TemporaryCardRecords> list3 = db.temporaryCardRecordsDao().getAll();
+                    if (ObjectUtils.isNotEmpty(list3)) {
+                        ALog.e("list3.size():" + list3.size());
+                        for (TemporaryCardRecords item : list3) {
+                            ALog.e(item.toString());
+                            if (ObjectUtils.isNotEmpty(item.sitePhoto)
+                                    && (item.sitePhoto.startsWith("/") || item.sitePhoto.startsWith("storage/"))) {
+                                // Bitmap bitmap = ImageUtils.getBitmap(item.sitePhoto);
+                                Bitmap bitmap = AESUtils.decryptFileToBitmap(item.sitePhoto);
+                                if (bitmap == null) {
+                                    ALog.d("bitmap == null");
+                                    item.sitePhoto = "";
+                                } else {
+                                    // 上传通行图片到服务器
+                                    String imgUrl = imageUploader.uploadBitmap2(bitmap);
+                                    ALog.i("上传图片路径: " + imgUrl);
+                                    if (ObjectUtils.isEmpty(imgUrl)) {
+                                        continue;
+                                    }
+                                    FileUtils.delete(item.sitePhoto);
+                                    item.sitePhoto = imgUrl;
+                                }
 
-                return "";
+                            }
+
+                            PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_CREATE_TEMP_RECORD)
+                                    .tag(UrlConstants.URL_CREATE_TEMP_RECORD);
+                            request.headers("tenant-id", "1");
+                            // 检查是否有 accessToken，如果有则添加 Authorization 头
+                            if (ApiUtils.accessToken != null) {
+                                request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
+                            }
+                            request.upJson(GsonUtils.toJson(item));
+                            // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
+                            Call<String> call = request.converter(new StringConvert()).adapt();
+                            try {
+                                Response<String> res = call.execute();
+                                if (res.code() == 200) {
+                                    ALog.d("上传临时证件日志成功返回");
+                                    db.temporaryCardRecordsDao().delete(item);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                ALog.e("上传临时证件日志失败返回: " + e.getMessage());
+                            }
+                        }
+                    }
+
+                    // final SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH", Locale.getDefault());
+                    try {
+                        long max = 3 * 86400000L;
+                        long cur = TimeUtils.getNowMills();
+                        File directory = new File(getExternalFilesDir(null), "records");
+                        if (!directory.exists()) {
+                            directory.mkdirs();
+                        }
+                        List<File> list = FileUtils.listFilesInDir(directory.getAbsolutePath());
+                        if (ObjectUtils.isNotEmpty(list)) {
+                            for (int i = 0; i < list.size(); i++) {
+                                long temp = cur - list.get(i).lastModified();
+                                ALog.e("temp:" + temp);
+                                if (temp > max) {
+                                    boolean delete = list.get(i).delete();
+                                    ALog.e(list.get(i).getAbsolutePath() + "，delete:" + delete);
+                                }
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return "";
+                } finally {
+                    isUploadingRecord.set(false);
+                }
             }
         };
         ThreadUtils.executeByFixedAtFixRate(POOL_SIZE, task, UPLOAD_LOG_TIME, TimeUnit.MILLISECONDS);
