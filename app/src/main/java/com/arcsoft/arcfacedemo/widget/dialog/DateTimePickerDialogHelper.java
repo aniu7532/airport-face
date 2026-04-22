@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 
 import androidx.annotation.Nullable;
@@ -38,7 +39,7 @@ public final class DateTimePickerDialogHelper {
      * @param initial  初始时间，传 null 表示当前时间
      * @param listener 确定回调，不会为 null
      */
-    public static void show(Context context, @Nullable Calendar initial, OnDateTimePickedListener listener) {
+    public static void show(Context context, @Nullable Calendar initial, boolean withoutHMS, OnDateTimePickedListener listener) {
         if (listener == null) {
             return;
         }
@@ -46,11 +47,20 @@ public final class DateTimePickerDialogHelper {
         NumberPicker npYear = root.findViewById(R.id.np_year);
         NumberPicker npMonth = root.findViewById(R.id.np_month);
         NumberPicker npDay = root.findViewById(R.id.np_day);
+        LinearLayout llHour = root.findViewById(R.id.ll_hour);
         NumberPicker npHour = root.findViewById(R.id.np_hour);
+        NumberPicker llMinute = root.findViewById(R.id.ll_minute);
         NumberPicker npMinute = root.findViewById(R.id.np_minute);
+        NumberPicker llSecond = root.findViewById(R.id.ll_second);
         NumberPicker npSecond = root.findViewById(R.id.np_second);
         Button btnCancel = root.findViewById(R.id.btn_datetime_cancel);
         Button btnOk = root.findViewById(R.id.btn_datetime_ok);
+
+        if (withoutHMS) {
+            llHour.setVisibility(View.GONE);
+            llMinute.setVisibility(View.GONE);
+            llSecond.setVisibility(View.GONE);
+        }
 
         Calendar cal = initial != null ? (Calendar) initial.clone() : Calendar.getInstance();
 

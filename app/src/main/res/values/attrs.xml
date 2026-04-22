@@ -10,4 +10,7 @@
         <attr name="title" />
         <attr name="placeholder" />
     </declare-styleable>
+    <declare-styleable name="ConstructionWorkersTimeSelector">
+        <attr name="withoutHMS" format="boolean" />
+    </declare-styleable>
 </resources>

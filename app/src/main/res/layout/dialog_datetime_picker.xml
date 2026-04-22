@@ -92,6 +92,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/ll_hour"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -114,6 +115,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/ll_minute"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -136,6 +138,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/ll_second"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

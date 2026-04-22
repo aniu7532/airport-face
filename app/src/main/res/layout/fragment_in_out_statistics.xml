@@ -38,7 +38,8 @@
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toStartOf="@id/title"
             app:layout_constraintTop_toBottomOf="@id/title"
-            app:title="开始时间" />
+            app:title="开始时间"
+            app:withoutHMS="true" />
 
         <com.arcsoft.arcfacedemo.widget.ConstructionWorkersTimeSelector
             android:id="@+id/selector_end_time"
@@ -49,7 +50,8 @@
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toEndOf="@id/selector_start_time"
             app:layout_constraintTop_toTopOf="@id/selector_start_time"
-            app:title="结束时间" />
+            app:title="结束时间"
+            app:withoutHMS="true" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_reset"
