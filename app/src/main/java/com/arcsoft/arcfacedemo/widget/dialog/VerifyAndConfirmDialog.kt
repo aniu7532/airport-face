@@ -88,7 +88,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         }
         StringListPickerDialog.show(
             context,
-            "标题",
+            "设备列表",
             devices.mapNotNull { it.name }.toList(),
             { index: Int?, text: String? ->
                 if (index == null) return@show
