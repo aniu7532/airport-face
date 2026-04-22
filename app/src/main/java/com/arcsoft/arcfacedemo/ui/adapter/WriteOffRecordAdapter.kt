@@ -66,16 +66,16 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
         fun bind(value: CardRecords.ListDTO) {
             binding.apply {
                 tvName.text = value.nickname
-                tvCardNo.text = "证件编号：${value.idCode}"
-                tvArea.text = "通行道口：${value.areaName}"
-                tvTime.text = "通行时间：${value.checkTime}"
-                tvCheckBy.text = "查验人员：${value.checkUserName}"
+                tvCardNo.text = "证件编号：${value.idCode ?: ""}"
+                tvArea.text = "通行道口：${value.areaName ?: ""}"
+                tvTime.text = "通行时间：${value.checkTime ?: ""}"
+                tvCheckBy.text = "查验人员：${value.checkUserName ?: ""}"
                 if (ObjectUtils.isEmpty(value.verifyRemark)) {
                     tvMark.visibility = View.GONE
                 } else {
                     tvMark.visibility = View.VISIBLE
                 }
-                tvMark.text = "核实备注：${value.verifyRemark}"
+                tvMark.text = "核实备注：${value.verifyRemark ?: ""}"
 
                 btnVerify.setOnClickListener {
                     XPopup.Builder(btnVerify.context).isDestroyOnDismiss(true) // 对于只使用一次的弹窗，推荐设置这个

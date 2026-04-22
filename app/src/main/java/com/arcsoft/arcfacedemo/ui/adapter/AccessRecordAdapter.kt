@@ -58,11 +58,11 @@ class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordA
         fun bind(value: CardRecords.ListDTO) {
             binding.apply {
                 tvName.text = value.nickname
-                tvCardNo.text = "证件编号：${value.idCode}"
-                tvCheckBy.text = "查验人员：${value.checkUserName}"
-                tvArea.text = "通行道口：${value.areaName}"
-                tvTime.text = "通行时间：${value.checkTime}"
-                tvDeviceCode.text = "设备编号：${value.deviceCode}"
+                tvCardNo.text = "证件编号：${value.idCode ?: ""}"
+                tvCheckBy.text = "查验人员：${value.checkUserName ?: ""}"
+                tvArea.text = "通行道口：${value.areaName ?: ""}"
+                tvTime.text = "通行时间：${value.checkTime ?: ""}"
+                tvDeviceCode.text = "设备编号：${value.deviceCode ?: ""}"
                 // 通行方向（1：进，-1出，2：核验)
                 tvDirection.text = "通行方向：${
                     when (value.direction) {
