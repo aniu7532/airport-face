@@ -42,7 +42,16 @@ class WriteOffRecordViewModel : ViewModel() {
      * 进入页面时初始为「空条件」会拉第一页；之后仅在 [search] 时更新。
      * version 递增保证同一条件重复点击也会重新拉数。
      */
-    private val searchSnapshot = MutableStateFlow(Pair(CheckRecordQuery(), 0L))
+    private val searchSnapshot = MutableStateFlow(
+        Pair(
+            CheckRecordQuery(
+                nickname = _name.value,
+                idCode = _cardNo.value,
+                startCheckTime = formatCheckTime(_startTime.value),
+                endCheckTime = formatCheckTime(_endTime.value),
+            ), 0L
+        )
+    )
 
     /** 当前查询条件下接口返回的总条数（首页成功后才有值）；切换查询会先变为 null。 */
     private val _listTotal = MutableStateFlow<Int?>(null)

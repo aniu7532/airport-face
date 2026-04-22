@@ -40,7 +40,16 @@ class AccessRecordViewModel : ViewModel() {
      * 进入页面时初始为「空条件」会拉第一页；之后仅在 [search] 时更新。
      * version 递增保证同一条件重复点击也会重新拉数。
      */
-    private val searchSnapshot = MutableStateFlow(Pair(CheckRecordQuery(), 0L))
+    private val searchSnapshot = MutableStateFlow(
+        Pair(
+            CheckRecordQuery(
+                nickname = _name.value,
+                idCode = _cardNo.value,
+                startCheckTime = formatCheckTime(_startTime.value),
+                endCheckTime = formatCheckTime(_endTime.value),
+            ), 0L
+        )
+    )
 
     val cardRecords = searchSnapshot.flatMapLatest { (q, _) ->
         Pager(
