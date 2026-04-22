@@ -84,17 +84,19 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
                         })).show()
                 }
 
-                if (ObjectUtils.isEmpty(value.checkPhoto)) {
+                val photo =
+                    if (value.sitePhoto.isNullOrEmpty()) value.checkPhoto else value.sitePhoto
+                if (ObjectUtils.isEmpty(photo)) {
                     return
                 }
 
                 if (
-                    value.checkPhoto.startsWith("http") ||
-                    value.checkPhoto.startsWith("encrypted/")
+                    photo.startsWith("http") ||
+                    photo.startsWith("encrypted/")
                 ) {
                     // 拼接基础下载地址
                     val baseUrl =
-                        UrlConstants.URL + "/app-api/infra/file/stream?path=" + value.checkPhoto
+                        UrlConstants.URL + "/app-api/infra/file/stream?path=" + photo
                     // 构造带有 Authorization 头的 GlideUrl
                     val headersBuilder = LazyHeaders.Builder()
                     // 携带 accessToken（如果存在）
@@ -109,7 +111,7 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
                     Glide.with(imgAvatar.context).load(glideUrl)
                         .into(imgAvatar)
                 } else {
-                    val file: File = File(value.checkPhoto)
+                    val file: File = File(photo)
                     if (!file.exists()) {
                         return
                     }
