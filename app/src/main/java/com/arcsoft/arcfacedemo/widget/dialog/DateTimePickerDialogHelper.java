@@ -49,9 +49,9 @@ public final class DateTimePickerDialogHelper {
         NumberPicker npDay = root.findViewById(R.id.np_day);
         LinearLayout llHour = root.findViewById(R.id.ll_hour);
         NumberPicker npHour = root.findViewById(R.id.np_hour);
-        NumberPicker llMinute = root.findViewById(R.id.ll_minute);
+        LinearLayout llMinute = root.findViewById(R.id.ll_minute);
         NumberPicker npMinute = root.findViewById(R.id.np_minute);
-        NumberPicker llSecond = root.findViewById(R.id.ll_second);
+        LinearLayout llSecond = root.findViewById(R.id.ll_second);
         NumberPicker npSecond = root.findViewById(R.id.np_second);
         Button btnCancel = root.findViewById(R.id.btn_datetime_cancel);
         Button btnOk = root.findViewById(R.id.btn_datetime_ok);
