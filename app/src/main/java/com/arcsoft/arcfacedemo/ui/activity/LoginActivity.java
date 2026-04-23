@@ -323,9 +323,12 @@ public class LoginActivity extends BaseActivity
             ActivityUtils.finishAllActivitiesExceptNewest();
         }
 
-        startLogin(10 * 1000);
+        Bundle extras = getIntent().getExtras();
+        if (extras == null || extras.getBoolean("auto")) {
+            startLogin(10 * 1000);
+            binding.inputLayout.setVisibility(View.INVISIBLE);
+        }
 
-        binding.inputLayout.setVisibility(View.INVISIBLE);
         ALog.e("getAppId:" + ConfigUtil.getAppId(this));
         ALog.e("getSdkKey:" + ConfigUtil.getSdkKey(this));
         ALog.e("getActiveKey:" + ConfigUtil.getActiveKey(this));

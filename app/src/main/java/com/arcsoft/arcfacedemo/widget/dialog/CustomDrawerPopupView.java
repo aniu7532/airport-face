@@ -34,6 +34,7 @@ import com.arcsoft.arcfacedemo.widget.dialog.VerifyFeatureSettingsDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
@@ -403,7 +404,9 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                     @Override
                     public void onConfirm() {
                         if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
-                            ActivityUtils.startActivity(LoginActivity.class);
+                            Bundle extra = new Bundle();
+                            extra.putBoolean("auto", false);
+                            ActivityUtils.startActivity(extra, LoginActivity.class);
 
                             ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                             ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
