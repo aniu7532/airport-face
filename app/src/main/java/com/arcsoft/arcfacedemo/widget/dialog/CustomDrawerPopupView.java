@@ -29,6 +29,7 @@ import com.lxj.xpopup.core.DrawerPopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnSelectListener;
 import com.arcsoft.arcfacedemo.widget.dialog.CardSerialConfigPopDialog;
+import com.arcsoft.arcfacedemo.widget.dialog.QrSerialConfigPopDialog;
 import com.arcsoft.arcfacedemo.widget.dialog.VerifyFeatureSettingsDialog;
 
 import android.content.ActivityNotFoundException;
@@ -74,6 +75,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
         TextView tvVerifyFeature = findViewById(R.id.tvVerifyFeature);
         TextView tvCanshu = findViewById(R.id.tvCanshu);
         TextView tvCardSerial = findViewById(R.id.tvCardSerial);
+        TextView tvQrSerial = findViewById(R.id.tvQrSerial);
         TextView tvTipsLoc = findViewById(R.id.tvTipsLoc);
 
         TextView tvDelete = findViewById(R.id.tvDelete);
@@ -184,6 +186,13 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             public void onClick(View view) {
                 new XPopup.Builder(getContext()).isDestroyOnDismiss(true)
                         .asCustom(new CardSerialConfigPopDialog(getContext())).show();
+            }
+        });
+        tvQrSerial.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new XPopup.Builder(getContext()).isDestroyOnDismiss(true)
+                        .asCustom(new QrSerialConfigPopDialog(getContext())).show();
             }
         });
         tvDelete.setOnClickListener(new OnClickListener() {

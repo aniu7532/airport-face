@@ -3,6 +3,8 @@ package com.arcsoft.arcfacedemo.Serial;
 
 import android.util.Log;
 
+import com.arcsoft.arcfacedemo.util.QrSerialConfigUtil;
+
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -63,8 +65,14 @@ public class SerialManage {
      * 打开串口
      */
     public void open() {
-        isConnect = serialHandle.open("/dev/ttyS4", 115200, true);//设置地址，波特率，开启读取串口数据
-        Log.d("LivenessDetectActivity", "ttyS4串口初始化成功:" +isConnect);
+        String path = QrSerialConfigUtil.getDevicePath();
+        int baudrate = QrSerialConfigUtil.getBaudRate();
+        int dataBits = QrSerialConfigUtil.getDataBits();
+        int stopBits = QrSerialConfigUtil.getStopBits();
+        int parity = QrSerialConfigUtil.getParity();
+        isConnect = serialHandle.open(path, baudrate, dataBits, stopBits, parity, true);//设置地址，波特率，开启读取串口数据
+        Log.d("LivenessDetectActivity", "二维码串口初始化:" + path + "," + baudrate + "," + dataBits + "," + stopBits + ","
+                + parity + " => " + isConnect);
     }
 
     /**
