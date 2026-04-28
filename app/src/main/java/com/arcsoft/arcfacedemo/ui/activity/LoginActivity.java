@@ -1104,8 +1104,6 @@ public class LoginActivity extends BaseActivity
                     }
                 });
 
-        snackbar.show();
-
         AsyncTask.execute(() -> {
 
             while (true) {

@@ -1,6 +1,5 @@
 package com.arcsoft.arcfacedemo.util.glide;
 
-import java.io.File;
 import java.io.InputStream;
 
 import javax.crypto.SecretKey;
@@ -15,8 +14,6 @@ import com.bumptech.glide.module.AppGlideModule;
 import com.arcsoft.arcfacedemo.network.OkHttpUtils;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-
 import okhttp3.OkHttpClient;
 
 @GlideModule
@@ -27,8 +24,8 @@ public class SecureGlideModule extends AppGlideModule {
         OkHttpClient unsafeClient = OkHttpUtils.getUnsafeOkHttpClient();
         ModelLoaderFactory<GlideUrl, InputStream> urlLoaderFactory = new OkHttpUrlLoader.Factory(unsafeClient);
         registry.replace(GlideUrl.class, InputStream.class, urlLoaderFactory);
-        // 注册加密文件解码器
+        // 注册加密文件 ModelLoader，强制 File 走解密链路
         SecretKey secretKey = AESUtils.generateKey();
-        registry.append(File.class, Bitmap.class, new EncryptedFileDecoder(glide.getBitmapPool(), secretKey));
+        registry.append(EncryptedGlideFile.class, InputStream.class, new EncryptedFileModelLoader.Factory(secretKey));
     }
 }

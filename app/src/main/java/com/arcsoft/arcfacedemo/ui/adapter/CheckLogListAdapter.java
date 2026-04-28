@@ -7,6 +7,7 @@ import com.arcsoft.arcfacedemo.db.entity.LongTermRecords;
 import com.arcsoft.arcfacedemo.db.entity.TemporaryCardRecords;
 import com.arcsoft.arcfacedemo.entity.Records;
 import com.arcsoft.arcfacedemo.util.glide.AESUtils;
+import com.arcsoft.arcfacedemo.util.glide.EncryptedGlideFile;
 import com.arcsoft.arcfacedemo.util.glide.GlideApp;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ObjectUtils;
@@ -30,39 +31,20 @@ public class CheckLogListAdapter extends EasyRVAdapter<Records> {
             LongTermRecords longTermRecords = (LongTermRecords) item;
             if (ObjectUtils.isNotEmpty(longTermRecords.passid)) {
                 ALog.e(longTermRecords.passid);
-                GlideApp.with(Utils.getApp()).load(AESUtils.getPhotoPath(longTermRecords.passid)).into(imageView);
-                // ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new ThreadUtils.SimpleTask<Bitmap>() {
-                // @Override
-                // public Bitmap doInBackground() throws Throwable {
-                //
-                // return ImageDownloader.loadAndDecryptImage2(longTermRecords.passid, mContext);
-                // }
-                //
-                // @Override
-                // public void onSuccess(Bitmap result) {
-                // ((ImageView) viewHolder.getView(R.id.img)).setImageBitmap(result);
-                // }
-                // });
+                GlideApp.with(Utils.getApp())
+                        .asBitmap()
+                        .load(new EncryptedGlideFile(AESUtils.getPhotoPath(longTermRecords.passid)))
+                        .into(imageView);
             }
         } else if (item instanceof TemporaryCardRecords) {
             TemporaryCardRecords temporaryCardRecords = (TemporaryCardRecords) item;
             if (ObjectUtils.isNotEmpty(temporaryCardRecords.passid)) {
                 ALog.e(temporaryCardRecords.passid);
                 // 加载本地加密文件
-                GlideApp.with(Utils.getApp()).load(AESUtils.getPhotoPath(temporaryCardRecords.passid)).into(imageView);
-
-                // ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new ThreadUtils.SimpleTask<Bitmap>() {
-                // @Override
-                // public Bitmap doInBackground() throws Throwable {
-                // return ImageDownloader.loadAndDecryptImage2(temporaryCardRecords.passid, mContext);
-                // }
-                //
-                // @Override
-                // public void onSuccess(Bitmap result) {
-                // ((ImageView) viewHolder.getView(R.id.img)).setImageBitmap(result);
-                // }
-                // });
-
+                GlideApp.with(Utils.getApp())
+                        .asBitmap()
+                        .load(new EncryptedGlideFile(AESUtils.getPhotoPath(temporaryCardRecords.passid)))
+                        .into(imageView);
             }
         }
 
