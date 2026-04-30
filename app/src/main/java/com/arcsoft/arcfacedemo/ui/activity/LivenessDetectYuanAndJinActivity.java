@@ -459,34 +459,6 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
-    private void scheduleTokenRefreshJob() {
-        // 获取 JobScheduler 系统服务
-        JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
-
-        // 指定执行 Token 刷新任务的 JobService 组件
-        ComponentName componentName = new ComponentName(this, TokenRefreshJobService.class);
-
-        // 构建 JobInfo 对象，用于配置 Job 的参数
-        JobInfo jobInfo = new JobInfo.Builder(1, componentName)
-                // 设置任务的执行周期，这里设置为每 1 小时执行一次（单位：毫秒）
-                .setPeriodic(1000 * 1 * 1)
-                // 设置任务执行需要的网络条件，这里表示任何网络连接都可以
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                // 设置即使设备重启后，任务仍然会被调度执行
-                .setPersisted(true).build();
-
-        // 将配置好的 Job 提交给 JobScheduler 进行调度
-        int resultCode = jobScheduler.schedule(jobInfo);
-
-        if (resultCode == JobScheduler.RESULT_SUCCESS) {
-            // 调度成功，打印日志
-            ALog.d("Token refresh job scheduled successfully");
-        } else {
-            // 调度失败，打印日志
-            ALog.e("Failed to schedule token refresh job");
-        }
-    }
-
     void initFragment() {
         fragment1 = new Document1();
         fragment2 = new Document2();
@@ -1334,18 +1306,6 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     void setRfidNull() {
         rfid = "";
-    }
-
-    String jsonToArea() {
-        String areaDetail = infoStorage.getString("deviceAreaDetail", "");
-        ALog.i("infoStorage.areaDetail: " + gson.toJson(areaDetail));
-        // 解析 JSON 字符串为 Area 对象
-        Area area = gson.fromJson(areaDetail, Area.class);
-        if (area != null) {
-            return area.getCode();
-        } else {
-            return null;
-        }
     }
 
     public String getArea() {
@@ -2810,16 +2770,6 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
             popDialog.dismiss();
         }
         showCustomDialog(2, null);
-    }
-
-    /**
-     * 显示成功弹窗
-     */
-    public void showFailedDialog(String msg) {
-        if (popDialog != null) {
-            popDialog.dismiss();
-        }
-        showCustomDialog(2, msg);
     }
 
     public void showCustomDialog(int icon, String msg) {

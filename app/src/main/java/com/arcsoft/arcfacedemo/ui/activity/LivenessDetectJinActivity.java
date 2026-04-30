@@ -455,34 +455,6 @@ public class LivenessDetectJinActivity extends BaseActivity
         }
     }
 
-    private void scheduleTokenRefreshJob() {
-        // 获取 JobScheduler 系统服务
-        JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
-
-        // 指定执行 Token 刷新任务的 JobService 组件
-        ComponentName componentName = new ComponentName(this, TokenRefreshJobService.class);
-
-        // 构建 JobInfo 对象，用于配置 Job 的参数
-        JobInfo jobInfo = new JobInfo.Builder(1, componentName)
-                // 设置任务的执行周期，这里设置为每 1 小时执行一次（单位：毫秒）
-                .setPeriodic(1000 * 1 * 1)
-                // 设置任务执行需要的网络条件，这里表示任何网络连接都可以
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                // 设置即使设备重启后，任务仍然会被调度执行
-                .setPersisted(true).build();
-
-        // 将配置好的 Job 提交给 JobScheduler 进行调度
-        int resultCode = jobScheduler.schedule(jobInfo);
-
-        if (resultCode == JobScheduler.RESULT_SUCCESS) {
-            // 调度成功，打印日志
-            ALog.d("Token refresh job scheduled successfully");
-        } else {
-            // 调度失败，打印日志
-            ALog.e("Failed to schedule token refresh job");
-        }
-    }
-
     void initFragment() {
         fragment1 = new Document1();
         fragment2 = new Document2();
@@ -1317,18 +1289,6 @@ public class LivenessDetectJinActivity extends BaseActivity
 
     void setRfidNull() {
         rfid = "";
-    }
-
-    String jsonToArea() {
-        String areaDetail = infoStorage.getString("deviceAreaDetail", "");
-        ALog.i("infoStorage.areaDetail: " + gson.toJson(areaDetail));
-        // 解析 JSON 字符串为 Area 对象
-        Area area = gson.fromJson(areaDetail, Area.class);
-        if (area != null) {
-            return area.getCode();
-        } else {
-            return null;
-        }
     }
 
     public String getArea() {
@@ -2264,42 +2224,6 @@ public class LivenessDetectJinActivity extends BaseActivity
         // });
     }
 
-    // // 上传临时证件日志
-    // public void getAllRecords() {
-    // GetRequest<Base<CardRecords>> request =
-    // OkGo.<Base<CardRecords>>get(UrlConstants.URL_GET_RESORD_PAGE).tag(UrlConstants.URL_GET_RESORD_PAGE);
-    // request.headers("tenant-id", "1");
-    // if (ApiUtils.accessToken != null) {
-    // request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-    // }
-    // request.params("deviceId", infoStorage.getString("deviceId", "")).params("pageNo", 1).params("pageSize", 50)
-    // .params("direction", 1).execute(new JsonCallback<Base<CardRecords>>() {
-    // @Override
-    // public void onSuccess(Response<Base<CardRecords>> response) {
-    // if (ObjectUtils.isEmpty(response.body())) {
-    // showToast("getAllRecords失败");
-    // return;
-    // }
-    // Base<CardRecords> res = response.body();
-    // if (res.getCode() == 200) {
-    // if (ObjectUtils.isNotEmpty(res.getData())
-    // && ObjectUtils.isNotEmpty(res.getData().getList())) {
-    // mListAdapter.clear();
-    // mListAdapter.addAll(res.getData().getList());
-    // }
-    // } else {
-    // showWarningToast(res.getMsg());
-    // }
-    // }
-    //
-    // @Override
-    // public void onError(Response<Base<CardRecords>> response) {
-    // response.getException().printStackTrace();
-    // ALog.e("uploadTemporaryRecords," + response.getException().getMessage());
-    // }
-    // });
-    // }
-
     public void saveRecord(LongTermPass longTermPass) {
         if (longTermPass != null && ObjectUtils.isNotEmpty(longTermPass.userId)) {
             infoStorage.saveString("linshiID", longTermPass.userId);
@@ -2807,16 +2731,6 @@ public class LivenessDetectJinActivity extends BaseActivity
             popDialog.dismiss();
         }
         showCustomDialog(2, null);
-    }
-
-    /**
-     * 显示成功弹窗
-     */
-    public void showFailedDialog(String msg) {
-        if (popDialog != null) {
-            popDialog.dismiss();
-        }
-        showCustomDialog(2, msg);
     }
 
     public void showCustomDialog(int icon, String msg) {
