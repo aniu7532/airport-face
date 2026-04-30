@@ -2239,9 +2239,6 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             }
         });
 
-        // popDialog = new CustomPopDialog(LivenessDetectActivity1.this, icon, msg);
-        // new XPopup.Builder(LivenessDetectActivity1.this).hasStatusBarShadow(false).isRequestFocus(false)
-        // .hasStatusBar(false).asCustom(popDialog).show();
     }
 
     void check() {

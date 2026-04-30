@@ -401,30 +401,6 @@ public class LivenessDetectYuanActivity extends BaseActivity
                 }
             }
         });
-        // countdownHandler.postDelayed(new Runnable() {
-        // @Override
-        // public void run() {
-        // ActivityUtils.startActivity(LoginActivity.class);
-        // ActivityUtils.getTopActivity().finish();
-        // }
-        // }, 10000L);
-        // getLongPassCardsTest();
-
-        // runOnUiThread(new Runnable() {
-        // @Override
-        // public void run() {
-        ////// ALog.e("photo:" + longTermPass.photo + "");
-        ////// ALog.e("checkPhoto:" + longTermPass.checkPhoto + "");
-        // iv_face1.setVisibility(View.VISIBLE);
-        // iv_face2.setVisibility(View.VISIBLE);
-        // Glide.with(LivenessDetectActivity.this).load("https://obs-digitalpass-prod.caacsri.com/09ad8eb824009f717fc3f8d863b59ce2aa4a7d6a0875fa821e390d2a3a106104.jpg").into(iv_face1);
-        // iv_face2.setImageBitmap(ImageDownloader.loadAndDecryptImage("1894931788607250434",
-        // LivenessDetectActivity.this));
-        // iv_face3.setImageBitmap(ImageDownloader.loadAndDecryptImage2("1894931788607250434",
-        // LivenessDetectActivity.this));
-        ////// Glide.with(LivenessDetectActivity.this).load("https://obs-digitalpass-prod.caacsri.com/09ad8eb824009f717fc3f8d863b59ce2aa4a7d6a0875fa821e390d2a3a106104.jpg").into(iv_face2);
-        // }
-        // });
 
         // 调试：上传几条假通行记录（需已登录且有 token）。需要时取消下面三行注释。
 //         if (BuildConfig.DEBUG) {
@@ -1744,41 +1720,6 @@ public class LivenessDetectYuanActivity extends BaseActivity
                         return null;
                     }
 
-                    // boolean currentTimeInRange =
-                    // DeviceUtils.isCurrentTimeInRange(longTermPass.startDate, longTermPass.expiryDate);
-                    // if (!currentTimeInRange) {
-                    // longTermPass.status = 3;
-                    // playAudio(mediaReject);
-                    // showCustomDialog(2, "临时卡过期");
-                    // return null;
-                    // }
-                    // // 判断证件是否正常
-                    // if (longTermPass.status != 1) {
-                    // playAudio(mediaReject);
-                    // showCustomDialog(2, "证件已" + theCardIsExpired(longTermPass.status));
-                    // return null;
-                    // }
-                    // 判断是否拥有当前区域权限
-                    // String code = jsonToArea();
-                    // ALog.e("area code=" + code);
-                    // if (code != null && code != "") {
-                    // if (Arrays.asList(longTermPass.areaDisplayCode).contains(code)) {
-                    // ALog.i("拥有当前区域权限" + longTermPass.cardId);
-                    // } else {
-                    // ALog.i("没有有当前区域权限" + longTermPass.cardId);
-                    // runOnUiThread(new Runnable() {
-                    // @Override
-                    // public void run() {
-                    // ToastDialogManager.showCustomDialog(LivenessDetectActivity.this, 2, "无当前区域权限");
-                    // }
-                    // });
-                    // setRfidNull();
-                    // return null;
-                    // }
-                    // }
-                    // 判断是否拥有当前区域权限
-                    // String code = jsonToArea();
-                    // if (code != null && code != "")
                     if (!isAreaPass(longTermPass.areaIds, longTermPass.areaRootIds)) {
                         // if (Arrays.asList(longTermPass.areaDisplayCode).contains(code)) {
                         // ALog.i("拥有当前区域权限" + longTermPass.cardId);
@@ -2714,18 +2655,6 @@ public class LivenessDetectYuanActivity extends BaseActivity
         setRfidNull();
         if (longTermPass != null) {
             if (longTermPass.type == 0) {
-                // // 上传通行图片到服务器
-                // String s = imageUploader.uploadBitmap(bitmap);
-                // runOnUiThread(new Runnable() {
-                // @Override
-                // public void run() {
-                // ALog.e("photo:" + longTermPass.photo + "");
-                // ALog.e("checkPhoto:" + longTermPass.checkPhoto + "");
-                // Glide.with(LivenessDetectActivity.this).load(longTermPass.photo).into(iv_face1);
-                // Glide.with(LivenessDetectActivity.this).load(longTermPass.checkPhoto).into(iv_face2);
-                // }
-                // });
-
                 // ALog.i("上传图片路径: " + s);
                 saveLongTermRecords(longTermPass, bitmap, faceSimilar, quality, false); // 保存长期通行记录到本地数据库
 
@@ -2826,9 +2755,6 @@ public class LivenessDetectYuanActivity extends BaseActivity
             }
         });
 
-        // popDialog = new CustomPopDialog(LivenessDetectActivity1.this, icon, msg);
-        // new XPopup.Builder(LivenessDetectActivity1.this).hasStatusBarShadow(false).isRequestFocus(false)
-        // .hasStatusBar(false).asCustom(popDialog).show();
     }
 
     void check() {

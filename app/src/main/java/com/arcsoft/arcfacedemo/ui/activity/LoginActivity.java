@@ -1247,11 +1247,6 @@ public class LoginActivity extends BaseActivity
 
                         // 批量注册人脸
                         registerFace();
-
-                        // 跳转到 IndexActivity
-                        // Intent intent = new Intent(LoginActivity.this, LivenessDetectActivity.class);
-                        // startActivity(intent);
-                        // finish();
                     }
                 });
                 return null;

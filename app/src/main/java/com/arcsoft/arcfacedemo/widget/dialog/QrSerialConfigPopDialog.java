@@ -8,7 +8,6 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 
 import com.arcsoft.arcfacedemo.R;
-import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
@@ -93,7 +92,6 @@ public class QrSerialConfigPopDialog extends CenterPopupView {
                 ToastUtils.showShort("保存成功，正在重启页面以生效");
                 if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
                     ActivityUtils.startActivity(LoginActivity.class);
-                    ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                     ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
                     ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
                     ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);

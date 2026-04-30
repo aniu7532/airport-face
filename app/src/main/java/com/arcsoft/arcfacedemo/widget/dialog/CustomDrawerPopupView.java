@@ -2,20 +2,28 @@ package com.arcsoft.arcfacedemo.widget.dialog;
 
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
 import com.arcsoft.arcfacedemo.R;
-import com.arcsoft.arcfacedemo.ui.activity.BaseActivity;
-import com.arcsoft.arcfacedemo.ui.activity.FaceManageActivity;
-import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LoginActivity;
 import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
-import com.arcsoft.arcfacedemo.ui.callback.BatchRegisterCallback;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
+import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsReInitUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
-import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
@@ -28,25 +36,6 @@ import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.core.DrawerPopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnSelectListener;
-import com.arcsoft.arcfacedemo.widget.dialog.CardSerialConfigPopDialog;
-import com.arcsoft.arcfacedemo.widget.dialog.QrSerialConfigPopDialog;
-import com.arcsoft.arcfacedemo.widget.dialog.VerifyFeatureSettingsDialog;
-
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.annotation.NonNull;
-
-import java.io.File;
 
 /**
  * Description: 自定义抽屉弹窗
@@ -104,7 +93,6 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                                 if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
                                     ActivityUtils.startActivity(LoginActivity.class);
 
-                                    ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);
@@ -130,7 +118,6 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                                 if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
                                     ActivityUtils.startActivity(LoginActivity.class);
 
-                                    ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);
@@ -162,7 +149,6 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                                 SPUtils.getInstance().put("tipsLoc", position);
                                 if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
                                     ActivityUtils.startActivity(LoginActivity.class);
-                                    ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
                                     ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);
@@ -417,7 +403,6 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                             extra.putBoolean("auto", false);
                             ActivityUtils.startActivity(extra, LoginActivity.class);
 
-                            ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                             ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
                             ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
                             ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);

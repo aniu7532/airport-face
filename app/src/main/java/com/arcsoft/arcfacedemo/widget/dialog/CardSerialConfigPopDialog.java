@@ -1,7 +1,6 @@
 package com.arcsoft.arcfacedemo.widget.dialog;
 
 import com.arcsoft.arcfacedemo.R;
-import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
@@ -82,7 +81,6 @@ public class CardSerialConfigPopDialog extends CenterPopupView {
                 if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
                     ActivityUtils.startActivity(LoginActivity.class);
 
-                    ActivityUtils.finishOtherActivities(LivenessDetectActivity.class);
                     ActivityUtils.finishOtherActivities(LivenessDetectJinActivity.class);
                     ActivityUtils.finishOtherActivities(LivenessDetectYuanActivity.class);
                     ActivityUtils.finishOtherActivities(LivenessDetectYuanAndJinActivity.class);

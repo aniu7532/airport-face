@@ -424,34 +424,6 @@ public class LivenessDetectJinActivity extends BaseActivity
                 }
             }
         });
-        // countdownHandler.postDelayed(new Runnable() {
-        // @Override
-        // public void run() {
-        // // ActivityUtils.startActivity(LoginActivity.class);
-        // // ActivityUtils.getTopActivity().finish();
-        // Intent intent = new Intent(getActivity(), LoginActivity.class);
-        // intent.putExtra("auto", true);
-        // ActivityUtils.startActivity(intent);
-        // }
-        // }, 10000L);
-        // getLongPassCardsTest();
-
-        // runOnUiThread(new Runnable() {
-        // @Override
-        // public void run() {
-        ////// ALog.e("photo:" + longTermPass.photo + "");
-        ////// ALog.e("checkPhoto:" + longTermPass.checkPhoto + "");
-        // iv_face1.setVisibility(View.VISIBLE);
-        // iv_face2.setVisibility(View.VISIBLE);
-        // iv_face3.setVisibility(View.VISIBLE);
-        // Glide.with(LivenessDetectActivity.this).load("https://obs-digitalpass-prod.caacsri.com/58870e09e72010f19ba72492001a1ddf3a57c17732893653aa3fb3bc7fc468c4.jpg").into(iv_face1);
-        // iv_face2.setImageBitmap(ImageDownloader.loadAndDecryptImage("1872472149001134082",
-        // LivenessDetectActivity.this));
-        // iv_face3.setImageBitmap(ImageDownloader.loadAndDecryptImage2("1872472149001134082",
-        // LivenessDetectActivity.this));
-        ////// Glide.with(LivenessDetectActivity.this).load("https://obs-digitalpass-prod.caacsri.com/09ad8eb824009f717fc3f8d863b59ce2aa4a7d6a0875fa821e390d2a3a106104.jpg").into(iv_face2);
-        // }
-        // });
     }
 
     private void callApi() {
@@ -1578,14 +1550,6 @@ public class LivenessDetectJinActivity extends BaseActivity
                             if (!checkCard()) {
                                 return null;
                             }
-                            // runOnUiThread(new Runnable() {
-                            // @Override
-                            // public void run() {
-                            // showCustomDialog(1, "设置了引领人的C类卡请验证人脸");
-                            // // ToastDialogManager.showCustomDialog(LivenessDetectActivity.this, 1,
-                            // // "临时卡请验证人脸");
-                            // }
-                            // });
                         }
                     }
                     showCustomDialog(1, "请验证人脸");
@@ -1901,41 +1865,6 @@ public class LivenessDetectJinActivity extends BaseActivity
                         return null;
                     }
 
-                    // boolean currentTimeInRange =
-                    // DeviceUtils.isCurrentTimeInRange(longTermPass.startDate, longTermPass.expiryDate);
-                    // if (!currentTimeInRange) {
-                    // longTermPass.status = 3;
-                    // playAudio(mediaReject);
-                    // showCustomDialog(2, "临时卡过期");
-                    // return null;
-                    // }
-                    // // 判断证件是否正常
-                    // if (longTermPass.status != 1) {
-                    // playAudio(mediaReject);
-                    // showCustomDialog(2, "证件已" + theCardIsExpired(longTermPass.status));
-                    // return null;
-                    // }
-                    // 判断是否拥有当前区域权限
-                    // String code = jsonToArea();
-                    // ALog.e("area code=" + code);
-                    // if (code != null && code != "") {
-                    // if (Arrays.asList(longTermPass.areaDisplayCode).contains(code)) {
-                    // ALog.i("拥有当前区域权限" + longTermPass.cardId);
-                    // } else {
-                    // ALog.i("没有有当前区域权限" + longTermPass.cardId);
-                    // runOnUiThread(new Runnable() {
-                    // @Override
-                    // public void run() {
-                    // ToastDialogManager.showCustomDialog(LivenessDetectActivity.this, 2, "无当前区域权限");
-                    // }
-                    // });
-                    // setRfidNull();
-                    // return null;
-                    // }
-                    // }
-                    // 判断是否拥有当前区域权限
-                    // String code = jsonToArea();
-                    // if (code != null && code != "")
                     if (!isAreaPass(longTermPass.areaIds, longTermPass.areaRootIds)) {
                         // if (Arrays.asList(longTermPass.areaDisplayCode).contains(code)) {
                         // ALog.i("拥有当前区域权限" + longTermPass.cardId);
@@ -2826,17 +2755,6 @@ public class LivenessDetectJinActivity extends BaseActivity
         setRfidNull();
         if (longTermPass != null) {
             if (longTermPass.type == 0) {
-                // // 上传通行图片到服务器
-                // String s = imageUploader.uploadBitmap(bitmap);
-                // runOnUiThread(new Runnable() {
-                // @Override
-                // public void run() {
-                // ALog.e("photo:" + longTermPass.photo + "");
-                // ALog.e("checkPhoto:" + longTermPass.checkPhoto + "");
-                // Glide.with(LivenessDetectActivity.this).load(longTermPass.photo).into(iv_face1);
-                // Glide.with(LivenessDetectActivity.this).load(longTermPass.checkPhoto).into(iv_face2);
-                // }
-                // });
                 // ALog.i("上传图片路径: " + s);
                 saveLongTermRecords(longTermPass, bitmap, faceSimilar, quality, false); // 保存长期通行记录到本地数据库
             } else if (longTermPass.type == 1) {
@@ -2938,9 +2856,6 @@ public class LivenessDetectJinActivity extends BaseActivity
             }
         });
 
-        // popDialog = new CustomPopDialog(LivenessDetectActivity1.this, icon, msg);
-        // new XPopup.Builder(LivenessDetectActivity1.this).hasStatusBarShadow(false).isRequestFocus(false)
-        // .hasStatusBar(false).asCustom(popDialog).show();
     }
 
     void check() {
@@ -3005,41 +2920,6 @@ public class LivenessDetectJinActivity extends BaseActivity
             }
         });
 
-        // UpdateUtils.update(this, new OnUpdateFailureListener() {
-        // @Override
-        // public void onFailure(UpdateError error) {
-        // ALog.e(error.toString());
-        // // 对不同错误进行处理
-        // if (error.getCode() == UpdateError.ERROR.CHECK_NO_NEW_VERSION) {
-        //// AppClient.get().postEvent(new AppInfoEvent(AppInfoEvent.UPDATE_NO_NEWER));
-        // countdownHandler.removeMessages(7);
-        // countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
-        // } else if ((error.getCode() == UpdateError.ERROR.DOWNLOAD_FAILED
-        // || error.getCode() == UpdateError.ERROR.DOWNLOAD_PERMISSION_DENIED)
-        // && error.getUpdateEntity() != null && error.getUpdateEntity().isForce()) {
-        // showToast(error.toString());
-        // AppUtils.exitApp();
-        // } else if (error.getCode() == UpdateError.ERROR.PROMPT_CANCEL
-        // || error.getCode() == UpdateError.ERROR.PROMPT_IGNORE
-        // || error.getCode() == UpdateError.ERROR.CHECK_IGNORED_VERSION) {
-        // // showToast(getString(R.string.update_tips));
-        //// AppClient.get().postEvent(new AppInfoEvent(AppInfoEvent.CANCLE));
-        // countdownHandler.removeMessages(7);
-        // countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
-        // } else {
-        //// AppClient.get().postEvent(new AppInfoEvent(AppInfoEvent.ERROR));
-        // countdownHandler.removeMessages(7);
-        // countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
-        // showToast(error.getMessage());
-        // }
-        // }
-        // }, new DefaultInstallListener() {
-        // @Override
-        // public void onInstallApkSuccess() {
-        // super.onInstallApkSuccess();
-        // finish();
-        // }
-        // });
     }
 
 }
