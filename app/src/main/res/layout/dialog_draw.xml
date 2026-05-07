@@ -25,205 +25,218 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tvInOut"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="12dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="进出配置"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/tvChayan"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="查验模式"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/tvVerifyFeature"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="核销功能"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvInOut"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="进出配置"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvTipsLoc"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="证件提示窗口位置"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvChayan"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="查验模式"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvCanshu"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="人脸识别参数配置"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvVerifyFeature"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="核销功能"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvCardSerial"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="读卡串口配置"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvTipsLoc"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="证件提示窗口位置"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvQrSerial"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="二维码串口配置"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvCanshu"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="人脸识别参数配置"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvDelete"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="删除本地数据"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvCardSerial"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="读卡串口配置"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvWenan"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="文案配置"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvQrSerial"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="二维码串口配置"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvUploadLog"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="上传日志"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:visibility="visible" />
+            <TextView
+                android:id="@+id/tvDelete"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="删除本地数据"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvReInit"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="在线数据完整性检查"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:visibility="visible" />
+            <TextView
+                android:id="@+id/tvWenan"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="文案配置"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/tvRemedial"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="数据完整性检查"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:visibility="visible" />
+            <TextView
+                android:id="@+id/tvUploadLog"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="上传日志"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/tvGotoLuancher"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="返回系统桌面"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:visibility="gone" />
+            <TextView
+                android:id="@+id/tvReInit"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="在线数据完整性检查"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/tvGotoSetting"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="系统设置"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:visibility="visible" />
+            <TextView
+                android:id="@+id/tvRemedial"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="数据完整性检查"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/tvVersion"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="16dp"
-        android:background="@mipmap/draw_btn_bg"
-        android:gravity="center_vertical"
-        android:paddingLeft="16dp"
-        android:text="版本V1.1"
-        android:textColor="@color/white"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/tvGotoLuancher"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="返回系统桌面"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="gone" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+            <TextView
+                android:id="@+id/tvGotoSetting"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="系统设置"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="visible" />
 
-    <Button
-        android:id="@+id/btnExit"
-        android:layout_width="260dp"
-        android:layout_height="56dp"
-        android:layout_marginBottom="50dp"
-        android:background="@drawable/btn_bg2"
-        android:gravity="center"
-        android:minHeight="36dp"
-        android:text="注销登录"
-        android:textColor="@color/white"
-        android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@mipmap/draw_btn_bg"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="版本V1.1"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btnExit"
+                android:layout_width="260dp"
+                android:layout_height="56dp"
+                android:layout_marginBottom="50dp"
+                android:background="@drawable/btn_bg2"
+                android:gravity="center"
+                android:minHeight="36dp"
+                android:text="注销登录"
+                android:textColor="@color/white"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+    </ScrollView>
+
 </LinearLayout>
