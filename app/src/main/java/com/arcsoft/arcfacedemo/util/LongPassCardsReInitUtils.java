@@ -59,11 +59,9 @@ public class LongPassCardsReInitUtils {
             public String doInBackground() throws Throwable {
                 int onlineCount = getOnlineCount();
                 int localCount = ArcFaceApplication.getApplication().getDb().longTermPassDao().getAll().size();
-                if (localCount >= onlineCount) {
-                    ToastUtils.showLong("数据已经是最新");
-                    return "";
+                if (localCount < onlineCount) {
+                    update();
                 }
-                update();
                 LongPassCardsRemedialMeasuresUtils.getInstance().start();
                 return "";
             }
