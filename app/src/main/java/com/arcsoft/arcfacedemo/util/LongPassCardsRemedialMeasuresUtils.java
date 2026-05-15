@@ -212,6 +212,8 @@ public class LongPassCardsRemedialMeasuresUtils {
 
                 doing = true;
 
+                final ArrayList<Map<String, String>> failFileNames = new ArrayList<>();
+
                 LongTermPassDao dao = ArcFaceApplication.getApplication().getDb().longTermPassDao();
                 List<LongTermPass> longTermPassList = dao.getByStatusNotCancelled();
 
@@ -262,6 +264,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                         ALog.i("registerDir文件下载成功");
                     } else {
                         ALog.i("registerDir文件下载失败");
+                        failFileNames.add(buildFailedContent(longTermPass.id, "register下载失败"));
                         hasFailure = true;
                     }
 
@@ -274,6 +277,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                         ALog.i("photoDir文件下载成功");
                     } else {
                         ALog.i("photoDir文件下载失败");
+                        failFileNames.add(buildFailedContent(longTermPass.id, "photo下载失败"));
                         hasFailure = true;
                     }
 
@@ -293,6 +297,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                 ALog.i(String.format("下载完成 - 总数: %d, 当前: %d, 失败: %d", totalCount, currentIndex[0], failedCount[0]));
                 callback.end();
                 doing = false;
+                tellServer(failFileNames);
                 return null;
             }
         });
@@ -426,7 +431,7 @@ public class LongPassCardsRemedialMeasuresUtils {
 
                 File[] files = validFiles.toArray(new File[0]);
                 int total = files.length;
-                final ArrayList<String> failFileNames = new ArrayList<>();
+                final ArrayList<Map<String, String>> failFileNames = new ArrayList<>();
                 final int[] failed = {0};
                 final int[] success = {0};
                 Observable.fromArray(files).flatMap((Function<File, ObservableSource<Boolean>>) file -> {
@@ -434,7 +439,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                             if (decryptedBytes == null) {
                                 ALog.e(TAG, "解密文件失败: " + file.getName());
                                 failed[0]++;
-                                failFileNames.add(file.getName());
+                                failFileNames.add(buildFileFailedContent(file, "解密文件失败"));
                                 return observer -> observer.onNext(true);
                             }
                             String name = file.getName();
@@ -447,14 +452,14 @@ public class LongPassCardsRemedialMeasuresUtils {
                                 faceEntity = faceRepository.registerJpeg(context, decryptedBytes, name);
                                 if (faceEntity == null) {
                                     failed[0]++;
-                                    failFileNames.add(file.getName());
+                                    failFileNames.add(buildFileFailedContent(file, "注册文件失败 faceEntity == null"));
                                 } else {
                                     success[0]++;
                                 }
                             } catch (Exception e) {
                                 ALog.e(TAG, "注册文件失败: " + file.getName(), e);
                                 failed[0]++;
-                                failFileNames.add(file.getName());
+                                failFileNames.add(buildFileFailedContent(file, "注册文件失败" + e.getMessage()));
                                 faceEntity = null;
                             }
                             FaceEntity finalFaceEntity = faceEntity;
@@ -623,22 +628,15 @@ public class LongPassCardsRemedialMeasuresUtils {
         }
     }
 
-    private void tellServer(List<String> passIds) {
-        if (passIds.isEmpty()) {
+    private void tellServer(List<Map<String, String>> passIdsWithMsg) {
+        if (passIdsWithMsg.isEmpty()) {
             return;
         }
-        passIds = passIds
-                .stream()
-                .map((fileName) -> {
-                    int suffixIndex = fileName.indexOf(".");
-                    if (suffixIndex > 0) {
-                        fileName = fileName.substring(0, suffixIndex);
-                    }
-                    return fileName;
-                })
+        List<String> finalPassIds = passIdsWithMsg.stream()
+                .map(entity -> entity.get("id"))
+                .distinct()
                 .collect(Collectors.toList());
-		List<String> finalPassIds = passIds;
-		ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
+        ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
             @Override
             public String doInBackground() throws Throwable {
                 PostRequest<Base<String>> request =
@@ -651,6 +649,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                 params.put("accountName", loginName);
                 params.put("accountId", infoStorage.getString("userId", ""));
                 params.put("detail", finalPassIds);
+                params.put("detailContent", passIdsWithMsg);
                 request.headers("tenant-id", "1");
                 // 检查是否有 accessToken，如果有则添加 Authorization 头
                 if (ApiUtils.accessToken != null) {
@@ -674,6 +673,20 @@ public class LongPassCardsRemedialMeasuresUtils {
                 return "";
             }
         });
+    }
+
+    private Map<String, String> buildFailedContent(String id, String reason) {
+        HashMap<String, String> hashMap = new HashMap<>();
+        hashMap.put("id", id);
+        hashMap.put("reason", reason);
+        return hashMap;
+    }
+
+    private Map<String, String> buildFileFailedContent(File file, String reason) {
+        String name = file.getName();
+        int dot = name.lastIndexOf('.');
+        String baseName = (dot > 0) ? name.substring(0, dot) : name;
+        return buildFailedContent(baseName, reason);
     }
 
 }
