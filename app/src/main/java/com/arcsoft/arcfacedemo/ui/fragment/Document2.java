@@ -5,6 +5,7 @@ import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.network.ApiUtils;
 import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.util.glide.AESUtils;
+import com.arcsoft.arcfacedemo.util.glide.EncryptedGlideFile;
 import com.arcsoft.arcfacedemo.util.glide.GlideApp;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ObjectUtils;
@@ -25,6 +26,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+
+import java.io.File;
 
 public class Document2 extends Fragment {
     private static final String TAG = "Document2";
@@ -171,7 +174,8 @@ public class Document2 extends Fragment {
 
         ALog.e(ArcFaceApplication.getApplication().isOffLine());
         if (ArcFaceApplication.getApplication().isOffLine() || ObjectUtils.isEmpty(photo)) { // 加载本地加密文件
-            GlideApp.with(getActivity()).load(AESUtils.getPhotoPath(passid)).into(card_img);
+            File file = AESUtils.getPhotoPath(passid);
+            GlideApp.with(getActivity()).load(new EncryptedGlideFile(file)).into(card_img);
         } else {
             // 拼接基础下载地址
             String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + photo;

@@ -12,10 +12,10 @@ import com.arcsoft.arcfacedemo.databinding.WriteOffRecordListHeaderBinding
 import com.arcsoft.arcfacedemo.entity.CardRecords
 import com.arcsoft.arcfacedemo.network.ApiUtils
 import com.arcsoft.arcfacedemo.network.UrlConstants
+import com.arcsoft.arcfacedemo.util.glide.EncryptedGlideFile
 import com.arcsoft.arcfacedemo.widget.dialog.AppKeyPopDialog
 import com.arcsoft.arcfacedemo.widget.dialog.VerifyAndConfirmDialog
 import com.blankj.utilcode.util.ObjectUtils
-import com.blankj.utilcode.util.Utils
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.model.LazyHeaders
@@ -116,8 +116,8 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
                         return
                     }
                     // 加载本地加密文件
-                    Glide.with(Utils.getApp())
-                        .load(file)
+                    Glide.with(imgAvatar.context)
+                        .load(EncryptedGlideFile(file))
                         .into(imgAvatar)
                 }
             }
