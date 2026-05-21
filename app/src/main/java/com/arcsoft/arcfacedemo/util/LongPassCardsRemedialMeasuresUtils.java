@@ -185,7 +185,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                                         }
                                     });
                                 }
-                                if (!errMsg.isEmpty()) {
+                                if (errMsg != null && !errMsg.isEmpty()) {
                                     ToastUtils.showLong(errMsg);
                                 }
                             }
