@@ -131,7 +131,9 @@ class WriteOffRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, WriteOffRec
  * 核销记录列表顶部说明行，固定 1 条，放在 [WriteOffRecordAdapter] 之上。
  * 总条数通过 [setTotal] 更新（来自接口 [com.arcsoft.arcfacedemo.entity.CardRecords.getTotal]）。
  */
-class WriteOffRecordHeaderAdapter : RecyclerView.Adapter<WriteOffRecordHeaderAdapter.HeaderVH>() {
+class WriteOffRecordHeaderAdapter(
+    val onRefresh: () -> Unit
+) : RecyclerView.Adapter<WriteOffRecordHeaderAdapter.HeaderVH>() {
 
     private var total: Int? = null
 
@@ -156,6 +158,9 @@ class WriteOffRecordHeaderAdapter : RecyclerView.Adapter<WriteOffRecordHeaderAda
         holder.binding.tvHeaderTitle.text = when (val t = total) {
             null -> "有进无出列表"
             else -> "有进无出列表（总数：$t）"
+        }
+        holder.binding.btnRefresh.setOnClickListener {
+            onRefresh.invoke()
         }
     }
 

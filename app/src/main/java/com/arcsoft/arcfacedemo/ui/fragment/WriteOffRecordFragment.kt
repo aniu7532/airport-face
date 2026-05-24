@@ -1,21 +1,26 @@
 package com.arcsoft.arcfacedemo.ui.fragment
 
 import android.graphics.Rect
-import androidx.fragment.app.viewModels
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.arcsoft.arcfacedemo.databinding.FragmentWriteOffRecordBinding
 import com.arcsoft.arcfacedemo.ui.adapter.WriteOffRecordAdapter
 import com.arcsoft.arcfacedemo.ui.adapter.WriteOffRecordHeaderAdapter
 import com.arcsoft.arcfacedemo.ui.viewmodel.WriteOffRecordViewModel
+import com.arcsoft.arcfacedemo.widget.dialog.LoadingPopDialog
+import com.lxj.xpopup.XPopup
+import com.lxj.xpopup.core.BasePopupView
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class WriteOffRecordFragment : Fragment() {
@@ -31,7 +36,12 @@ class WriteOffRecordFragment : Fragment() {
     /** 首次 onResume 已由 ViewModel 初始 paging 加载，避免重复请求；之后每次回到本页再 search。 */
     private var hasResumedOnce = false
 
-    private val headerAdapter by lazy { WriteOffRecordHeaderAdapter() }
+    private val headerAdapter by lazy {
+        WriteOffRecordHeaderAdapter {
+            showLoadingPopup()
+            adapter.refresh()
+        }
+    }
 
     private val adapter by lazy { WriteOffRecordAdapter() }
 
@@ -101,12 +111,16 @@ class WriteOffRecordFragment : Fragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.name.collect {
-                        if (it.isEmpty()) { binding.inputName.clear() }
+                        if (it.isEmpty()) {
+                            binding.inputName.clear()
+                        }
                     }
                 }
                 launch {
                     viewModel.cardNo.collect {
-                        if (it.isEmpty()) { binding.inputCardNo.clear() }
+                        if (it.isEmpty()) {
+                            binding.inputCardNo.clear()
+                        }
                     }
                 }
                 launch {
@@ -122,10 +136,43 @@ class WriteOffRecordFragment : Fragment() {
                 launch {
                     viewModel.listTotal.collect { headerAdapter.setTotal(it) }
                 }
+                launch {
+                    adapter.loadStateFlow.collectLatest { loadStates ->
+                        when (loadStates.refresh) {
+                            is LoadState.Loading -> {}
+                            is LoadState.NotLoading, is LoadState.Error -> dismissLoadingPopup()
+                        }
+                    }
+                }
                 viewModel.cardRecords.collect {
                     adapter.submitData(it)
                 }
             }
         }
+    }
+
+    /** 分页 refresh 会多次 show/dismiss，不可对同一实例设 isDestroyOnDismiss(true) */
+    private var loadingPopup: BasePopupView? = null
+
+    private fun showLoadingPopup() {
+        if (!isAdded) return
+        val popup = loadingPopup ?: XPopup.Builder(requireActivity())
+            .dismissOnBackPressed(false)
+            .dismissOnTouchOutside(false)
+            .asCustom(LoadingPopDialog(requireActivity(), "加载中，请稍后......"))
+            .also { loadingPopup = it }
+        if (!popup.isShow) {
+            popup.show()
+        }
+    }
+
+    private fun dismissLoadingPopup() {
+        loadingPopup?.takeIf { it.isShow }?.dismiss()
+    }
+
+    override fun onDestroyView() {
+        dismissLoadingPopup()
+        loadingPopup = null
+        super.onDestroyView()
     }
 }
