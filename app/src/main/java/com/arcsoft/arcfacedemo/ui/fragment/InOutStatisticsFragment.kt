@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.arcsoft.arcfacedemo.databinding.FragmentInOutStatisticsBinding
 import com.arcsoft.arcfacedemo.ui.adapter.InOutStatisticsAdapter
+import com.arcsoft.arcfacedemo.ui.bindCompanyUnitSelector
 import com.arcsoft.arcfacedemo.ui.viewmodel.InOutStatisticsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -60,6 +61,7 @@ class InOutStatisticsFragment : Fragment() {
             selectorEndTime.addOnTimeChangedListener {
                 viewModel.setEndTime(it)
             }
+            bindCompanyUnitSelector(selectorCompany) { viewModel.setCompanyName(it) }
             foldView.setOnFoldListener {
                 foldGroup.visibility = if (it) View.GONE else View.VISIBLE
             }
@@ -97,6 +99,15 @@ class InOutStatisticsFragment : Fragment() {
                 launch {
                     viewModel.endTime.collect {
                         binding.selectorEndTime.setValue(it)
+                    }
+                }
+                launch {
+                    viewModel.companyName.collect {
+                        if (it.isEmpty()) {
+                            binding.selectorCompany.clear()
+                        } else {
+                            binding.selectorCompany.setValue(it)
+                        }
                     }
                 }
                 viewModel.list.collectLatest {

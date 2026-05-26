@@ -32,6 +32,9 @@ class WriteOffRecordViewModel : ViewModel() {
     private val _endTime = MutableStateFlow(Calendar.getInstance().dayEnd)
     val endTime = _endTime.asStateFlow()
 
+    private val _companyName = MutableStateFlow("")
+    val companyName = _companyName.asStateFlow()
+
     private val pagingConfig = PagingConfig(
         pageSize = 10,
         prefetchDistance = 1,
@@ -49,6 +52,7 @@ class WriteOffRecordViewModel : ViewModel() {
                 idCode = _cardNo.value,
                 startCheckTime = formatCheckTime(_startTime.value),
                 endCheckTime = formatCheckTime(_endTime.value),
+                companyName = _companyName.value,
             ), 0L
         )
     )
@@ -74,6 +78,7 @@ class WriteOffRecordViewModel : ViewModel() {
         _cardNo.value = ""
         _startTime.value = Calendar.getInstance().dayStart
         _endTime.value = Calendar.getInstance().dayEnd
+        _companyName.value = ""
         search()
     }
 
@@ -83,6 +88,7 @@ class WriteOffRecordViewModel : ViewModel() {
             idCode = _cardNo.value,
             startCheckTime = formatCheckTime(_startTime.value),
             endCheckTime = formatCheckTime(_endTime.value),
+            companyName = _companyName.value,
         )
         val nextV = searchSnapshot.value.second + 1
         searchSnapshot.value = Pair(q, nextV)
@@ -107,6 +113,10 @@ class WriteOffRecordViewModel : ViewModel() {
 
     fun setEndTime(endTime: Calendar) {
         _endTime.value = endTime
+    }
+
+    fun setCompanyName(companyName: String) {
+        _companyName.value = companyName
     }
 
 }

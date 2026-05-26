@@ -45,7 +45,10 @@ class AccessRecordPagingSource(
                 .params("idCode", query.idCode)
                 .params("startCheckTime", query.startCheckTime)
                 .params("endCheckTime", query.endCheckTime)
-                .execute(object : JsonCallback<Base<CardRecords?>?>() {
+            if (query.companyName.isNotEmpty()) {
+                request.params("companyName", query.companyName)
+            }
+            request.execute(object : JsonCallback<Base<CardRecords?>?>() {
                     override fun onSuccess(response: Response<Base<CardRecords?>?>?) {
                         val data = response?.body()?.data
                         val list = data?.list ?: emptyList()

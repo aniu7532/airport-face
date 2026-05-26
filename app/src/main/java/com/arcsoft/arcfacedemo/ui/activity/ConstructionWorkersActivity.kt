@@ -12,7 +12,6 @@ import com.arcsoft.arcfacedemo.databinding.ActivityConstructionWorkersTabBinding
 import com.arcsoft.arcfacedemo.ui.adapter.ConstructionWorkersAdapter
 import com.arcsoft.arcfacedemo.ui.viewmodel.ConstructionWorkersTab
 import com.arcsoft.arcfacedemo.ui.viewmodel.ConstructionWorkersViewModel
-import com.tencent.bugly.proguard.ad
 import kotlinx.coroutines.launch
 
 class ConstructionWorkersActivity : AppCompatActivity() {

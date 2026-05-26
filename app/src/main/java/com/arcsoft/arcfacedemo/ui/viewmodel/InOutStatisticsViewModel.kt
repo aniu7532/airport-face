@@ -24,6 +24,9 @@ class InOutStatisticsViewModel : ViewModel() {
     private val _endTime = MutableStateFlow(Calendar.getInstance().dayEnd)
     val endTime = _endTime.asStateFlow()
 
+    private val _companyName = MutableStateFlow("")
+    val companyName = _companyName.asStateFlow()
+
     private val _list = MutableStateFlow<List<InOutStatisticsResult>>(emptyList())
     val list = _list.asStateFlow()
 
@@ -50,6 +53,9 @@ class InOutStatisticsViewModel : ViewModel() {
         _endTime.value?.let {
             request.params("endCheckTime", formatLocalDate(it))
         }
+        if (_companyName.value.isNotEmpty()) {
+            request.params("companyName", _companyName.value)
+        }
         request.execute(object : JsonCallback<Base<List<InOutStatisticsResult?>?>?>() {
             override fun onSuccess(response: Response<Base<List<InOutStatisticsResult?>?>?>?) {
                 _list.value = response?.body()?.data?.filterNotNull() ?: emptyList()
@@ -66,7 +72,12 @@ class InOutStatisticsViewModel : ViewModel() {
     fun reset() {
         _startTime.value = Calendar.getInstance().dayBefore(7)
         _endTime.value = Calendar.getInstance().dayEnd
+        _companyName.value = ""
         request()
+    }
+
+    fun setCompanyName(companyName: String) {
+        _companyName.value = companyName
     }
 
 }

@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.arcsoft.arcfacedemo.databinding.FragmentAccessRecordBinding
 import com.arcsoft.arcfacedemo.ui.adapter.AccessRecordAdapter
 import com.arcsoft.arcfacedemo.ui.adapter.AccessRecordHeaderAdapter
+import com.arcsoft.arcfacedemo.ui.bindCompanyUnitSelector
 import com.arcsoft.arcfacedemo.ui.viewmodel.AccessRecordViewModel
 import kotlinx.coroutines.launch
 
@@ -68,6 +69,7 @@ class AccessRecordFragment : Fragment() {
             selectorEndTime.addOnTimeChangedListener {
                 viewModel.setEndTime(it)
             }
+            bindCompanyUnitSelector(selectorCompany) { viewModel.setCompanyName(it) }
             foldView.setOnFoldListener {
                 foldGroup.visibility = if (it) View.GONE else View.VISIBLE
             }
@@ -116,6 +118,15 @@ class AccessRecordFragment : Fragment() {
                 launch {
                     viewModel.endTime.collect {
                         binding.selectorEndTime.setValue(it)
+                    }
+                }
+                launch {
+                    viewModel.companyName.collect {
+                        if (it.isEmpty()) {
+                            binding.selectorCompany.clear()
+                        } else {
+                            binding.selectorCompany.setValue(it)
+                        }
                     }
                 }
                 viewModel.cardRecords.collect {

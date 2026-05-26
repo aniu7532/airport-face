@@ -47,6 +47,14 @@
         tools:text="证件编号：YC-TX-202604-0093" />
 
     <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_company"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        android:textSize="18sp"
+        tools:text="申办单位：安航部" />
+
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_check_by"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

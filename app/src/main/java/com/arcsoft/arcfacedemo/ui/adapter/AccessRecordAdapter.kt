@@ -59,6 +59,7 @@ class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordA
             binding.apply {
                 tvName.text = value.nickname
                 tvCardNo.text = "证件编号：${value.idCode ?: ""}"
+                tvCompany.text = "申办单位：${value.companyName ?: ""}"
                 tvCheckBy.text = "查验人员：${value.checkUserName ?: ""}"
                 tvArea.text = "通行道口：${value.areaName ?: ""}"
                 tvTime.text = "通行时间：${value.checkTime ?: ""}"

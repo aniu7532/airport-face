@@ -3,7 +3,7 @@ package com.arcsoft.arcfacedemo.network;
 public class UrlConstants {
     // 二所测试环境：https://inc-kzqtxz.caacsri.com
     // 二所正式环境：https://inckzqtxz.caacsri.com
-    // public static final String URL = "https://inc-kzqtxz.caacsri.com";// 二所测试环境
+//     public static final String URL = "https://inc-kzqtxz.caacsri.com";// 二所测试环境
     public static final String URL = "https://inckzqtxz.caacsri.com";// 二所正式环境
 //     public static final String URL = "http://test.sczhbf.com:58088";//慧能测试环境
      public static final String Test_URL = "http://test.sczhbf.com:58088";//慧能测试环境
@@ -51,4 +51,6 @@ public class UrlConstants {
     public static final String checkDeviceList = URL + "/app-api/check/device/list";
     // 核实
     public static final String checkRecordVerify = URL + "/app-api/check/record/verify";
+    // 申办单位简易列表
+    public static final String checkUnitSimpleList = URL + "/app-api/check/unit/simpleList";
 }
