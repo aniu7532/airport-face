@@ -27,6 +27,16 @@ android {
 //        multiDexEnabled true
     }
 
+    flavorDimensions "channel"
+    productFlavors {
+        yinchuan {
+            dimension "channel"
+        }
+        chongqing {
+            dimension "channel"
+        }
+    }
+
     dataBinding {
         enabled = true
     }

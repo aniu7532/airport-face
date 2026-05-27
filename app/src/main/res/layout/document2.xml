@@ -37,7 +37,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="银川河东国际机场"
+                    android:text="@string/channel_airport_name"
                     android:textColor="@color/color_black"
                     android:textSize="18sp"
                     android:textStyle="bold" />

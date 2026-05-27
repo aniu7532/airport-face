@@ -1,12 +1,11 @@
 package com.arcsoft.arcfacedemo.network;
 
+import com.arcsoft.arcfacedemo.config.ChannelConfig;
+
 public class UrlConstants {
-    // 二所测试环境：https://inc-kzqtxz.caacsri.com
-    // 二所正式环境：https://inckzqtxz.caacsri.com
-//     public static final String URL = "https://inc-kzqtxz.caacsri.com";// 二所测试环境
-    public static final String URL = "https://inckzqtxz.caacsri.com";// 二所正式环境
-//     public static final String URL = "http://test.sczhbf.com:58088";//慧能测试环境
-     public static final String Test_URL = "http://test.sczhbf.com:58088";//慧能测试环境
+    /** 各渠道在 src/{flavor}/java/.../config/ChannelConfig 中配置 BASE_URL */
+    public static final String URL = ChannelConfig.BASE_URL;
+    public static final String Test_URL = "http://test.sczhbf.com:58088";//慧能测试环境
     public static final String URL_TOKEN = "";
     public static final String URL_ClIENTID = "VERTICAL";
     public static final String URL_LOGIN = URL + "/app-api/system/auth/vertical-client-login";// 登录

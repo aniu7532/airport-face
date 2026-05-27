@@ -39,7 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
-                    android:text="银川河东国际机场控制区临时通行证"
+                    android:text="@string/channel_temp_pass_title"
                     android:textColor="@color/color_black"
                     android:textSize="14sp"
                     android:textStyle="bold" />

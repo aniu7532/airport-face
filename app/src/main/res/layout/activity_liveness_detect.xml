@@ -243,7 +243,7 @@
             android:background="@mipmap/title_bg"
             android:gravity="center"
             android:paddingBottom="6dp"
-            android:text="银川河东国际机场通行证查验系统"
+            android:text="@string/channel_pass_check_system_title"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />

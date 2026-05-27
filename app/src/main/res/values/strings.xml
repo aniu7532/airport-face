@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">云端查验</string>
 
+    <!-- 渠道文案见 src/yinchuan、src/chongqing 下同名 key：channel_pass_check_system_title 等 -->
+
 
     <!--通用提示-->
     <string name="loading">加载中…</string>
