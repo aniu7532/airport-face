@@ -39,7 +39,23 @@ public final class DateTimePickerDialogHelper {
      * @param initial  初始时间，传 null 表示当前时间
      * @param listener 确定回调，不会为 null
      */
-    public static void show(Context context, @Nullable Calendar initial, boolean withoutHMS, OnDateTimePickedListener listener) {
+    public static void show(
+            Context context,
+            @Nullable Calendar initial,
+            boolean withoutHMS,
+            OnDateTimePickedListener listener) {
+        show(context, initial, withoutHMS, false, listener);
+    }
+
+    /**
+     * @param hourOnly 仅选日期+小时，分秒滚轮隐藏且结果分秒为 0
+     */
+    public static void show(
+            Context context,
+            @Nullable Calendar initial,
+            boolean withoutHMS,
+            boolean hourOnly,
+            OnDateTimePickedListener listener) {
         if (listener == null) {
             return;
         }
@@ -58,6 +74,10 @@ public final class DateTimePickerDialogHelper {
 
         if (withoutHMS) {
             llHour.setVisibility(View.GONE);
+            llMinute.setVisibility(View.GONE);
+            llSecond.setVisibility(View.GONE);
+        } else if (hourOnly) {
+            llHour.setVisibility(View.VISIBLE);
             llMinute.setVisibility(View.GONE);
             llSecond.setVisibility(View.GONE);
         }
@@ -128,8 +148,13 @@ public final class DateTimePickerDialogHelper {
             out.set(Calendar.MONTH, npMonth.getValue() - 1);
             out.set(Calendar.DAY_OF_MONTH, npDay.getValue());
             out.set(Calendar.HOUR_OF_DAY, npHour.getValue());
-            out.set(Calendar.MINUTE, npMinute.getValue());
-            out.set(Calendar.SECOND, npSecond.getValue());
+            if (hourOnly || withoutHMS) {
+                out.set(Calendar.MINUTE, 0);
+                out.set(Calendar.SECOND, 0);
+            } else {
+                out.set(Calendar.MINUTE, npMinute.getValue());
+                out.set(Calendar.SECOND, npSecond.getValue());
+            }
             out.set(Calendar.MILLISECOND, 0);
             listener.onPicked(out);
             dialog.dismiss();

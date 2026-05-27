@@ -73,7 +73,7 @@
             app:layout_constraintTop_toTopOf="@id/selector_start_time"
             app:title="结束时间" />
 
-        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersSelector
+        <com.arcsoft.arcfacedemo.widget.ConstructionWorkersCompanyAutoComplete
             android:id="@+id/selector_company"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -81,7 +81,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/selector_start_time"
             app:layout_constraintTop_toBottomOf="@id/selector_start_time"
-            app:placeholder="请选择申办单位"
+            app:placeholder="请输入或选择申办单位"
             app:title="申办单位" />
 
         <androidx.appcompat.widget.AppCompatButton

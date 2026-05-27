@@ -46,12 +46,11 @@ class InOutStatisticsViewModel : ViewModel() {
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
         }
-        // 接口为 LocalDate，需传 yyyy-MM-dd；勿传时间戳或 yyyy-MM-dd HH:mm:ss
         _startTime.value?.let {
-            request.params("startCheckTime", formatLocalDate(it))
+            request.params("startCheckTime", formatCheckTime(it))
         }
         _endTime.value?.let {
-            request.params("endCheckTime", formatLocalDate(it))
+            request.params("endCheckTime", formatCheckTime(it))
         }
         if (_companyName.value.isNotEmpty()) {
             request.params("companyName", _companyName.value)
@@ -66,8 +65,8 @@ class InOutStatisticsViewModel : ViewModel() {
         })
     }
 
-    private fun formatLocalDate(cal: Calendar): String =
-        SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).format(cal.time)
+    private fun formatCheckTime(cal: Calendar): String =
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(cal.time)
 
     fun reset() {
         _startTime.value = Calendar.getInstance().dayBefore(7)

@@ -12,5 +12,13 @@
     </declare-styleable>
     <declare-styleable name="ConstructionWorkersTimeSelector">
         <attr name="withoutHMS" format="boolean" />
+        <!-- 仅选到小时（显示时、分秒滚轮隐藏）；与 withoutHMS 互斥，withoutHMS 优先 -->
+        <attr name="hourOnly" format="boolean" />
+        <!-- hourOnly 时：结束时间对齐到该小时 59 分 59 秒 -->
+        <attr name="snapToEndOfHour" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="ConstructionWorkersCompanyAutoComplete">
+        <attr name="title" />
+        <attr name="placeholder" />
     </declare-styleable>
 </resources>

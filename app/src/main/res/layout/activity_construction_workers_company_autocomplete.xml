@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFF"
+        tools:text="申办单位" />
+
+    <androidx.appcompat.widget.AppCompatAutoCompleteTextView
+        android:id="@+id/auto_complete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/input_bg"
+        android:completionThreshold="0"
+        android:dropDownHeight="wrap_content"
+        android:dropDownVerticalOffset="4dp"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:maxLines="1"
+        android:padding="10dp"
+        android:popupBackground="@android:color/white"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#CECECE"
+        android:textSize="16sp"
+        tools:hint="请输入或选择申办单位" />
+
+</merge>

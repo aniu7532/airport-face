@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.arcsoft.arcfacedemo.databinding.FragmentWriteOffRecordBinding
 import com.arcsoft.arcfacedemo.ui.adapter.WriteOffRecordAdapter
 import com.arcsoft.arcfacedemo.ui.adapter.WriteOffRecordHeaderAdapter
-import com.arcsoft.arcfacedemo.ui.bindCompanyUnitSelector
+import com.arcsoft.arcfacedemo.ui.bindCompanyUnitField
 import com.arcsoft.arcfacedemo.ui.viewmodel.WriteOffRecordViewModel
 import com.arcsoft.arcfacedemo.widget.dialog.LoadingPopDialog
 import com.lxj.xpopup.XPopup
@@ -46,15 +46,15 @@ class WriteOffRecordFragment : Fragment() {
 
     private val adapter by lazy { WriteOffRecordAdapter() }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        initView()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initView()
     }
 
     override fun onResume() {
@@ -80,7 +80,7 @@ class WriteOffRecordFragment : Fragment() {
             selectorEndTime.addOnTimeChangedListener {
                 viewModel.setEndTime(it)
             }
-            bindCompanyUnitSelector(selectorCompany) { viewModel.setCompanyName(it) }
+            bindCompanyUnitField(selectorCompany) { viewModel.setCompanyName(it) }
             foldView.setOnFoldListener {
                 foldGroup.visibility = if (it) View.GONE else View.VISIBLE
             }
@@ -137,11 +137,7 @@ class WriteOffRecordFragment : Fragment() {
                 }
                 launch {
                     viewModel.companyName.collect {
-                        if (it.isEmpty()) {
-                            binding.selectorCompany.clear()
-                        } else {
-                            binding.selectorCompany.setValue(it)
-                        }
+                        binding.selectorCompany.setCompanyName(it)
                     }
                 }
                 launch {

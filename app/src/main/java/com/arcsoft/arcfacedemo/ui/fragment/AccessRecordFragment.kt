@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.arcsoft.arcfacedemo.databinding.FragmentAccessRecordBinding
 import com.arcsoft.arcfacedemo.ui.adapter.AccessRecordAdapter
 import com.arcsoft.arcfacedemo.ui.adapter.AccessRecordHeaderAdapter
-import com.arcsoft.arcfacedemo.ui.bindCompanyUnitSelector
+import com.arcsoft.arcfacedemo.ui.bindCompanyUnitField
 import com.arcsoft.arcfacedemo.ui.viewmodel.AccessRecordViewModel
 import kotlinx.coroutines.launch
 
@@ -36,15 +36,15 @@ class AccessRecordFragment : Fragment() {
 
     private val adapter by lazy { AccessRecordAdapter() }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        initView()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = binding.root
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initView()
+    }
 
     override fun onResume() {
         super.onResume()
@@ -69,7 +69,7 @@ class AccessRecordFragment : Fragment() {
             selectorEndTime.addOnTimeChangedListener {
                 viewModel.setEndTime(it)
             }
-            bindCompanyUnitSelector(selectorCompany) { viewModel.setCompanyName(it) }
+            bindCompanyUnitField(selectorCompany) { viewModel.setCompanyName(it) }
             foldView.setOnFoldListener {
                 foldGroup.visibility = if (it) View.GONE else View.VISIBLE
             }
@@ -122,11 +122,7 @@ class AccessRecordFragment : Fragment() {
                 }
                 launch {
                     viewModel.companyName.collect {
-                        if (it.isEmpty()) {
-                            binding.selectorCompany.clear()
-                        } else {
-                            binding.selectorCompany.setValue(it)
-                        }
+                        binding.selectorCompany.setCompanyName(it)
                     }
                 }
                 viewModel.cardRecords.collect {
