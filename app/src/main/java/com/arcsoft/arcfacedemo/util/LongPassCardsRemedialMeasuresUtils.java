@@ -644,7 +644,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                 Map<String, Object> params = new HashMap<>();
                 InfoStorage infoStorage = new InfoStorage(ArcFaceApplication.getApplication());
                 String loginName = infoStorage.getString("loginName", "");
-                params.put("deviceId", DeviceUtils.getDeviceId(ArcFaceApplication.getApplication()));
+                params.put("deviceId", infoStorage.getString("deviceId", ""));
                 params.put("deviceName", infoStorage.getString("deviceName", "立式查验终端"));
                 params.put("accountName", loginName);
                 params.put("accountId", infoStorage.getString("userId", ""));
