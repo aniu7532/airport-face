@@ -87,7 +87,7 @@ class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordA
                 ) {
                     // 拼接基础下载地址
                     val baseUrl =
-                        UrlConstants.URL + "/app-api/infra/file/stream?path=" + photo
+                        UrlConstants.fileStreamUrl(photo)
                     // 构造带有 Authorization 头的 GlideUrl
                     val headersBuilder = LazyHeaders.Builder()
                     // 携带 accessToken（如果存在）

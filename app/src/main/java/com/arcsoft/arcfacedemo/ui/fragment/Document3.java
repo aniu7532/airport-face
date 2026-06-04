@@ -297,7 +297,7 @@ public class Document3 extends Fragment {
             GlideApp.with(getActivity()).load(AESUtils.getPhotoPath(passid)).into(card_img);
         } else {
             // 拼接基础下载地址
-            String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + photo;
+            String baseUrl = UrlConstants.fileStreamUrl(photo);
 
             // 构造带有 Authorization 头的 GlideUrl
             LazyHeaders.Builder headersBuilder = new LazyHeaders.Builder();

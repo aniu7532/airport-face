@@ -38,7 +38,7 @@ public class ImageDownloader {
         ALog.i("Image imageName: " + imageName);
 
         // 拼接基础下载地址
-        String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + imageUrl;
+        String baseUrl = UrlConstants.fileStreamUrl(imageUrl);
 
         // 构造带有 Authorization 头的 GlideUrl
         LazyHeaders.Builder headersBuilder = new LazyHeaders.Builder();

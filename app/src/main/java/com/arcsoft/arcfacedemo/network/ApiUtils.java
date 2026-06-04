@@ -116,7 +116,7 @@ public class ApiUtils {
                 request.params(entry.getKey(), entry.getValue());
             }
         }
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (accessToken != null) {
             request.headers("Authorization", "Bearer " + accessToken);
@@ -179,7 +179,7 @@ public class ApiUtils {
                 request.params(entry.getKey(), entry.getValue());
             }
         }
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (accessToken != null) {
             request.headers("Authorization", "Bearer " + accessToken);
@@ -230,7 +230,7 @@ public class ApiUtils {
         // });
 
         PostRequest<String> request = OkGo.<String> post(url).tag(url);
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (accessToken != null) {
             request.headers("Authorization", "Bearer " + accessToken);

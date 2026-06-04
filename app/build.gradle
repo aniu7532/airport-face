@@ -35,6 +35,9 @@ android {
         chongqing {
             dimension "channel"
         }
+        shihezi {
+            dimension "channel"
+        }
     }
 
     dataBinding {

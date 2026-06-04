@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 石河子渠道：与 chongqing 使用相同 key，内容不同 -->
+    <string name="channel_pass_check_system_title">石河子花园机场通行证查验系统</string>
+    <string name="channel_airport_name">石河子花园机场</string>
+    <string name="channel_temp_pass_title">石河子花园机场控制区临时通行证</string>
+</resources>

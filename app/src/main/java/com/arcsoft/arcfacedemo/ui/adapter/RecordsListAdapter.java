@@ -38,7 +38,7 @@ public class RecordsListAdapter extends EasyRVAdapter<CardRecords.ListDTO> {
             if (item.getCheckPhoto().startsWith("http") || item.getCheckPhoto().startsWith("encrypted/")) {
 
                 // 拼接基础下载地址
-                String baseUrl = UrlConstants.URL + "/app-api/infra/file/stream?path=" + item.getCheckPhoto();
+                String baseUrl = UrlConstants.fileStreamUrl(item.getCheckPhoto());
 
                 // 构造带有 Authorization 头的 GlideUrl
                 LazyHeaders.Builder headersBuilder = new LazyHeaders.Builder();
