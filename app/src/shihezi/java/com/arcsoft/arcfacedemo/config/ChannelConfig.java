@@ -8,13 +8,12 @@ package com.arcsoft.arcfacedemo.config;
  */
 public final class ChannelConfig {
 
+    public static final String BASE_URL_Test0 = "https://txzcloudservice.caacsri.com";
     public static final String BASE_URL = "https://txzcloudservice.caacsri.com";
+    public static final String BASE_URL_Test1 = "https://txzcloudservice.caacsri.com";
     /** 租户路径前缀，拼在域名与 app-api 之间 */
     public static final String TENANT_PREFIX = "shf";
     public static final String TENANT_ID = "1";
-
-    public static final String BASE_URL_Test0 = BASE_URL;
-    public static final String BASE_URL_Test1 = "http://test.sczhbf.com:58088";
 
     private ChannelConfig() {
     }
