@@ -84,6 +84,7 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -115,7 +116,7 @@ public class LoginActivity extends BaseActivity
     private Button button_test5;
     private Dialog progressDialog;
     private ImageView to_regis;
-    private ImageView btnGo;
+    private LinearLayout btnGo;
 
     // private RadioGroup radioGroup;
     // private RadioButton radioIn, radioOut;

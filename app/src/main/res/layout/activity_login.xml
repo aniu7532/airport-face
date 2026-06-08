@@ -14,12 +14,28 @@
         android:padding="16dp"
         tools:context=".ui.activity.LoginActivity">
 
-        <ImageView
+        <LinearLayout
             android:id="@+id/btnGo"
-            android:layout_width="317dp"
-            android:layout_height="32dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
-            android:src="@drawable/ic_logo1" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="45dp"
+                android:layout_height="38dp"
+                android:src="@drawable/airport_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/channel_login_airport_name"
+                android:textColor="#000"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/inputLayout"
@@ -174,7 +190,7 @@
                 android:layout_height="64dp"
                 android:layout_gravity="bottom"
                 android:layout_marginTop="75dp"
-                android:src="@drawable/ic_logo2" />
+                android:src="@drawable/airport_logo" />
 
             <TextView
                 android:id="@+id/tvVersion"
