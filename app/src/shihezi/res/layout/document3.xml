@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <FrameLayout
+        android:layout_width="380dp"
+        android:layout_height="240dp"
+        android:layout_gravity="center_horizontal">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/shihezi_pass_temp_bg" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/or_code"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@null"
+                android:scaleType="fitXY"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/card_img"
+                android:layout_width="104dp"
+                android:layout_height="138dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="80dp"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/label_pass_holder"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="86dp"
+                android:text="@string/label_pass_holder"
+                android:textColor="@color/color_black"
+                android:textSize="9sp"
+                app:layout_constraintStart_toEndOf="@id/card_img"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/passers_by"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="58dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_black"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@id/label_pass_holder"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_pass_holder" />
+
+            <TextView
+                android:id="@+id/label_company_row"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/label_company"
+                android:textColor="@color/color_black"
+                android:textSize="9sp"
+                app:layout_constraintStart_toEndOf="@id/card_img"
+                app:layout_constraintTop_toBottomOf="@id/label_pass_holder" />
+
+            <TextView
+                android:id="@+id/unit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="58dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_black"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@id/label_company_row"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_company_row" />
+
+            <TextView
+                android:id="@+id/label_escort"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/label_escort"
+                android:textColor="@color/color_black"
+                android:textSize="9sp"
+                app:layout_constraintStart_toEndOf="@id/card_img"
+                app:layout_constraintTop_toBottomOf="@id/label_company_row" />
+
+            <TextView
+                android:id="@+id/lead_people1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="58dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_black"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@id/label_escort"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_escort" />
+
+            <TextView
+                android:id="@+id/label_escort_unit"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/label_escort_unit"
+                android:textColor="@color/color_black"
+                android:textSize="9sp"
+                app:layout_constraintStart_toEndOf="@id/card_img"
+                app:layout_constraintTop_toBottomOf="@id/label_escort" />
+
+            <TextView
+                android:id="@+id/leading_person_unit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="58dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_black"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@id/label_escort_unit"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_escort_unit" />
+
+            <TextView
+                android:id="@+id/label_validity_row"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/label_validity"
+                android:textColor="@color/color_black"
+                android:textSize="9sp"
+                app:layout_constraintStart_toEndOf="@id/card_img"
+                app:layout_constraintTop_toBottomOf="@id/label_escort_unit" />
+
+            <TextView
+                android:id="@+id/expiryDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="58dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_black"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@id/label_validity_row"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_validity_row" />
+
+            <LinearLayout
+                android:id="@+id/access_area_badges"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="start|center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/card_img" />
+
+            <TextView
+                android:id="@+id/lead_people2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <FrameLayout
+            android:id="@+id/statusOverlay"
+            android:layout_width="120dp"
+            android:layout_height="105dp"
+            android:layout_gravity="bottom|end"
+            android:rotation="-30"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_seal" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </FrameLayout>
+</LinearLayout>

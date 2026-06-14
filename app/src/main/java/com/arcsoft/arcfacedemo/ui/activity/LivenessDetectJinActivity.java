@@ -480,6 +480,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             bundle.putString("nickname", longTermPass.nickname);
             bundle.putString("companyName", longTermPass.companyName);
             bundle.putString("expiryDate", longTermPass.expiryDate);
+            bundle.putString("startDate", longTermPass.startDate);
             bundle.putString("templateType", String.valueOf(longTermPass.templateType));
             bundle.putString("status", String.valueOf(longTermPass.status));
             bundle.putString("photo", longTermPass.photo);
@@ -569,6 +570,7 @@ public class LivenessDetectJinActivity extends BaseActivity
 
             Bundle bundle = new Bundle();
             bundle.putString("leadingPeople", temporaryCardRecords.leadingPeople);
+            bundle.putString("applyId", temporaryCardRecords.applyId);
             bundle.putString("idCode", temporaryCardRecords.idCode);
             bundle.putString("passid", temporaryCardRecords.passid);
             bundle.putString("nickname", temporaryCardRecords.nickname);
@@ -604,6 +606,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             }
             Bundle bundle = new Bundle();
             bundle.putString("leadingPeople", longTermPass.leadingPeople);
+            bundle.putString("applyId", longTermPass.applyId);
             bundle.putString("idCode", longTermPass.idCode);
             bundle.putString("passid", longTermPass.id);
             bundle.putString("nickname", longTermPass.nickname);

@@ -3,8 +3,18 @@
     <!-- 石河子渠道：与 chongqing 使用相同 key，内容不同 -->
     <string name="channel_pass_check_system_title">石河子花园机场通行证查验系统</string>
     <string name="channel_airport_name">石河子花园机场</string>
-    <string name="channel_temp_pass_title">石河子花园机场控制区临时通行证</string>
+    <string name="channel_temp_pass_title">石河子机场控制区临时通行证</string>
     <string name="channel_login_airport_name">石河子花园机场控制区通行证云服务平台</string>
     <string name="channel_airport_name_en">SHIHEZI HUAYUAN AIRPORT</string>
-    <string name="channel_temp_pass_title_en">SHIHEZI HUAYUAN AIRPORT CONTROL ZONE</string>
+    <string name="channel_temp_pass_title_en">Shihezi Airport Security Restricted Area Temporary Pass</string>
+
+    <string name="channel_long_term_pass_title">石河子机场控制区人员长期通行证</string>
+    <string name="channel_long_term_pass_title_en">Shihezi Airport Security Restricted Area Long-Term Pass</string>
+
+    <string name="label_company">所属单位：</string>
+    <string name="label_id_code">证件编号：</string>
+    <string name="label_validity">有效期限：</string>
+    <string name="label_pass_holder">持证人员：</string>
+    <string name="label_escort">引领人员：</string>
+    <string name="label_escort_unit">引领单位：</string>
 </resources>
