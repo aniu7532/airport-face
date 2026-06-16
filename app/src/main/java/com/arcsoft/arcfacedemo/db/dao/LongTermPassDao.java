@@ -74,6 +74,13 @@ public interface LongTermPassDao {
     @Query("SELECT * FROM long_term_pass WHERE status != 2")
     List<LongTermPass> getByStatusNotCancelled();
 
+    @Query("SELECT * FROM long_term_pass WHERE userId = :userId")
+    List<LongTermPass> getByUserId(String userId);
+
+    /** 有效证件：status=1，临时证优先，再按更新时间倒序 */
+    @Query("SELECT * FROM long_term_pass WHERE userId = :userId AND status = 1 ORDER BY type DESC, updateTime DESC")
+    List<LongTermPass> getActiveByUserId(String userId);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrUpdateUsers(List<LongTermPass> longTermPasses);
 

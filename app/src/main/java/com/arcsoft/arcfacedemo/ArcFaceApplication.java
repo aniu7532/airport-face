@@ -34,6 +34,7 @@ import com.arcsoft.arcfacedemo.ui.callback.OnRegisterFinishedCallback;
 import com.arcsoft.arcfacedemo.util.Converters;
 import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
+import com.arcsoft.arcfacedemo.util.DuplicateFaceCleanupUtils;
 import com.arcsoft.arcfacedemo.util.ImageDeleter;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
@@ -742,39 +743,8 @@ public class ArcFaceApplication extends Application {
             @Override
             public String doInBackground() throws Throwable {
 
-                List<FaceEntity> faceEntityList = FaceDatabase.getInstance(getApplication()).faceDao().getAllFaces();
                 for (LongPassCard longPassCard : longPassCardList) {
-                    for (FaceEntity faceEntity : faceEntityList) {
-                        if (faceEntity.getUserName().equals(longPassCard.id)) {
-                            if (FaceServer.getInstance().getFaceEngine() == null
-                                    && FaceServer.getInstance().getFrEngine() == null) {
-                                ALog.e("FaceServer.getInstance().getFaceEngine() == null");
-                                continue;
-                            }
-
-                            ALog.e(longPassCard.nickname + ", " + faceEntity.toString2());
-                            if (ActivityUtils.getTopActivity() instanceof RegisterAndRecognizeActivity) {
-                                int flag1 = FaceServer.getInstance().getFrEngine()
-                                        .removeFaceFeature((int) faceEntity.getFaceId());
-                                ALog.e("getFrEngine deleteFace removeFaceFeature：" + flag1);
-                            } else {
-                                int flag1 = FaceServer.getInstance().getFaceEngine()
-                                        .removeFaceFeature((int) faceEntity.getFaceId());
-                                ALog.e("getFaceEngine deleteFace removeFaceFeature：" + flag1);
-                            }
-
-                            boolean flag = FaceServer.getInstance().removeOneFace(faceEntity);
-
-                            ALog.e("deleteFace removeOneFace：" + flag);
-                            // 删除人脸
-                            int result = FaceDatabase.getInstance(getApplication()).faceDao().deleteFace(faceEntity);
-                            ALog.e("deleteFace result：" + result);
-                            ALog.e("FaceDatabase.getInstance(getApplication()).faceDao().deleteFace(faceEntity)："
-                                    + faceEntity.toString2());
-
-                        }
-                    }
-
+                    DuplicateFaceCleanupUtils.getInstance().prepareRegisterFace(longPassCard.id);
                     Bitmap bitmap = AESUtils.decryptRegisterFileToBitmap(longPassCard.id);
                     // 获取图片
                     // Bitmap bitmap = ImageDownloader.loadAndDecryptImage(longPassCard.id, getInstance());

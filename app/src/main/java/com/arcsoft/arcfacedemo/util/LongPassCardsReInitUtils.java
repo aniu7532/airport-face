@@ -45,6 +45,10 @@ public class LongPassCardsReInitUtils {
 
     private boolean doing = false;
 
+    public boolean isDoing() {
+        return doing;
+    }
+
     public void start() {
         if (doing) {
             ToastUtils.showShort("正在处理中...");
@@ -52,6 +56,10 @@ public class LongPassCardsReInitUtils {
         }
         if (LongPassCardsRemedialMeasuresUtils.getInstance().doing) {
             ToastUtils.showShort("正在处理中...");
+            return;
+        }
+        if (DuplicateFaceCleanupUtils.getInstance().doing) {
+            ToastUtils.showShort("清除重复人脸进行中，请稍后再试");
             return;
         }
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {

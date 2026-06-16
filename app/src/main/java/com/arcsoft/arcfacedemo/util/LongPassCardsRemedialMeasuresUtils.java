@@ -118,6 +118,14 @@ public class LongPassCardsRemedialMeasuresUtils {
     }
 
     public void start() {
+        if (doing) {
+            ToastUtils.showShort("正在处理中...");
+            return;
+        }
+        if (DuplicateFaceCleanupUtils.getInstance().doing) {
+            ToastUtils.showShort("清除重复人脸进行中，请稍后再试");
+            return;
+        }
         // 获取当前Activity
         Activity activity = ActivityUtils.getTopActivity();
         if (activity != null && activity instanceof BaseActivity) {
@@ -209,6 +217,11 @@ public class LongPassCardsRemedialMeasuresUtils {
             public String doInBackground() throws Throwable {
 
                 if (doing) return null;
+
+                if (DuplicateFaceCleanupUtils.getInstance().doing) {
+                    ToastUtils.showShort("清除重复人脸进行中，请稍后再试");
+                    return null;
+                }
 
                 doing = true;
 
@@ -447,6 +460,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                             if (suffixIndex > 0) {
                                 name = name.substring(0, suffixIndex);
                             }
+                            DuplicateFaceCleanupUtils.getInstance().removeOtherFacesForPassId(name);
                             FaceEntity faceEntity;
                             try {
                                 faceEntity = faceRepository.registerJpeg(context, decryptedBytes, name);

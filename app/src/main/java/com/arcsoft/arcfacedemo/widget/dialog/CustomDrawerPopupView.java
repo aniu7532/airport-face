@@ -21,6 +21,7 @@ import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LoginActivity;
 import com.arcsoft.arcfacedemo.ui.activity.RegisterAndRecognizeActivity;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
+import com.arcsoft.arcfacedemo.util.DuplicateFaceCleanupUtils;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsReInitUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
@@ -73,6 +74,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
         TextView tvUploadLog = findViewById(R.id.tvUploadLog);
         TextView tvReInit = findViewById(R.id.tvReInit);
         TextView tvRemedial = findViewById(R.id.tvRemedial);
+        TextView tvClearDuplicateFace = findViewById(R.id.tvClearDuplicateFace);
         TextView tvGotoLuancher = findViewById(R.id.tvGotoLuancher);
 
         TextView tvGotoSetting = findViewById(R.id.tvGotoSetting);
@@ -466,6 +468,20 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                         LongPassCardsRemedialMeasuresUtils.getInstance().start();
                     }
                 });
+            }
+        });
+
+        tvClearDuplicateFace.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DialogUtils.startConfirmDialog(getContext(), "", "确认清除重复人脸？\n（同一人存在多条时，保留有效证对应人脸）",
+                        new DialogUtils.ConfirmListener() {
+                            @Override
+                            public void onConfirm() {
+                                dismiss();
+                                DuplicateFaceCleanupUtils.getInstance().start();
+                            }
+                        });
             }
         });
 
