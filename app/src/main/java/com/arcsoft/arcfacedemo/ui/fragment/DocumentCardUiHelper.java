@@ -56,6 +56,25 @@ public final class DocumentCardUiHelper {
         return name + "  " + idCode;
     }
 
+    /**
+     * 石河子临时证：两位引领人时，引领单位用顿号拼接。
+     */
+    public static String formatEscortUnits(String unit1, String unit2, boolean hasSecondEscort) {
+        if (!hasSecondEscort) {
+            return safeText(unit1);
+        }
+        if (TextUtils.isEmpty(unit1) && TextUtils.isEmpty(unit2)) {
+            return "";
+        }
+        if (TextUtils.isEmpty(unit1)) {
+            return safeText(unit2);
+        }
+        if (TextUtils.isEmpty(unit2)) {
+            return unit1;
+        }
+        return unit1 + "、" + unit2;
+    }
+
     public static void bindAreaBadges(LinearLayout container, String areaDisplayCode,
             @DrawableRes int badgeBackgroundRes) {
         if (container == null) {

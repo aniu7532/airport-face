@@ -51,6 +51,8 @@ public abstract class AbstractDocument3 extends Fragment {
     protected String leadingPeople1;
     protected String leadingPeople1IdCode;
     protected String leadingPeople2;
+    protected String leadingPeople2IdCode;
+    protected String leadingPeople2Unit;
     protected String leadingPeopleUnit;
     protected String status;
     protected String similar;
@@ -116,8 +118,16 @@ public abstract class AbstractDocument3 extends Fragment {
         }
         if (result.size() >= 2) {
             Map<String, String> map2 = result.get(1);
-            if (map2 != null && map2.get("nickname") != null) {
-                leadingPeople2 = map2.get("nickname");
+            if (map2 != null) {
+                if (map2.get("companyName") != null) {
+                    leadingPeople2Unit = map2.get("companyName");
+                }
+                if (map2.get("nickname") != null) {
+                    leadingPeople2 = map2.get("nickname");
+                }
+                if (map2.get("idCode") != null) {
+                    leadingPeople2IdCode = map2.get("idCode");
+                }
             }
         }
     }

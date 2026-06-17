@@ -121,16 +121,42 @@
                 app:layout_constraintStart_toEndOf="@id/label_escort" />
 
             <TextView
-                android:id="@+id/label_escort_unit"
+                android:id="@+id/label_escort2"
                 android:layout_width="58dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:text="@string/label_escort_unit"
+                android:layout_marginTop="6dp"
+                android:text="@string/label_escort"
                 android:textColor="@color/color_black"
                 android:textSize="9sp"
                 app:layout_constraintStart_toEndOf="@id/card_img"
                 app:layout_constraintTop_toBottomOf="@id/label_escort" />
+
+            <TextView
+                android:id="@+id/lead_people2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="58dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_black"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@id/label_escort2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_escort2" />
+
+            <TextView
+                android:id="@+id/label_escort_unit"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
+                android:text="@string/label_escort_unit"
+                android:textColor="@color/color_black"
+                android:textSize="9sp"
+                app:layout_constraintStart_toEndOf="@id/card_img"
+                app:layout_constraintTop_toBottomOf="@id/label_escort2" />
 
             <TextView
                 android:id="@+id/leading_person_unit"
@@ -151,7 +177,7 @@
                 android:layout_width="58dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:text="@string/label_validity"
                 android:textColor="@color/color_black"
                 android:textSize="9sp"
@@ -184,14 +210,6 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/card_img" />
-
-            <TextView
-                android:id="@+id/lead_people2"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

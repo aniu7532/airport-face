@@ -1,7 +1,9 @@
 package com.arcsoft.arcfacedemo.ui.fragment;
 
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.arcsoft.arcfacedemo.R;
 
@@ -11,6 +13,7 @@ import com.arcsoft.arcfacedemo.R;
 public class Document3 extends AbstractDocument3 {
 
     private LinearLayout access_area_badges;
+    private TextView labelEscort2;
 
     @Override
     protected int getLayoutResId() {
@@ -23,6 +26,8 @@ public class Document3 extends AbstractDocument3 {
         unit = view.findViewById(R.id.unit);
         expiryDateTextView = view.findViewById(R.id.expiryDate);
         lead_people1 = view.findViewById(R.id.lead_people1);
+        labelEscort2 = view.findViewById(R.id.label_escort2);
+        lead_people2 = view.findViewById(R.id.lead_people2);
         leading_person_unit = view.findViewById(R.id.leading_person_unit);
         card_img = view.findViewById(R.id.card_img);
         or_code = view.findViewById(R.id.or_code);
@@ -43,8 +48,20 @@ public class Document3 extends AbstractDocument3 {
             lead_people1.setText(
                     DocumentCardUiHelper.formatPersonWithIdCode(leadingPeople1, leadingPeople1IdCode));
         }
+        boolean hasSecondEscort = !TextUtils.isEmpty(leadingPeople2);
+        if (labelEscort2 != null) {
+            labelEscort2.setVisibility(hasSecondEscort ? View.VISIBLE : View.GONE);
+        }
+        if (lead_people2 != null) {
+            lead_people2.setVisibility(hasSecondEscort ? View.VISIBLE : View.GONE);
+            if (hasSecondEscort) {
+                lead_people2.setText(
+                        DocumentCardUiHelper.formatPersonWithIdCode(leadingPeople2, leadingPeople2IdCode));
+            }
+        }
         if (leading_person_unit != null) {
-            leading_person_unit.setText(leadingPeopleUnit);
+            leading_person_unit.setText(DocumentCardUiHelper.formatEscortUnits(
+                    leadingPeopleUnit, leadingPeople2Unit, hasSecondEscort));
         }
         if (expiryDateTextView != null) {
             expiryDateTextView.setText(DocumentCardUiHelper.formatValidityPeriod(startDate, expiryDate));
