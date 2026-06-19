@@ -38,6 +38,9 @@ android {
         shihezi {
             dimension "channel"
         }
+        luoyang {
+            dimension "channel"
+        }
     }
 
     dataBinding {

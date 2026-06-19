@@ -35,6 +35,7 @@ import com.arcsoft.arcfacedemo.util.ConfigUtil;
 import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.ErrorCodeUtil;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
+import com.arcsoft.arcfacedemo.config.ChannelConfig;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.PlayerUtil;
@@ -1550,6 +1551,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity
                     if (card.type == 0) {
                         toggleFragment(card, faceSimilar); // 更新fragment
                     } else if (card.type == 1) {
+                        if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+                            playAudio(R.raw.validation_failed);
+                            showCustomDialog(2, "不支持临时通行证");
+                            return null;
+                        }
                         switchFragment3(card, faceSimilar);
                     }
                 }
@@ -1584,6 +1590,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     public boolean checkCard(LongTermPass longTermPass) {
+        if (longTermPass.type == 1 && !ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+            playAudio(R.raw.validation_failed);
+            showCustomDialog(2, "不支持临时通行证");
+            stopChecking();
+            return false;
+        }
         long span = TimeUtils.getTimeSpan(DateUtil.string2MillisStartDate(longTermPass.startDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
@@ -1678,6 +1690,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         if (type == 0) {// 长期卡
             saveLongRecord(card, bitmap, faceSimilar, quality, isPass);
         } else if (type == 1) {
+            if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+                return;
+            }
             saveShortRecord(card, bitmap, faceSimilar, quality, isPass);
         }
     }

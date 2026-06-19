@@ -43,6 +43,7 @@ import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
+import com.arcsoft.arcfacedemo.config.ChannelConfig;
 import com.arcsoft.arcfacedemo.util.CardSerialConfigUtil;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
@@ -1248,6 +1249,9 @@ public class LivenessDetectJinActivity extends BaseActivity
      * 临时卡读卡使用
      */
     public void initScanCard() {
+        if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+            return;
+        }
         SerialManage.getInstance().init(new SerialInter() {
             @Override
             public void connectMsg(String path, boolean isSucc) {
@@ -1792,6 +1796,10 @@ public class LivenessDetectJinActivity extends BaseActivity
 
     // 临时卡的本地数据库查询
     public void getShortPassCardID(String carID) {
+        if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+            ALog.i("当前渠道不支持临时通行证");
+            return;
+        }
         // toast_verified_passed.setVisibility(View.INVISIBLE);//页面更新
         // toast_verified_fail.setVisibility(View.INVISIBLE);
         iv_face.setVisibility(View.INVISIBLE);
@@ -1889,6 +1897,13 @@ public class LivenessDetectJinActivity extends BaseActivity
     }
 
     public boolean checkCard() {
+        if (longTermPass.type == 1 && !ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+            setRfidNull();
+            playAudio(mediaReject);
+            showCustomDialog(2, "不支持临时通行证");
+            stopChecking();
+            return false;
+        }
         long span = TimeUtils.getTimeSpan(DateUtil.string2MillisStartDate(longTermPass.startDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
@@ -2652,6 +2667,12 @@ public class LivenessDetectJinActivity extends BaseActivity
                 toggleFragment(longTermPass, faceSimilar); // 更新fragment
                 saveLongTermRecords(longTermPass, bitmap, faceSimilar, quality, true); // 保存长期通行记录到本地数据库
             } else if (longTermPass.type == 1) {
+                if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+                    playAudio(mediaReject);
+                    showCustomDialog(2, "不支持临时通行证");
+                    stopChecking();
+                    return;
+                }
                 playAudio(mediaPass);
                 switchFragment3(longTermPass, faceSimilar);
                 // String s = imageUploader.uploadBitmap(bitmap);

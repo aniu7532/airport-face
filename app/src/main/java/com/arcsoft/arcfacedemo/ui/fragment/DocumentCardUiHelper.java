@@ -2,6 +2,7 @@ package com.arcsoft.arcfacedemo.ui.fragment;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -110,6 +111,73 @@ public final class DocumentCardUiHelper {
             params.setMarginEnd(margin);
             container.addView(badge, params);
         }
+    }
+
+    /**
+     * 洛阳长期证：底部区域块网格（红框红字，每行 columnsPerRow 个）。
+     */
+    public static void bindAreaBadgeGrid(LinearLayout container, String areaDisplayCode,
+            @DrawableRes int badgeBackgroundRes, int textColor, int columnsPerRow) {
+        if (container == null) {
+            return;
+        }
+        container.removeAllViews();
+        List<String> codes = splitAreaCodes(areaDisplayCode);
+        if (codes.isEmpty()) {
+            container.setVisibility(android.view.View.GONE);
+            return;
+        }
+        container.setVisibility(android.view.View.VISIBLE);
+        float density = container.getResources().getDisplayMetrics().density;
+        int margin = (int) (6 * density);
+        int cellHeight = (int) (40 * density);
+
+        for (int i = 0; i < codes.size(); i += columnsPerRow) {
+            LinearLayout row = new LinearLayout(container.getContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            if (i > 0) {
+                rowParams.topMargin = margin;
+            }
+            container.addView(row, rowParams);
+
+            int end = Math.min(i + columnsPerRow, codes.size());
+            for (int j = i; j < end; j++) {
+                TextView badge = createGridBadge(row, badgeBackgroundRes, textColor, cellHeight);
+                badge.setText(codes.get(j));
+                row.addView(badge, createGridBadgeLayoutParams(j > i, margin, cellHeight));
+            }
+            for (int pad = end - i; pad < columnsPerRow; pad++) {
+                TextView badge = createGridBadge(row, badgeBackgroundRes, textColor, cellHeight);
+                row.addView(badge, createGridBadgeLayoutParams(pad > 0 || end > i, margin, cellHeight));
+            }
+        }
+    }
+
+    private static TextView createGridBadge(LinearLayout row, @DrawableRes int badgeBackgroundRes,
+            int textColor, int cellHeight) {
+        TextView badge = new TextView(row.getContext());
+        badge.setTextColor(textColor);
+        badge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        badge.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+        badge.setAllCaps(true);
+        badge.setIncludeFontPadding(false);
+        badge.setGravity(Gravity.CENTER);
+        badge.setBackgroundResource(badgeBackgroundRes);
+        badge.setMinHeight(cellHeight);
+        return badge;
+    }
+
+    private static LinearLayout.LayoutParams createGridBadgeLayoutParams(boolean marginStart, int margin,
+            int cellHeight) {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, cellHeight, 1f);
+        if (marginStart) {
+            params.setMarginStart(margin);
+        }
+        return params;
     }
 
     /** 临时证二维码内容：优先 applyId，否则用证件 id。 */
