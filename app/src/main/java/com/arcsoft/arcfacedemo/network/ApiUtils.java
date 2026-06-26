@@ -60,7 +60,7 @@ public class ApiUtils {
     // public static void get(String url, Map<String, String> params, ApiCallback callback) {
     // Request.Builder requestBuilder = new Request.Builder()
     // .url(url)
-    // .addHeader("tenant-id", "1");
+    // .addHeader("tenant-id", UrlConstants.TENANT_ID);
     // // 检查是否有 accessToken，如果有则添加 Authorization 头
     // if (accessToken!= null) {
     // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
@@ -94,7 +94,7 @@ public class ApiUtils {
         // urlBuilder.addQueryParameter(entry.getKey(), entry.getValue());
         // }
         // }
-        // Request.Builder requestBuilder = new Request.Builder().url(urlBuilder.build()).addHeader("tenant-id", "1");
+        // Request.Builder requestBuilder = new Request.Builder().url(urlBuilder.build()).addHeader("tenant-id", UrlConstants.TENANT_ID);
         // // 检查是否有 accessToken，如果有则添加 Authorization 头
         // if (accessToken != null) {
         // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
@@ -159,7 +159,7 @@ public class ApiUtils {
         // urlBuilder.addQueryParameter(entry.getKey(), entry.getValue());
         // }
         // }
-        // Request.Builder requestBuilder = new Request.Builder().url(urlBuilder.build()).addHeader("tenant-id", "1");
+        // Request.Builder requestBuilder = new Request.Builder().url(urlBuilder.build()).addHeader("tenant-id", UrlConstants.TENANT_ID);
         // // 检查是否有 accessToken，如果有则添加 Authorization 头
         // if (accessToken != null) {
         // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
@@ -218,7 +218,7 @@ public class ApiUtils {
      * 发起 JSON 格式的 POST 请求。
      */
     public static void post(String url, String json, ApiCallback callback) {
-        // Request.Builder requestBuilder = new Request.Builder().url(url).addHeader("tenant-id", "1");
+        // Request.Builder requestBuilder = new Request.Builder().url(url).addHeader("tenant-id", UrlConstants.TENANT_ID);
         // // 检查是否有 accessToken，如果有则添加 Authorization 头
         // if (accessToken != null) {
         // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);

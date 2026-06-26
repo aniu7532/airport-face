@@ -88,7 +88,7 @@ public class LongPassCardsReInitUtils {
     private int getOnlineCount() {
         GetRequest<String> request =
                 OkGo.<String>get(UrlConstants.passCount).tag(UrlConstants.passCount);
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -147,7 +147,7 @@ public class LongPassCardsReInitUtils {
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 request.params(entry.getKey(), entry.getValue());
             }
-            request.headers("tenant-id", "1");
+            request.headers("tenant-id", UrlConstants.TENANT_ID);
             // 检查是否有 accessToken，如果有则添加 Authorization 头
             if (ApiUtils.accessToken != null) {
                 request.headers("Authorization", "Bearer " + ApiUtils.accessToken);

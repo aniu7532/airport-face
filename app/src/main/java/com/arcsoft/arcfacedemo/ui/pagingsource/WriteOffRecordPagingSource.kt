@@ -53,7 +53,7 @@ class WriteOffRecordPagingSource(
             val request =
                 OkGo.get<Base<CardRecords?>?>(UrlConstants.checkRecordPageNeedVerifyNoOut)
                     .tag(UrlConstants.checkRecordPageNeedVerifyNoOut)
-            request.headers("tenant-id", "1")
+            request.headers("tenant-id", UrlConstants.TENANT_ID)
             if (ApiUtils.accessToken != null) {
                 request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
             }

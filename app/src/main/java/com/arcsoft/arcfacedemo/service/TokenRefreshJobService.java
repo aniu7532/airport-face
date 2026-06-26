@@ -46,7 +46,7 @@ public class TokenRefreshJobService extends JobService {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(REFRESH_TOKEN_URL)
-                    .addHeader("tenant-id", "1")
+                    .addHeader("tenant-id", UrlConstants.TENANT_ID)
                     .addHeader("Content-Type", "application/x-www-form-urlencoded")
                     .post(formBodyBuilder.build())
                     .build();

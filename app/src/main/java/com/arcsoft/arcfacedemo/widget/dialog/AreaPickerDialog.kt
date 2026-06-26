@@ -115,7 +115,7 @@ class AreaPickerDialog(
         val request = OkGo.get<Base<List<Area?>?>?>(UrlConstants.checkAreaGetDetailChannelTree)
             .tag(UrlConstants.checkAreaGetDetailChannelTree)
         request.params("timestamp", System.currentTimeMillis().toString())
-        request.headers("tenant-id", "1")
+        request.headers("tenant-id", UrlConstants.TENANT_ID)
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
         }

@@ -862,7 +862,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     // public void getAllRecords() {
     // GetRequest<Base<CardRecords>> request =
     // OkGo.<Base<CardRecords>>get(UrlConstants.URL_GET_RESORD_PAGE).tag(UrlConstants.URL_GET_RESORD_PAGE);
-    // request.headers("tenant-id", "1");
+    // request.headers("tenant-id", UrlConstants.TENANT_ID);
     // if (ApiUtils.accessToken != null) {
     // request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
     // }
@@ -2071,7 +2071,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
         PostRequest<Base<String>> request =
                 OkGo.<Base<String>> post(UrlConstants.URL_CREATE_LONG_RECORD).tag(UrlConstants.URL_CREATE_LONG_RECORD);
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -2134,7 +2134,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
         PostRequest<Base<String>> request =
                 OkGo.<Base<String>> post(UrlConstants.URL_CREATE_TEMP_RECORD).tag(UrlConstants.URL_CREATE_TEMP_RECORD);
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -2262,7 +2262,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     void check() {
         GetRequest<Base<Version>> getRequest =
                 OkGo.<Base<Version>> get(UrlConstants.URL_GET_APP_LAST_VERSION).params("type", 3);
-        getRequest.headers("tenant-id", "1");
+        getRequest.headers("tenant-id", UrlConstants.TENANT_ID);
         if (ApiUtils.accessToken != null) {
             getRequest.headers("Authorization", "Bearer " + ApiUtils.accessToken);
         }

@@ -27,7 +27,7 @@ object CheckUnitRepository {
         return suspendCancellableCoroutine { continuation ->
             val request = OkGo.get<Base<List<CheckUnit?>?>>(UrlConstants.checkUnitSimpleList)
                 .tag(UrlConstants.checkUnitSimpleList)
-            request.headers("tenant-id", "1")
+            request.headers("tenant-id", UrlConstants.TENANT_ID)
             if (ApiUtils.accessToken != null) {
                 request.headers("Authorization", "Bearer ${ApiUtils.accessToken}")
             }

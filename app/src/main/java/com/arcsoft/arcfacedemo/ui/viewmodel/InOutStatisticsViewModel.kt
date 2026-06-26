@@ -46,7 +46,7 @@ class InOutStatisticsViewModel : ViewModel() {
         val request =
             OkGo.get<Base<List<InOutStatisticsResult?>?>?>(UrlConstants.checkRecordStatisticNeedVerify)
                 .tag(UrlConstants.checkRecordStatisticNeedVerify)
-        request.headers("tenant-id", "1")
+        request.headers("tenant-id", UrlConstants.TENANT_ID)
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
         }

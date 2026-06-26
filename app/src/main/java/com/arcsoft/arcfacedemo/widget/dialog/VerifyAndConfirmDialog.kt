@@ -118,7 +118,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         val request =
             OkGo.get<Base<List<DeviceResult?>?>?>(UrlConstants.checkDeviceList)
                 .tag(UrlConstants.checkDeviceList)
-        request.headers("tenant-id", "1")
+        request.headers("tenant-id", UrlConstants.TENANT_ID)
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
         }
@@ -167,7 +167,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         val request =
             OkGo.put<Base<Boolean?>?>(UrlConstants.checkRecordVerify)
                 .tag(UrlConstants.checkRecordVerify)
-        request.headers("tenant-id", "1")
+        request.headers("tenant-id", UrlConstants.TENANT_ID)
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken)
         }

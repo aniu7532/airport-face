@@ -135,7 +135,7 @@ public class UpdateUtils {
                              final @NonNull Callback callBack) {
             GetRequest<String> getRequest = OkGo.<String>get(url).params(transform(params));
             getRequest.params("timestamp", String.valueOf(System.currentTimeMillis()));
-            getRequest.headers("tenant-id", "1");
+            getRequest.headers("tenant-id", UrlConstants.TENANT_ID);
             // 检查是否有 accessToken，如果有则添加 Authorization 头
             if (ApiUtils.accessToken != null) {
                 getRequest.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -159,7 +159,7 @@ public class UpdateUtils {
             // 这里默认post的是Form格式，使用json格式的请修改 post -> postString
             PostRequest<String> postRequest = OkGo.<String>post(url);
             postRequest.params("timestamp", String.valueOf(System.currentTimeMillis()));
-            postRequest.headers("tenant-id", "1");
+            postRequest.headers("tenant-id", UrlConstants.TENANT_ID);
             // 检查是否有 accessToken，如果有则添加 Authorization 头
             if (ApiUtils.accessToken != null) {
                 postRequest.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -189,7 +189,7 @@ public class UpdateUtils {
                              final @NonNull DownloadCallback callback) {
             GetRequest<File> getRequest = OkGo.<File>get(url).tag(url);
 
-            getRequest.headers("tenant-id", "1");
+            getRequest.headers("tenant-id", UrlConstants.TENANT_ID);
             // 检查是否有 accessToken，如果有则添加 Authorization 头
             if (ApiUtils.accessToken != null) {
                 getRequest.headers("Authorization", "Bearer " + ApiUtils.accessToken);

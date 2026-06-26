@@ -915,7 +915,7 @@ public class LoginActivity extends BaseActivity
                 OkGo.<String> get(UrlConstants.URL_GET_USER_DETAIL).tag(UrlConstants.URL_GET_USER_DETAIL);
         request.params("timestamp", String.valueOf(System.currentTimeMillis()));
         request.params("id", userId);
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -955,7 +955,7 @@ public class LoginActivity extends BaseActivity
                 OkGo.<String> get(UrlConstants.URL_GET_MAC_DETAIL).tag(UrlConstants.URL_GET_MAC_DETAIL);
         request.params("timestamp", String.valueOf(System.currentTimeMillis()));
         request.params("mac", deviceId);
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -1014,7 +1014,7 @@ public class LoginActivity extends BaseActivity
                 OkGo.<String> get(UrlConstants.URL_GETCONFIGINFO).tag(UrlConstants.URL_GETCONFIGINFO);
         request.params("timestamp", String.valueOf(System.currentTimeMillis()));
         request.params("type", "5");
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -1051,7 +1051,7 @@ public class LoginActivity extends BaseActivity
         request = OkGo.<String> get(UrlConstants.URL_GETCONFIGINFO).tag(UrlConstants.URL_GETCONFIGINFO);
         request.params("timestamp", String.valueOf(System.currentTimeMillis()));
         request.params("type", "6");
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -1117,7 +1117,7 @@ public class LoginActivity extends BaseActivity
                         request.params(entry.getKey(), entry.getValue());
                     }
                 }
-                request.headers("tenant-id", "1");
+                request.headers("tenant-id", UrlConstants.TENANT_ID);
                 // 检查是否有 accessToken，如果有则添加 Authorization 头
                 if (ApiUtils.accessToken != null) {
                     request.headers("Authorization", "Bearer " + ApiUtils.accessToken);

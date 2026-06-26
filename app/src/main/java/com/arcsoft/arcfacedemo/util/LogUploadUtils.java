@@ -102,7 +102,7 @@ public class LogUploadUtils {
 		// HttpInitUtils.init(ArcFaceApplication.getApplication(), 5 * 60 * 1000L);
 		ALog.e("FileUtils.getLength:" + FileUtils.getLength(outFile));
 		OkGo.<Base2<String>>post(UrlConstants.Test_URL + "/admin-api/infra/file/upload-no-auth").tag(activity).isMultipart(true)
-			.headers("tenant-id", "1")
+			.headers("tenant-id", UrlConstants.TENANT_ID)
 			.params("path", name)
 			.params("file", outFile)
 			.execute(new JsonCallback<Base2<String>>() {
@@ -204,7 +204,7 @@ public class LogUploadUtils {
 
 		ALog.e("FileUtils.getLength:" + FileUtils.getLength(outFile));
 		OkGo.<Base2<String>>post(UrlConstants.Test_URL + "/admin-api/infra/file/upload-no-auth").tag(context).isMultipart(true)
-			.headers("tenant-id", "1")
+			.headers("tenant-id", UrlConstants.TENANT_ID)
 			.params("path", name)
 			.params("file", outFile)
 			.execute(new JsonCallback<Base2<String>>() {
@@ -281,7 +281,7 @@ public class LogUploadUtils {
 
 		ALog.e("FileUtils.getLength:" + FileUtils.getLength(outFile));
 		OkGo.<Base2<String>>post(UrlConstants.Test_URL + "/admin-api/infra/file/upload-no-auth").tag(context).isMultipart(true)
-			.headers("tenant-id", "1")
+			.headers("tenant-id", UrlConstants.TENANT_ID)
 			.params("path", name)
 			.params("file", outFile)
 			.execute(new JsonCallback<Base2<String>>() {

@@ -667,7 +667,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                 params.put("accountId", infoStorage.getString("userId", ""));
                 params.put("detail", finalPassIds);
                 params.put("detailContent", passIdsWithMsg);
-                request.headers("tenant-id", "1");
+                request.headers("tenant-id", UrlConstants.TENANT_ID);
                 // 检查是否有 accessToken，如果有则添加 Authorization 头
                 if (ApiUtils.accessToken != null) {
                     request.headers("Authorization", "Bearer " + ApiUtils.accessToken);

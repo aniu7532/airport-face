@@ -52,7 +52,7 @@ public class ImageUploader {
 
         PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_UPLOAD_FILE).tag(this);
 
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);

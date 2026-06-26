@@ -266,7 +266,7 @@ public class ArcFaceApplication extends Application {
                             // item.id = SnowflakeIdUtil.getInstance().nextId() + "";
                             PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_CREATE_LONG_RECORD)
                                     .tag(UrlConstants.URL_CREATE_LONG_RECORD);
-                            request.headers("tenant-id", "1");
+                            request.headers("tenant-id", UrlConstants.TENANT_ID);
                             // 检查是否有 accessToken，如果有则添加 Authorization 头
                             if (ApiUtils.accessToken != null) {
                                 request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -315,7 +315,7 @@ public class ArcFaceApplication extends Application {
 
                             PostRequest<String> request = OkGo.<String> post(UrlConstants.URL_CREATE_TEMP_RECORD)
                                     .tag(UrlConstants.URL_CREATE_TEMP_RECORD);
-                            request.headers("tenant-id", "1");
+                            request.headers("tenant-id", UrlConstants.TENANT_ID);
                             // 检查是否有 accessToken，如果有则添加 Authorization 头
                             if (ApiUtils.accessToken != null) {
                                 request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -509,7 +509,7 @@ public class ArcFaceApplication extends Application {
                 updatePage = 1;
 
                 GetRequest<String> request = OkGo.<String> get(UrlConstants.heartbeat).tag(UrlConstants.heartbeat);
-                request.headers("tenant-id", "1");
+                request.headers("tenant-id", UrlConstants.TENANT_ID);
                 // 检查是否有 accessToken，如果有则添加 Authorization 头
                 if (ApiUtils.accessToken != null) {
                     request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
@@ -603,7 +603,7 @@ public class ArcFaceApplication extends Application {
                 request.params(entry.getKey(), entry.getValue());
             }
         }
-        request.headers("tenant-id", "1");
+        request.headers("tenant-id", UrlConstants.TENANT_ID);
         // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (ApiUtils.accessToken != null) {
             request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
