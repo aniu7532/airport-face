@@ -1,89 +1,105 @@
 # 通行证卡面 UI
 
-## 类体系
+## 类与布局体系
 
 ```
-AbstractDocument2（长期证基类）
-  └── Document2（各渠道实现）
-        └── document2.xml（各渠道布局）
+AbstractDocument2（长期证逻辑基类）
+  └── Document2（各 flavor 数据绑定）
+        └── res/layout/document2.xml（各 flavor 布局）
 
-AbstractDocument3（临时证基类）
-  └── Document3（各渠道实现）
-        └── document3.xml（各渠道布局）
+AbstractDocument3（临时证逻辑基类）
+  └── Document3（各 flavor）
+        └── res/layout/document3.xml
 
-DocumentCardSupport    — 状态章 overlay、Glide 加密图
-DocumentCardUiHelper   — 二维码生成、区域标签排版
+DocumentCardSupport   — 状态 overlay、Glide 加密图、多引领人
+DocumentCardUiHelper  — 二维码、区域标签、日期格式化
 ```
 
-## 渠道定制文件
+## 证件类型与 Fragment
 
-| 渠道 | Document2 | Document3 | 布局 |
-|------|-----------|-----------|------|
-| yinchuan | `app/src/yinchuan/java/.../Document2.java` | `Document3.java` | `document2.xml`、`document3.xml` |
-| chongqing | `app/src/chongqing/java/.../` | 同上 | 同上 |
-| shihezi | `app/src/shihezi/java/.../` | 同上 | 同上 |
-| luoyang | `app/src/luoyang/java/.../` | 同上 | 仅长期证布局 |
+| type 值 | 含义 | Fragment | 洛阳 |
+|---------|------|----------|------|
+| 0 | 长期证 | Document2 | ✅ |
+| 1 | 临时证 | Document3 | ❌ 禁用 |
 
-## AbstractDocument2 职责
+## templateType 模板色
 
-- 绑定 `LongPassCard` / `LongTermPass` 数据到 View
-- 加载 AES 加密头像（Glide + `EncryptedFileDecoder`）
-- 显示证件状态章（正常/过期/注销等）
-- 区域标签渲染（`DocumentCardUiHelper`）
-- 二维码生成（证件编号）
+| 值 | 含义 | 常见 UI |
+|----|------|---------|
+| 1 | 蓝色模板 | 长期证默认 |
+| 2 | 黄色模板 | 部分临时/施工证 |
 
-## AbstractDocument3 职责
+## 状态章（DocumentCardSupport）
 
-- 绑定临时证数据
-- 显示引领人信息（`LeadingPeople` 列表）
-- 临时证有效期、通行区域
-- 洛阳渠道不加载此 Fragment
+根据通行证字段叠加半透明状态章：
 
-## DocumentCardSupport
-
-| 功能 | 说明 |
+| 条件 | 展示 |
 |------|------|
-| 状态 overlay | 根据 `status`、`expiryDate` 显示「已过期」「已注销」等章 |
-| 加密图加载 | `Glide.with().load(EncryptedGlideFile)` |
-| 多引领人 | 支持 `LeadingPeople` 列表展示 |
+| `status == 2` | 已注销 |
+| 超过 `expiryDate` | 已过期 |
+| `isWithhold == true` | 暂扣 |
+| `isWithdraw == true` | 已撤回 |
+| `isBlacklist == true` | 黑名单 |
 
-## 证件提示位置
+## 区域标签
 
-`SPUtils.tipsLoc` 控制卡面提示文字位置：
+- 数据源：`areaDisplayCode`、`areaCodes`、`areaIds`
+- `DocumentCardUiHelper` 生成多行 `TextView` + badge drawable
+- 石河子/洛阳有渠道专属 badge 样式（`shihezi_area_badge_*`、`luoyang_area_badge_*`）
 
-| 值 | 位置 |
-|----|------|
-| 0 | 左下 |
-| 1 | 左上 |
-| 2 | 右下 |
-| 3 | 右上 |
+## 二维码
 
-在 `CustomDrawerPopupView` 中配置。
+- 内容通常为 `idCode` 或业务约定字符串
+- `DocumentCardUiHelper` 使用 ZXing `MultiFormatWriter` 生成 `Bitmap`
+- 显示在卡面指定 `ImageView`
 
-## 渠道 UI 差异示例
+## 加密头像加载
 
-| 渠道 | 差异 |
-|------|------|
-| 银川 | 默认 Logo `airport_logo.xml` |
-| 重庆 | PNG Logo `airport_logo.png` |
-| 石河子 | 定制背景 `shihezi_pass_*_bg.png`、区域 badge 样式 |
-| 洛阳 | 竖版长期证 `luoyang_pass_long_term_bg.png`，无临时证 |
-
-## 加密图片加载链路
-
-```
-服务端 path → UrlConstants.fileStreamUrl(path)
-→ ImageDownloader 下载 + AES 加密存本地
-→ EncryptedGlideFile 封装本地路径
-→ SecureGlideModule 注册 EncryptedFileModelLoader
-→ EncryptedFileDecoder 解密 → Bitmap 显示
+```java
+// 典型用法
+Glide.with(context)
+    .load(new EncryptedGlideFile(localEncryptedPath))
+    .into(imageView);
 ```
 
-相关类位于 `util/glide/` 包。
+链路：
 
-## Idle 页面
+1. `ImageDownloader` 从 `fileStreamUrl(photo)` 下载
+2. AES 加密存 `{externalFilesDir}/faceDB/{id}.jpg`
+3. `SecureGlideModule` 注册 `EncryptedFileModelLoader`
+4. `EncryptedFileDecoder` 解密渲染
 
-| Fragment | 布局 | 场景 |
-|----------|------|------|
-| `Document1` | `document1.xml` | 刷卡模式等待刷卡 |
-| `Document11` | `document11.xml` | 纯人脸模式等待识别 |
+## tipsLoc 提示位置
+
+`SPUtils.tipsLoc`（0~3）控制卡面 **状态提示条** 在屏幕四角的位置，在 `LivenessDetect*Activity` 内 `switch(tipsLoc)` 设置 `Gravity`。
+
+## 渠道 layout 差异要点
+
+| 渠道 | 长期证 layout 特点 |
+|------|-------------------|
+| yinchuan | 标准横版字段排列 |
+| chongqing | 江北机场 Logo、字段 label |
+| shihezi | 定制背景图、区域 badge、长期证专用 label |
+| luoyang | **竖版**长期证、`luoyang_pass_long_term_bg` |
+
+洛阳 `document3.xml` 可能存在但运行时不加载 Document3。
+
+## Idle 页
+
+| Fragment | 布局 | 使用场景 |
+|----------|------|----------|
+| `Document1` | document1.xml | 刷卡模式等待 |
+| `Document11` | document11.xml | 纯人脸模式等待 |
+
+## 多引领人展示
+
+`LongTermPass.leadingPeople` JSON → `LeadingPeople[]`：
+
+- `AbstractDocument3` 展示引领人列表（姓名、卡号）
+- 临时证刷卡流程需逐个校验引领人长期证
+
+## 相关文档
+
+- 刷卡流程 → [07-liveness-detect-flow.md](./07-liveness-detect-flow.md)
+- 渠道资源 → [02-product-flavors.md](./02-product-flavors.md)
+- 实体字段 → [17-entity-models.md](./17-entity-models.md)

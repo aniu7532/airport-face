@@ -1,81 +1,86 @@
 # 版本更新
 
-## 涉及类
+## 依赖与初始化
 
-| 类 | 路径 | 职责 |
-|----|------|------|
-| `UpdateUtils` | `util/UpdateUtils.java` | XUpdate 封装 |
-| `UpdatePopDialog` | `widget/dialog/UpdatePopDialog.java` | 更新弹窗 |
-| `ArcFaceApplication` | `ArcFaceApplication.java` | XUpdate 初始化 |
-| `Version` | `entity/Version.java` | 版本信息实体 |
+- 模块：`:xupdate-lib`（`com.xuexiang.xupdate`）
+- Application：`ArcFaceApplication.onCreate()` → `XUpdate.get().init(this)`
 
-## 依赖模块
+## UpdateUtils
 
-`:xupdate-lib`（`com.xuexiang.xupdate`）
+**路径**：`util/UpdateUtils.java`
 
-初始化（`ArcFaceApplication.onCreate`）：
+### 检查更新
 
 ```java
-XUpdate.get()
-    .debug(true)
-    .isWifiOnly(false)
-    .init(this);
+UpdateUtils.update(context, onFailureListener);
 ```
 
-## 检查更新 API
+内部配置：
 
-| 项 | 值 |
-|----|-----|
-| URL | `UrlConstants.URL_GET_APP_LAST_VERSION` |
-| 路径 | `{BASE_URL}/app-api/system/appVersion/get-lastVersion` |
-| 参数 | `type=3`（竖屏客户端） |
+| 配置项 | 值 |
+|--------|-----|
+| debug | true |
+| isWifiOnly | false |
+| isGet | true |
+| supportSilentInstall | false |
+| updateUrl | `URL_GET_APP_LAST_VERSION` |
+| 额外参数 | `type=3`（竖屏客户端） |
+| 布局 | `R.layout.xupdate_dialog_update_port` |
+| 宽度 | 屏幕 80% |
 
-## 更新流程
+### 版本比较逻辑（CustomUpdateParser）
 
-```mermaid
-flowchart TD
-    A[触发检查] --> B[GET get-lastVersion]
-    B --> C{有新版本?}
-    C -->|是| D[UpdatePopDialog 展示]
-    D --> E[用户确认下载]
-    E --> F[XUpdate 下载 APK]
-    F --> G[安装]
-    C -->|否| H[无操作]
+1. 解析响应为 `Base<Version>`
+2. `code != 200` → 无更新
+3. `result.getVersion().compareTo(AppUtils.getAppVersionName()) > 0` → 有新版本
+4. 构建 `UpdateEntity`：
+   - `force` ← `isForceUpdate == 1`
+   - `versionName` ← `result.getVersion()`
+   - `updateContent` ← `remark`
+   - `downloadUrl` ← `url`
+
+> 使用字符串 **compareTo** 比较版本名，需保证后台版本号格式与本地 `versionName`（如 `1.0.72`）可字典序比较。
+
+### HTTP 层 OKHttpUpdateHttpService
+
+下载与检查均通过 OkGo，自动附加：
+
+```java
+.headers("tenant-id", UrlConstants.TENANT_ID)
+.headers("Authorization", "Bearer " + accessToken)  // 若存在
 ```
 
 ## 触发入口
 
 | 入口 | 说明 |
 |------|------|
-| `CustomDrawerPopupView` | 运维侧边栏「检查更新」 |
-| 查验 Activity | 启动时自动检测（部分渠道） |
-| `UpdateUtils.update(context)` | 代码直接调用 |
-
-## UpdateUtils
-
-封装 XUpdate 配置：
-
-| 配置 | 值 | 说明 |
-|------|-----|------|
-| `debug` | true | 调试日志 |
-| `isWifiOnly` | false | 允许移动网络下载 |
-| `isGet` | true | GET 请求检查 |
-| `supportSilentInstall` | false | 非静默安装 |
-
-HTTP 服务使用 `OKHttpUpdateHttpService`（内部 OkGo），请求头携带 `tenant-id` 和 `Authorization`。
+| `CustomDrawerPopupView` | 运维手动检查 |
+| `UpdatePopDialog` | 查验页弹窗式更新（带进度） |
+| 部分 Activity onResume | 自动静默检查（视实现） |
 
 ## UpdatePopDialog
 
-自定义更新弹窗：
+- 自定义竖屏更新 UI
+- 集成下载进度 `NumberProgressBar`
+- 下载完成调起安装 Intent
 
-- 显示版本号、更新说明
-- 下载进度条（`NumberProgressBar`）
-- 下载完成后触发安装
+## 安装
 
-## FileProvider
+- `FileProvider` 授权安装 APK
+- `AndroidManifest` 配置 `update_file_paths.xml`
+- `DefaultInstallListener` / 自定义 `OnInstallListener`
 
-APK 安装通过 `FileProvider` 共享，`AndroidManifest.xml` 中配置 `update_file_paths.xml`。
+## 接口
+
+**GET** `/app-api/system/appVersion/get-lastVersion?type=3`
+
+响应 `Version` 字段见 [17-entity-models.md](./17-entity-models.md)。
 
 ## 独立 update 模块
 
-`update/` 模块（`com.sz.zysx.autoupdate`）为独立测试包，**app 未依赖**，不在此更新流程中使用。
+`update/`（`com.sz.zysx.autoupdate`）未被 app 依赖，仅作安装测试，**不在生产更新链路中**。
+
+## 相关文档
+
+- 接口清单 → [16-api-reference.md](./16-api-reference.md)
+- 运维入口 → [13-settings-and-ops-drawer.md](./13-settings-and-ops-drawer.md)

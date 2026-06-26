@@ -2,74 +2,123 @@
 
 ## 涉及类
 
-| 类 | 路径 | 职责 |
-|----|------|------|
-| `LoginActivity` | `ui/activity/LoginActivity.java` | 首次全量拉取 |
-| `ArcFaceApplication` | `ArcFaceApplication.java` | 定时增量同步 |
-| `FacePhotoViewModel` | `ui/viewmodel/FacePhotoViewModel.java` | 批量注册协调 |
-| `FaceRepository` | `data/FaceRepository.java` | 人脸 CRUD |
-| `FaceServer` | `faceserver/FaceServer.java` | ArcFace 引擎注册/搜索 |
-| `ImageDownloader` | `util/ImageDownloader.java` | 下载并 AES 加密存储照片 |
-| `LongPassCardsReInitUtils` | `util/LongPassCardsReInitUtils.java` | 凌晨数据完整性检查 |
-| `LongPassCardsRemedialMeasuresUtils` | `util/LongPassCardsRemedialMeasuresUtils.java` | 补救措施（补注册人脸） |
-| `DuplicateFaceCleanupUtils` | `util/DuplicateFaceCleanupUtils.java` | 重复人脸清理 |
+| 类 | 职责 |
+|----|------|
+| `LoginActivity.getLongPassCards()` | 登录时全量分页同步 |
+| `ArcFaceApplication.getLongPassCardsUpdate()` | 周期增量同步 |
+| `FacePhotoViewModel` | 批量注册进度与释放引擎 |
+| `FaceRepository` | 人脸分页、删除、计数 |
+| `FaceServer` | ArcFace register/search |
+| `ImageDownloader` | 下载证件照 + AES 落盘 |
+| `LongPassCardsReInitUtils` | 凌晨 1 点完整性检查 |
+| `LongPassCardsRemedialMeasuresUtils` | 运维补救批量修复 |
+| `DuplicateFaceCleanupUtils` | 去重 |
 
-## 同步接口
+## 分页参数
 
-| 接口 | 常量 | 说明 |
-|------|------|------|
-| 分页拉通行证 | `URL_GetLongPass` | `GET /check/pass/page-pass` |
-| 通行证总数 | `passCount` | 用于判断是否需要全量同步 |
-| 异常通行证上报 | `checkAbnormalCreate` | 注册失败时上报 |
+| 场景 | pageSize | 常量 |
+|------|----------|------|
+| 登录全量 | 20 | `LoginActivity.PAGE_SIZE` |
+| 增量更新 | 20 | `ArcFaceApplication.UPDATE_PAGE_SIZE` |
 
-## 全量同步（登录时）
+公共 query 参数：`timestamp`（毫秒）、`pageNo`、`pageSize`。
 
-1. 分页请求 `URL_GetLongPass`，携带 `pageNo`、`pageSize`
-2. 解析 `LongPassCards` → 列表 `LongPassCard`
-3. 每条通行证：
-   - 写入 `LongTermPass`（Room 业务库）
-   - `ImageDownloader` 下载头像 → AES 加密存本地
-   - `FaceServer.registerFace()` 提取特征写入 `FaceEntity`
-4. 更新进度 UI，完成后跳转查验页
+## 全量同步流程（登录）
 
-## 增量同步（后台定时）
+```mermaid
+flowchart TD
+    A[getLongPassCards page=1] --> B[GET page-pass]
+    B --> C{code==200?}
+    C -->|是| D[遍历 LongPassCard]
+    D --> E[转 LongTermPass 写 Room]
+    E --> F[ImageDownloader 下载 photo]
+    F --> G[FaceServer.registerFace]
+    G --> H{还有下一页?}
+    H -->|是| I[pageNo++] --> B
+    H -->|否| J[gotoActivity]
+    C -->|否| K[提示失败]
+```
 
-`ArcFaceApplication` 定时任务中：
+触发条件（`LoginActivity`）：
 
-1. 请求 `passCount` 获取服务端总数
-2. 与本地 `LongTermPass` 数量对比
-3. 若有新增，分页拉取并注册新人脸
-4. 同步间隔由后台 `configInfo` 配置
+```java
+if (isFirstStart || ObjectUtils.isEmpty(localPassList)) {
+    getLongPassCards();
+} else {
+    startUpDataToServer();
+    gotoActivity();
+}
+```
 
-## 图片存储
+## 增量同步流程（周期任务）
+
+`startPeriodicTask()` 每次执行调用 `getLongPassCardsUpdate()`：
+
+1. GET `passCount` → 服务端 `total`
+2. `localCount = db.longTermPassDao().getCount()`
+3. 若 `total > localCount`：从 `updatePage=1` 分页拉取
+4. 仅处理本地不存在的 `id`（按 updateTime 去重逻辑在实现中）
+5. 新人脸：下载 → 注册 → 写 DB
+
+周期：`infoStorage.getInt("interval", 5)` **分钟**。
+
+## 单条通行证处理
 
 | 步骤 | 说明 |
 |------|------|
-| 下载 | Glide + `Authorization` 头，URL 为 `fileStreamUrl(path)` |
-| 加密 | AES 加密后存 `{externalFilesDir}/faceDB/` |
-| 展示 | Glide `SecureGlideModule` + `EncryptedFileDecoder` 解密显示 |
+| 解析 | `LongPassCard` → `LongTermPass` 字段映射 |
+| 复杂字段 | `leadingPeople`、`timeControl` 序列化 JSON 存 DB |
+| 图片 | `photo` 字段为服务端 path → `fileStreamUrl(photo)` 下载 |
+| 加密 | AES 密钥见 `ImageDownloader.KEY`（16 字节） |
+| 注册 | Bitmap → `FaceServer.registerFace(context, bitmap, nickname)` |
+| 失败 | POST `checkAbnormalCreate` 上报异常 |
 
-## 人脸注册
+## 人脸注册细节
 
-`FaceServer` 核心方法：
+`FaceServer`：
 
-| 方法 | 说明 |
-|------|------|
-| `init()` | 初始化 ArcFace 引擎（检测 + 识别 + 活体） |
-| `registerFace()` | 从 Bitmap 提取特征，写入 Room + 内存搜索库 |
-| `searchFace()` | 1:N 比对，返回 `CompareResult` |
-| `clearAllFaces()` | 清空人脸库 |
+- 最大 **30000** 张（`MAX_REGISTER_FACE_COUNT`）
+- 特征存 `FaceEntity.featureData`（BLOB）
+- 内存 `faceRegisterInfoList` 用于快速 1:N
+- 引擎双实例：`faceEngine`（检测）、`frEngine`（识别）视版本而定
 
-最大支持 **30000** 张人脸。
+## 图片加密与展示
 
-## 数据完整性保障
+| 环节 | 类 |
+|------|-----|
+| 下载加密 | `ImageDownloader` + `AESUtils` |
+| Glide 加载 | `EncryptedGlideFile` → `EncryptedFileDecoder` |
+| Module 注册 | `SecureGlideModule` |
 
-| 工具 | 触发时机 | 作用 |
-|------|----------|------|
-| `LongPassCardsReInitUtils` | 凌晨 1 点 | 检查本地通行证与人脸是否一致，必要时重新初始化 |
-| `LongPassCardsRemedialMeasuresUtils` | 运维手动触发 | 批量补救缺失人脸的通行证 |
-| `DuplicateFaceCleanupUtils` | 运维手动触发 | 清理重复注册的人脸记录 |
+卡面展示见 [09-pass-card-ui.md](./09-pass-card-ui.md)。
 
-## 本地数据表
+## 数据完整性工具
 
-通行证主数据存于 `LongTermPass`（`db/entity/LongTermPass.java`），字段包括卡号、姓名、单位、区域、有效期、照片路径等。详见 [17-entity-models.md](./17-entity-models.md)。
+### LongPassCardsReInitUtils（凌晨 1 点）
+
+- 对比通行证数量与人脸库数量
+- 不一致时触发重新拉取/注册
+- SP 标志 `reinit_check` 防重复
+
+### LongPassCardsRemedialMeasuresUtils（运维手动）
+
+- 批量扫描缺失 `photoBytes` 或无人脸的通行证
+- 带 `RemedialProgressCallback` 进度
+- RxJava 链式处理，失败数统计
+
+### DuplicateFaceCleanupUtils
+
+- 按 nickname 或特征查重
+- 保留最新一条，删除重复 `FaceEntity`
+
+## 本地表 long_term_pass
+
+主键：`id`（通行证 ID）  
+`updateTime` 用于增量判断  
+完整字段见 [17-entity-models.md](./17-entity-models.md)。
+
+## 相关文档
+
+- 登录触发 → [04-login-and-auth.md](./04-login-and-auth.md)
+- 人脸库 API → [15-face-database.md](./15-face-database.md)
+- 定时任务 → [18-background-jobs.md](./18-background-jobs.md)

@@ -4,87 +4,95 @@
 
 | 类 | 职责 |
 |----|------|
-| `ArcFaceApplication` | `startUpDataToServer()` 定时上传 |
-| `ImageUploader` | 上传现场抓拍加密图 |
-| `LongTermRecords` | 长期证通行记录实体 |
-| `TemporaryCardRecords` | 临时证通行记录实体 |
-| `LongTermRecordsDao` | 长期记录 DAO |
-| `TemporaryCardRecordsDao` | 临时记录 DAO |
-| `RecordsPopDialog` | 在线通行记录查询弹窗 |
-| `CheckLogListAdapter` | 查验页底部日志列表 |
-
-## 本地记录表
-
-### LongTermRecords（长期证）
-
-| 字段 | 说明 |
-|------|------|
-| `id` | 本地自增主键 |
-| `passId` | 通行证 ID |
-| `direction` | 进出方向（1 进 / -1 出） |
-| `checkTime` | 查验时间 |
-| `photoPath` | 现场抓拍图本地路径（AES 加密） |
-| `uploaded` | 是否已上传 |
-| `mac` | 设备 MAC |
-
-### TemporaryCardRecords（临时证）
-
-结构类似，额外包含引领人 ID、临时证 ID 等字段。
+| `ArcFaceApplication.startUpDataToServer()` | 30 秒周期上传调度 |
+| `ImageUploader` | `uploadBitmap2()` 上传现场图 |
+| `AESUtils` | 现场图本地加解密 |
+| `LongTermRecords` / `TemporaryCardRecords` | Room 实体 |
+| `LongTermRecordsDao` / `TemporaryCardRecordsDao` | 查询全部待上传 |
 
 ## 写入时机
 
-查验 Activity 在人脸比对通过后：
+查验 Activity 在 **人脸比对成功** 后：
 
-1. 现场抓拍 → AES 加密存本地
-2. 组装记录实体写入 Room
-3. `uploaded = false`
+1. 抓拍当前帧 → AES 加密保存到本地路径
+2. 组装 `LongTermRecords` 或 `TemporaryCardRecords`
+3. `db.*RecordsDao().insert(item)`
+4. UI 刷新底部日志列表
 
-## 上传流程
+此时记录仅在本地，**尚未**调用 create-long/create-temporary。
 
-`ArcFaceApplication.startUpDataToServer()` 默认 **30 秒**周期：
+## 上传周期与并发
 
-```mermaid
-sequenceDiagram
-    participant Timer as 定时器
-    participant DB as Room
-    participant Upload as ImageUploader
-    participant API as 后台
+| 项 | 值 |
+|----|-----|
+| 周期 | `UPLOAD_LOG_TIME = 30_000` ms |
+| 并发控制 | `AtomicBoolean isUploadingRecord` |
+| 启动 | `LoginActivity` 登录成功 / 本地已有通行证时 |
 
-    Timer->>DB: 查询 uploaded=false 的记录
-    DB-->>Timer: 待上传列表
-    loop 每条记录
-        Timer->>Upload: 上传现场照片
-        Upload->>API: POST upload-encrypt-url
-        API-->>Upload: 文件 path
-        Timer->>API: POST create-long / create-temporary
-        API-->>Timer: 成功
-        Timer->>DB: 标记 uploaded=true
-    end
+若上一轮上传未完成，本轮直接跳过（CAS 失败）。
+
+## 单条长期证上传步骤
+
+```
+1. 从 longTermRecordsDao().getAll() 取记录
+2. 若 sitePhoto 为本地路径（/ 或 storage/ 开头）：
+   a. AESUtils.decryptFileToBitmap(sitePhoto)
+   b. imageUploader.uploadBitmap2(bitmap) → 服务端 path
+   c. 删除本地加密文件
+   d. item.sitePhoto = 服务端 path
+3. POST URL_CREATE_LONG_RECORD，Body = Gson(LongTermRecords)
+4. HTTP 200 → longTermRecordsDao().delete(item)
+5. 失败则保留本地，下轮重试
 ```
 
-## 上传接口
+临时证同理，接口为 `URL_CREATE_TEMP_RECORD`。
 
-| 证件类型 | 接口 |
-|----------|------|
-| 长期证 | `URL_CREATE_LONG_RECORD` |
-| 临时证 | `URL_CREATE_TEMP_RECORD` |
-| 现场照片 | `URL_UPLOAD_FILE` |
+## 现场图存储
 
-## 离线模式
+| 阶段 | 格式 |
+|------|------|
+| 查验写入 | AES 加密文件，路径存 `sitePhoto` |
+| 上传前 | 解密为 Bitmap |
+| 上传后 | 服务端返回 URL/path 写入 JSON |
+| 清理 | 本地加密文件 `FileUtils.delete` |
 
-`ArcFaceApplication.isOffLine` 由网络 Ping 检测设置：
+## 抓拍文件清理
 
-- 离线时记录仍写本地 Room
-- 恢复网络后定时器自动上传积压记录
+上传任务末尾扫描 `{externalFilesDir}/records/`：
 
-## 在线记录查询
+- 删除修改时间超过 **3 天**（`3 * 86400000` ms）的文件
 
-`RecordsPopDialog` 弹窗：
+## 离线行为
 
-- 调用 `URL_GET_RESORD_PAGE` 分页查询服务端记录
-- 按 `direction` 筛选进/出记录
-- 在运维侧边栏或查验页触发
+`ArcFaceApplication.isOffLine == true`（Ping 失败）时：
 
-## 查验页日志
+- 记录仍正常写入 Room
+- 上传 POST 可能失败，记录保留
+- 网络恢复后 30 秒任务自动重试
 
-`CheckLogListAdapter` 在查验 Activity 底部展示最近通行记录摘要（本地 `Records` 实体）。
+## 在线查询（非上传）
+
+`RecordsPopDialog`：
+
+- **GET** `URL_GET_RESORD_PAGE`
+- 按 `direction` 查服务端已入库记录
+- 与本地待上传队列无关
+
+## LongTermRecords 核心字段
+
+| 字段 | 说明 |
+|------|------|
+| id | 主键（业务生成） |
+| direction | `"1"` 进 / `"-1"` 出 / `"2"` 核验 |
+| sitePhoto | 上传前本地路径，上传后服务端 path |
+| faceSimilar | 相似度字符串 |
+| needVerify | 是否需施工人员核销 |
+| checkTime | 查验时间 |
+| status / reason | 正常或异常及原因 |
+
+完整字段见 [17-entity-models.md](./17-entity-models.md)。
+
+## 相关文档
+
+- 定时任务总览 → [18-background-jobs.md](./18-background-jobs.md)
+- 施工人员核实 → [11-construction-workers.md](./11-construction-workers.md)

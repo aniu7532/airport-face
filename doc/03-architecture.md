@@ -3,92 +3,130 @@
 ## 分层结构
 
 ```
-┌─────────────────────────────────────────────────┐
-│  UI 层                                          │
-│  Activity / Fragment / ViewModel / Adapter      │
-├─────────────────────────────────────────────────┤
-│  业务逻辑层                                      │
-│  FaceServer / SerialManage / 各 Utils           │
-├─────────────────────────────────────────────────┤
-│  数据层                                          │
-│  FaceRepository / CheckUnitRepository           │
-│  YinchuanAirportDB / FaceDatabase               │
-├─────────────────────────────────────────────────┤
-│  网络层                                          │
-│  ApiUtils / UrlConstants / OkGo Callbacks       │
-├─────────────────────────────────────────────────┤
-│  基础设施                                        │
-│  ArcFace SDK / 相机 / 串口 / Glide / XUpdate    │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ 表现层  Activity / Fragment / ViewModel / Adapter         │
+├──────────────────────────────────────────────────────────┤
+│ 业务层  LivenessDetectViewModel / FaceServer / SerialManage│
+├──────────────────────────────────────────────────────────┤
+│ 数据层  FaceRepository / Room DAO / CheckUnitRepository   │
+├──────────────────────────────────────────────────────────┤
+│ 网络层  ApiUtils / UrlConstants / OkGo Callback           │
+├──────────────────────────────────────────────────────────┤
+│ 基础层  ArcFace SDK / Camera / SQLCipher / Glide / XUpdate│
+└──────────────────────────────────────────────────────────┘
 ```
 
-## 核心模块关系
+## Application 启动时序
+
+`ArcFaceApplication.onCreate()` 执行顺序：
+
+| 步骤 | 动作 |
+|------|------|
+| 1 | 创建日志目录 `{externalFilesDir}/log/` |
+| 2 | `XUpdate.get().init(this)` |
+| 3 | `Utils.init` / Toasty / Bugly 初始化 |
+| 4 | `HttpInitUtils.init`（OkGo） |
+| 5 | `ALog` 配置（文件日志 2 天） |
+| 6 | `InfoStorage` 初始化 |
+| 7 | `ImageUploader` 实例化 |
+| 8 | Room 构建 `YinchuanAirportDB` → `airportDb.db` |
+
+登录成功后额外启动（`LoginActivity`）：
+
+- `startUpDataToServer()` — 30s 上传
+- `startPeriodicTask()` — interval 分钟周期任务
+
+## 模块依赖图
 
 ```mermaid
-flowchart TB
-    Login[LoginActivity] --> App[ArcFaceApplication]
-    App --> DB[(YinchuanAirportDB)]
-    App --> FDB[(FaceDatabase)]
-    App --> Net[ApiUtils / UrlConstants]
+flowchart LR
+    subgraph UI
+        LA[LoginActivity]
+        LD[LivenessDetect*]
+        RR[RegisterAndRecognize]
+        CW[ConstructionWorkers]
+    end
 
-    Liveness[LivenessDetect*Activity] --> VM[LivenessDetectViewModel]
-    VM --> FH[FaceHelper]
-    FH --> FS[FaceServer]
-    FS --> FDB
+    subgraph Core
+        APP[ArcFaceApplication]
+        FS[FaceServer]
+        FH[FaceHelper]
+    end
 
-    Liveness --> Serial[SerialManage]
-    Liveness --> Doc[Document2/Document3]
+    subgraph Data
+        YDB[(YinchuanAirportDB)]
+        FDB[(FaceDatabase)]
+    end
 
-    Liveness --> Records[LongTermRecords / TemporaryCardRecords]
-    Records --> App
-    App -->|定时上传| Net
+    subgraph Net
+        API[ApiUtils]
+        URL[UrlConstants]
+    end
+
+    LA --> APP
+    LA --> API
+    LD --> FH --> FS --> FDB
+    LD --> YDB
+    APP --> YDB
+    APP --> API
+    API --> URL
+    CW --> API
 ```
 
-## 双数据库设计
+## 双数据库
 
-| 数据库 | 类 | 文件路径 | 用途 |
-|--------|-----|----------|------|
-| 业务库 | `YinchuanAirportDB` | `{externalFilesDir}/db/airportDb.db` | 通行证档案、通行记录 |
-| 人脸库 | `FaceDatabase` | `{externalFilesDir}/database/faceDB.db` | 人脸特征向量 |
+| 库 | 类 | 版本 | 路径 | 表 |
+|----|-----|------|------|-----|
+| 业务库 | `YinchuanAirportDB` | 19 | `db/airportDb.db` | long_term_pass, long_term_records, temporary_card_records |
+| 人脸库 | `FaceDatabase` | 1 | `database/faceDB.db` | face |
 
-业务库当前 Schema 版本 **19**，人脸库版本 **1**。Schema 导出在 `app/schemas/`。
+- Schema 导出：`app/schemas/com.arcsoft.arcfacedemo.db.YinchuanAirportDB/`
+- 迁移策略：`fallbackToDestructiveMigration()`（破坏性升级）
+- 加密：SQLCipher 4.5.2
 
-## Application 职责
+## 网络层约定
 
-`ArcFaceApplication` 在 `onCreate` 中完成：
+```java
+request.headers("tenant-id", UrlConstants.TENANT_ID);
+if (ApiUtils.accessToken != null) {
+    request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
+}
+```
 
-1. Room 数据库初始化
-2. OkGo / 日志 / Bugly / XUpdate 初始化
-3. 网络 Ping 检测与离线标志
-4. 定时任务：心跳、通行证增量同步、记录上传、凌晨重启、日志上传
+封装入口：
 
-详见 [18-background-jobs.md](./18-background-jobs.md)。
+- `ApiUtils.get(url, params, callback)`
+- `ApiUtils.post(url, json, callback)`
+- 部分页面 OkGo 直接调用（已统一 TENANT_ID）
 
-## 网络请求规范
+## 包职责索引
 
-所有业务请求需携带：
+| 包 | 核心类 | 文档 |
+|----|--------|------|
+| `ui/activity` | Login, Liveness*, Register* | 04, 06, 07, 08 |
+| `ui/fragment` | Document1/2/3, *Record* | 07, 09, 11 |
+| `ui/viewmodel` | *ViewModel | 各业务流程文档 |
+| `network` | UrlConstants, ApiUtils | 16 |
+| `db` | YinchuanAirportDB, *Dao | 17 |
+| `facedb` | FaceDatabase, FaceDao | 15 |
+| `faceserver` | FaceServer | 15 |
+| `util/face` | FaceHelper, ConfigUtil | 14 |
+| `util/glide` | AESUtils, Encrypted* | 09 |
+| `Serial` | SerialManage | 12 |
+| `widget/dialog` | CustomDrawerPopupView | 13 |
+| `config` | ChannelConfig（flavor） | 02 |
 
-| Header | 值 |
-|--------|-----|
-| `tenant-id` | `UrlConstants.TENANT_ID`（来自渠道 `ChannelConfig`） |
-| `Authorization` | `Bearer {accessToken}`（登录后，部分接口可选） |
+## 线程模型
 
-封装入口：`ApiUtils.get()` / `ApiUtils.post()`，以及各 Activity 中 OkGo 直接调用处。
+| 场景 | 调度 |
+|------|------|
+| 人脸检测 | 相机回调线程 → FaceHelper |
+| 网络回调 | OkGo 线程 → UI runOnUiThread |
+| 定时任务 | `ThreadUtils.executeByFixedAtFixRate` |
+| 人脸注册批量 | RxJava `Schedulers.io()` |
+| Paging | Kotlin 协程 `suspendCancellableCoroutine` |
 
-## 目录与职责映射
+## 相关文档
 
-| 包路径 | 职责 | 文档 |
-|--------|------|------|
-| `ui/` | 界面与状态管理 | [06](./06-check-modes.md) ~ [11](./11-construction-workers.md) |
-| `network/` | URL 常量、HTTP 工具 | [16-api-reference.md](./16-api-reference.md) |
-| `data/` | 人脸仓库、HTTP 回调 | [15-face-database.md](./15-face-database.md) |
-| `db/` | 业务 Room | [17-entity-models.md](./17-entity-models.md) |
-| `facedb/` | 人脸 Room | [15-face-database.md](./15-face-database.md) |
-| `faceserver/` | ArcFace 引擎 | [15-face-database.md](./15-face-database.md) |
-| `util/face/` | 识别辅助 | [14-recognize-settings.md](./14-recognize-settings.md) |
-| `util/camera/` | 相机预览 | [14-recognize-settings.md](./14-recognize-settings.md) |
-| `util/glide/` | 加密图片 | [09-pass-card-ui.md](./09-pass-card-ui.md) |
-| `Serial/` | 串口通信 | [12-serial-port-config.md](./12-serial-port-config.md) |
-| `widget/dialog/` | 弹窗与运维抽屉 | [13-settings-and-ops-drawer.md](./13-settings-and-ops-drawer.md) |
-| `entity/` | 数据模型 | [17-entity-models.md](./17-entity-models.md) |
-| `preference/` | 识别参数 UI | [14-recognize-settings.md](./14-recognize-settings.md) |
+- 定时任务 → [18-background-jobs.md](./18-background-jobs.md)
+- 渠道配置 → [02-product-flavors.md](./02-product-flavors.md)

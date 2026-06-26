@@ -1,33 +1,27 @@
 # 开机自启与 Kiosk 模式
 
-## 涉及类
+## BootReceiver
 
-| 类 | 路径 | 职责 |
-|----|------|------|
-| `BootReceiver` | `receiver/BootReceiver.java` | 开机广播接收 |
-| `LoginActivity` | `ui/activity/LoginActivity.java` | 自启目标页 |
-
-## 开机自启
-
-### BootReceiver
-
-监听广播：
+**路径**：`receiver/BootReceiver.java`  
+**权限**：`RECEIVE_BOOT_COMPLETED`
 
 ```xml
-<action android:name="android.intent.action.BOOT_COMPLETED" />
+<receiver android:name=".receiver.BootReceiver">
+    <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+    </intent-filter>
+</receiver>
 ```
 
-收到开机广播后启动 `LoginActivity`，携带 `auto=true` 参数，跳过部分 UI 交互直接走自动登录流程。
+`onReceive`：
 
-### 权限
+1. 记录 `BOOT_COMPLETED`
+2. 延迟启动 `LoginActivity`（`WeakHandler`）
+3. 可携带 `auto=true` 走免密/自动登录分支
 
-```xml
-<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-```
+## Kiosk（默认桌面）
 
-## Kiosk 桌面模式
-
-`LoginActivity` 在 Manifest 中注册为 Launcher 且带 `HOME` category：
+`LoginActivity` Manifest：
 
 ```xml
 <intent-filter>
@@ -40,37 +34,48 @@
 
 效果：
 
-- 应用可作为设备默认桌面
-- 按 Home 键回到 `LoginActivity` 而非系统桌面
-- 适用于闸机/立式终端禁止用户退出的场景
+- 作为系统桌面，Home 键回到登录/查验流程
+- 防止用户进入其他应用（需配合设备管理策略）
+- `launchMode="singleTop"` 避免重复栈
 
-## 设备 MAC 绑定
+运维抽屉「跳转系统桌面」`tvGotoLuancher` 可尝试恢复系统 Launcher。
 
-登录时调用 `URL_GET_MAC_DETAIL`：
+## 设备标识
 
-- 上报设备 MAC 地址
-- 后台绑定设备与机场/通道
-- 返回设备专属配置（查验模式默认值、同步间隔等）
+| 方法 | 用途 |
+|------|------|
+| `DeviceUtils.getDeviceId()` | 心跳 mac、detail-mac 绑定 |
+| `DeviceUtils.getMacAddress()` | 硬件 MAC（视权限） |
 
-MAC 获取：`DeviceUtils.getMacAddress()`
+登录后 **GET detail-mac** 将设备注册到后台，拉取：
 
-## 设备重启
+- 默认 `checkType` / `direction`
+- 绑定区域 `areaName`
+- 同步 `interval` 等
 
-后台定时任务在凌晨 2:00 触发设备重启（详见 [18-background-jobs.md](./18-background-jobs.md)）：
+## 自动重启（非 Boot）
 
-| 设备 | 管理方式 |
-|------|----------|
-| 大屏 | `ZysjSystemManager` |
-| 小屏 | `com.ys.rkapi.MyManager` |
+`ArcFaceApplication.startPeriodicTask()` 每日 **凌晨 2 点**：
 
-## 部署建议
+| 屏宽 | 方式 |
+|------|------|
+| > 800px | `ZysjSystemManager.zYRebootSys()` |
+| ≤ 800px | `MyManager.reboot()` |
 
-1. 安装 APK 后设为默认桌面（HOME）
-2. 授予所有必要权限（相机、存储、电话状态等）
-3. 配置串口参数（读卡器、二维码）
-4. 首次手动登录完成数据初始化
-5. 之后依赖开机自启 + 自动登录
+SP `reboot` 标志保证当日只重启一次。
 
-## 退出 Kiosk
+## 部署检查清单
 
-通过运维侧边栏「退出登录」可回到 `LoginActivity` 登录页。如需完全退出应用需通过 ADB 或系统设置切换默认桌面。
+- [ ] 安装对应渠道 Release APK
+- [ ] 授予相机、存储、电话状态、开机广播权限
+- [ ] Android 11+ `MANAGE_EXTERNAL_STORAGE`（若需要）
+- [ ] 设为默认桌面（HOME）
+- [ ] 配置读卡器/二维码串口（见 [12-serial-port-config.md](./12-serial-port-config.md)）
+- [ ] 首次联网登录完成全量同步
+- [ ] 验证心跳与记录上传
+- [ ] 确认 tenant-id 与机场租户一致
+
+## 相关文档
+
+- 登录流程 → [04-login-and-auth.md](./04-login-and-auth.md)
+- 定时重启 → [18-background-jobs.md](./18-background-jobs.md)

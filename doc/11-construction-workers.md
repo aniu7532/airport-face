@@ -1,72 +1,90 @@
 # 施工人员管理
 
-## 涉及类
+## 页面结构
 
-| 类 | 路径 | 职责 |
-|----|------|------|
-| `ConstructionWorkersActivity` | `ui/activity/ConstructionWorkersActivity.kt` | 三 Tab 主页面 |
-| `ConstructionWorkersViewModel` | `ui/viewmodel/ConstructionWorkersViewModel.kt` | Tab 状态 |
-| `ConstructionWorkersAdapter` | `ui/adapter/ConstructionWorkersAdapter.kt` | ViewPager2 适配 |
-| `ConstructionWorkersEntrance` | `widget/ConstructionWorkersEntrance.kt` | 查验页入口图标 |
-| `WriteOffRecordFragment` | `ui/fragment/WriteOffRecordFragment.kt` | 核销记录 Tab |
-| `AccessRecordFragment` | `ui/fragment/AccessRecordFragment.kt` | 通行记录 Tab |
-| `InOutStatisticsFragment` | `ui/fragment/InOutStatisticsFragment.kt` | 进出统计 Tab |
-| `WriteOffRecordViewModel` | `ui/viewmodel/WriteOffRecordViewModel.kt` | 核销逻辑 |
-| `AccessRecordViewModel` | `ui/viewmodel/AccessRecordViewModel.kt` | 通行记录筛选 |
-| `InOutStatisticsViewModel` | `ui/viewmodel/InOutStatisticsViewModel.kt` | 统计数据 |
-| `VerifyAndConfirmDialog` | `widget/dialog/VerifyAndConfirmDialog.kt` | 核实确认弹窗 |
+**Activity**：`ui/activity/ConstructionWorkersActivity.kt`  
+**布局**：ViewPager2 + Tab  
+**Adapter**：`ConstructionWorkersAdapter.kt`  
+**ViewModel**：`ConstructionWorkersViewModel.kt`（Tab 枚举）
 
-## 入口
+| Tab 序号 | Fragment | ViewModel | API |
+|----------|----------|-----------|-----|
+| 0 | `WriteOffRecordFragment` | `WriteOffRecordViewModel` | `page-need-verify-no-out` |
+| 1 | `AccessRecordFragment` | `AccessRecordViewModel` | `page-need-verify` |
+| 2 | `InOutStatisticsFragment` | `InOutStatisticsViewModel` | `statistic-need-verify` |
 
-查验页布局 `activity_liveness_detect.xml` 中嵌入 `ConstructionWorkersEntrance`，点击跳转 `ConstructionWorkersActivity`。
-
-## 三个 Tab
-
-| Tab | Fragment | API | 功能 |
-|-----|----------|-----|------|
-| 核销记录 | `WriteOffRecordFragment` | `page-need-verify-no-out` | 有进无出记录，支持核实 |
-| 通行记录 | `AccessRecordFragment` | `page-need-verify` | 施工人员通行记录分页 |
-| 进出统计 | `InOutStatisticsFragment` | `statistic-need-verify` | 按日统计进出人数 |
+**入口**：查验页 `ConstructionWorkersEntrance` 图标 → `startActivity(ConstructionWorkersActivity)`
 
 ## 筛选组件
 
-| 组件 | 类 | 说明 |
-|------|-----|------|
-| 姓名/证件号输入 | `ConstructionWorkersInput` | 文本筛选 |
-| 时间范围 | `ConstructionWorkersTimeSelector` | 起止日期 |
-| 申办单位 | `ConstructionWorkersCompanyAutoComplete` | 自动完成，数据来自 `CheckUnitRepository` |
-| 通用选择器 | `ConstructionWorkersSelector` | 下拉选择 |
-| 区域选择 | `AreaPickerDialog` | 管制区域树 |
+| 组件 | 类 | 绑定字段 |
+|------|-----|----------|
+| 姓名 | `ConstructionWorkersInput` | nickname |
+| 证件号 | `ConstructionWorkersInput` | idCode |
+| 时间范围 | `ConstructionWorkersTimeSelector` | startCheckTime / endCheckTime |
+| 申办单位 | `ConstructionWorkersCompanyAutoComplete` | companyName |
+| 区域 | `AreaPickerDialog` | 区域树选择 |
 
-## 核实流程
+单位数据源：`CheckUnitRepository`（缓存 `checkUnitSimpleList` 结果）。
 
-`WriteOffRecordFragment` 中对「有进无出」记录：
+## 核销 Tab（有进无出）
 
-1. 列表展示待核实记录（Paging3 + `WriteOffRecordPagingSource`）
-2. 点击记录 → `VerifyAndConfirmDialog`
-3. 确认后 POST `checkRecordVerify`（`URL: checkRecordVerify`）
-4. 刷新列表
+### 数据加载
 
-## 分页加载
+`WriteOffRecordPagingSource` → **GET** `checkRecordPageNeedVerifyNoOut`
 
-| PagingSource | 对应 API |
-|--------------|----------|
-| `WriteOffRecordPagingSource` | `checkRecordPageNeedVerifyNoOut` |
-| `AccessRecordPagingSource` | `checkRecordPageNeedVerify` |
+| 参数 | 默认 |
+|------|------|
+| pageNo | 从 1 递增 |
+| pageSize | 10 |
+| nickname / idCode | 筛选 |
+| startCheckTime / endCheckTime | 时间 |
+| companyName | 可选 |
 
-## 申办单位数据
+### 核实流程
 
-`CheckUnitRepository`（Kotlin object）：
+1. 列表项点击 → `VerifyAndConfirmDialog`
+2. 表单字段必填受 `VerifyFeatureSettings` 子开关控制
+3. 确认 → **POST** `checkRecordVerify`
+4. 成功刷新 Paging 列表
 
-- 调用 `checkUnitSimpleList` 拉取单位列表
-- 内存缓存，供 `ConstructionWorkersCompanyAutoComplete` 和 `CompanyUnitPicker` 使用
+## 通行记录 Tab
 
-## 数据模型
+`AccessRecordPagingSource` → **GET** `checkRecordPageNeedVerify`
 
-| 类 | 说明 |
-|----|------|
-| `InOutStatisticsResult` | 进出统计结果 |
-| `CheckUnit` | 申办单位 |
-| `DeviceResult` | 设备信息（区域树接口返回） |
+参数与核销 Tab 相同，展示施工人员通行明细。  
+Adapter：`AccessRecordAdapter.kt`（direction 显示进/出）。
 
-详见 [17-entity-models.md](./17-entity-models.md)。
+## 进出统计 Tab
+
+`InOutStatisticsViewModel` → **GET** `checkRecordStatisticNeedVerify`
+
+展示按日统计结果，实体 `InOutStatisticsResult`，Adapter `InOutStatisticsAdapter`。
+
+## VerifyFeatureSettings 联动
+
+| 开关 | SP 键 | 影响 |
+|------|-------|------|
+| 总开关 | `verify_feature_enabled` | 新记录 `needVerify` |
+| 必填通道 | `verify_required_passage` | 核实表单 |
+| 必填通行时间 | `verify_required_pass_time` | 核实表单 |
+| 必填设备 | `verify_required_device` | 核实表单 |
+| 必填备注 | `verify_required_remark` | 核实表单 |
+
+配置入口：运维抽屉 → `VerifyFeatureSettingsDialog`。
+
+## CheckUnitRepository
+
+```kotlin
+// 挂起函数拉取并缓存申办单位
+suspend fun fetchUnits(): List<CheckUnit>
+```
+
+接口：**GET** `checkUnitSimpleList`  
+用于单位自动完成与 `CompanyUnitPicker.bindCompanyUnitField` 扩展。
+
+## 相关文档
+
+- 接口参数 → [16-api-reference.md](./16-api-reference.md)
+- 运维核实开关 → [13-settings-and-ops-drawer.md](./13-settings-and-ops-drawer.md)
+- needVerify 写入 → [10-offline-records-upload.md](./10-offline-records-upload.md)

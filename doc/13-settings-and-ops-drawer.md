@@ -1,84 +1,94 @@
 # 运维侧边栏与设置
 
-## 运维侧边栏
+## CustomDrawerPopupView
+
+**类**：`widget/dialog/CustomDrawerPopupView.java`  
+**布局**：`res/layout/dialog_draw.xml`  
+**基类**：XPopup `DrawerPopupView`
 
 ### 入口
 
-| 位置 | 触发方式 |
-|------|----------|
-| `LoginActivity` | 连续点击 `btnGo` 5 次 |
-| 查验 Activity | 连续点击隐藏区域（各 Activity 内实现） |
-
-弹出 `CustomDrawerPopupView`（XPopup 侧边抽屉）。
-
-### 功能菜单
-
-| 菜单项 | 说明 |
-|--------|------|
-| 进出方向 | 切换 `SPUtils.direction`（进/出） |
-| 查验模式 | 切换 `SPUtils.checkType`（四种模式） |
-| 证件窗口位置 | 切换 `SPUtils.tipsLoc` |
-| 读卡器串口配置 | `CardSerialConfigPopDialog` |
-| 二维码串口配置 | `QrSerialConfigPopDialog` |
-| ArcFace AppKey | `AppKeyPopDialog`（SDK 密钥配置） |
-| 识别参数设置 | 跳转 `RecognizeSettingsActivity` |
-| 相机配置 | 跳转 `CameraConfigureActivity` |
-| 核实功能设置 | `VerifyFeatureSettingsDialog` |
-| 通行记录查询 | `RecordsPopDialog` |
-| 日志上传 | 调用 `LogUploadUtils.upload()` |
-| 数据重新初始化 | `LongPassCardsReInitUtils` |
-| 重复人脸清理 | `DuplicateFaceCleanupUtils` |
-| 补救措施 | `LongPassCardsRemedialMeasuresUtils` |
-| 版本更新 | `UpdatePopDialog` |
-| 退出登录 | 清除 Token，跳转 `LoginActivity` |
-
-## 设置页面
-
-### RecognizeSettingsActivity
-
-ArcFace 识别参数，加载 `RecognizeSettingsPreferenceFragment`：
-
-| 参数 | Preference 类 | 说明 |
-|------|---------------|------|
-| 识别阈值 | `ThresholdPreference` | 1:N 比对相似度阈值 |
-| 活体阈值 | `ThresholdLivePreference` | RGB/IR 活体检测阈值 |
-| 检测角度 | `ChooseDetectDegreeListPreference` | 人脸检测方向优先级 |
-| 其他整数参数 | `AdjustableIntegerPreference` | 可调节整型配置 |
-
-持久化通过 `ConfigUtil` 读写 SharedPreferences。
-
-### CameraConfigureActivity
-
-相机硬件配置：
-
-- RGB / IR 相机 ID 选择
-- 预览分辨率
-- 双目偏移量（识别区域适配）
-- 镜像/旋转设置
-
-### VerifyFeatureSettingsDialog
-
-查验特征开关，配置存于 `VerifyFeatureSettings.kt`（SharedPreferences）。
-
-## 相关弹窗
-
-| 弹窗 | 用途 |
+| 位置 | 触发 |
 |------|------|
-| `LoadingPopDialog` | 加载中提示 |
-| `LogingPopDialog` | 登录等待 |
-| `CustomPopDialog` | 自定义结果提示 |
-| `ImagePopDialog` | 图片预览 |
-| `DrawPopDialog` | 侧边图片预览 |
-| `AreaPickerDialog` | 管制区域树选择 |
-| `StringListPickerDialog` | 字符串列表选择 |
-| `DateTimePickerDialogHelper` | 日期时间选择 |
+| `LoginActivity` | 连续点击 `btnGo` 5 次 |
+| 各查验 Activity | 隐藏区域连点（实现各异） |
 
-## SP 关键键位
+### 完整菜单项
 
-| 键 | 类型 | 说明 |
-|----|------|------|
-| `checkType` | int | 查验模式 0~3 |
-| `direction` | int | 进出方向 1/-1 |
-| `tipsLoc` | int | 证件提示位置 0~3 |
+| 控件 ID | 菜单文案 | 行为 |
+|---------|----------|------|
+| `tvPhone` | （展示） | 显示 `SPUtils.mobile` |
+| `tvInOut` | 选择进出 | 列表：进控制区/出控制区 → `direction` 1/-1，重启 Login |
+| `tvChayan` | 查验模式 | 4 种 checkType → 重启 Login |
+| `tvTipsLoc` | 证件提示窗口位置 | 4 角 → `tipsLoc` 0~3 |
+| `tvVerifyFeature` | 核实功能设置 | 打开 `VerifyFeatureSettingsDialog` |
+| `tvCanshu` | 识别参数设置 | 跳转 `RecognizeSettingsActivity` |
+| `tvCardSerial` | 读卡器串口配置 | `CardSerialConfigPopDialog` |
+| `tvQrSerial` | 二维码串口配置 | `QrSerialConfigPopDialog` |
+| `tvWenan` | 文案设置 | 输入框 → `wenan` |
+| `tvDelete` | 清除数据 | 确认后清 DB/人脸库等 |
+| `tvUploadLog` | 上传日志 | `LogUploadUtils.upload()` |
+| `tvReInit` | 数据重新初始化 | `LongPassCardsReInitUtils` |
+| `tvRemedial` | 补救措施 | `LongPassCardsRemedialMeasuresUtils` |
+| `tvClearDuplicateFace` | 重复人脸清理 | `DuplicateFaceCleanupUtils` |
+| `tvGotoLuancher` | 跳转系统桌面 | 尝试启动系统 Launcher |
+| `tvGotoSetting` | 系统设置 | `Settings.ACTION_SETTINGS` |
+| `tvVersion` | （展示） | 当前 `versionName` |
+| `btnExit` | 退出 | 清 Token，跳转 `LoginActivity` |
 
-存储工具：`InfoStorage` / `SPUtils`（blankj UtilCodeX）。
+切换进出/查验模式后，会 `finish` 所有查验 Activity 并 `startActivity(LoginActivity)` 以重新走路由。
+
+## VerifyFeatureSettings
+
+**类**：`util/VerifyFeatureSettings.kt`
+
+| SP 键 | 默认 | 说明 |
+|-------|------|------|
+| `verify_feature_enabled` | false | 核销总开关 |
+| `verify_required_passage` | false | 核实时必填通道 |
+| `verify_required_pass_time` | false | 必填通行时间 |
+| `verify_required_device` | false | 必填设备 |
+| `verify_required_remark` | false | 必填备注 |
+
+总开关开启时，新写入的通行记录 `needVerify=true`。  
+配置 UI：`VerifyFeatureSettingsDialog.kt`。
+
+## RecognizeSettingsActivity
+
+- 加载 `RecognizeSettingsPreferenceFragment`
+- XML：`res/xml/preferences_recognize.xml`
+- 读写 `ConfigUtil`（与 `PreferenceManager` 同一 SP 文件）
+
+## CameraConfigureActivity
+
+- 相机 ID、分辨率、双目偏移
+- XML：`preference_camera.xml` 等
+- 影响 `DualCameraHelper` 预览与 `FaceRectTransformer` 对齐
+
+## ArcFace AppKey
+
+`AppKeyPopDialog` → 写入 SP：
+
+| 键 | 说明 |
+|----|------|
+| `Appid` | APP_ID |
+| `Sdkkey` | SDK_KEY |
+| `Activecode` | ACTIVE_KEY |
+
+`ActivationActivity` 读取上述值做在线激活。
+
+## 相关弹窗速查
+
+| 弹窗 | 文件 | 用途 |
+|------|------|------|
+| `RecordsPopDialog` | RecordsPopDialog.java | 在线通行记录 |
+| `UpdatePopDialog` | UpdatePopDialog.java | 版本更新 |
+| `LoadingPopDialog` | LoadingPopDialog.java | 加载中 |
+| `AreaPickerDialog` | AreaPickerDialog.kt | 区域树选择 |
+| `AppKeyPopDialog` | AppKeyPopDialog.java | SDK 密钥 |
+
+## 相关文档
+
+- checkType/direction → [06-check-modes.md](./06-check-modes.md)
+- 串口配置 → [12-serial-port-config.md](./12-serial-port-config.md)
+- 识别阈值 → [14-recognize-settings.md](./14-recognize-settings.md)

@@ -1,68 +1,86 @@
 # 纯人脸出区查验
 
-适用于 `RegisterAndRecognizeActivity`（checkType = 3）。
+**Activity**：`RegisterAndRecognizeActivity`  
+**ViewModel**：`RecognizeViewModel`  
+**checkType**：`3`  
+**布局**：`activity_register_and_recognize.xml`
 
-## 涉及类
+## 与刷卡模式对比
 
-| 类 | 职责 |
-|----|------|
-| `RegisterAndRecognizeActivity` | 出区查验主界面 |
-| `RecognizeViewModel` | 识别状态与搜索逻辑 |
-| `FaceHelper` | 相机帧处理 |
-| `FaceServer` | 1:N 搜索 |
-| `Document11` | Idle 提示页 Fragment |
-| `AbstractDocument2` / `Document2` | 识别成功后展示长期证卡面 |
+| 项目 | 刷卡+人脸 | 纯人脸出区 |
+|------|-----------|------------|
+| Activity | `LivenessDetect*` | `RegisterAndRecognizeActivity` |
+| 读卡/串口 | RFID + 二维码 | 无 |
+| Idle UI | `Document1` | `Document11` |
+| 比对触发 | 刷卡后等待人脸 | 持续 1:N |
+| 典型场景 | 进控制区 | 出控制区 |
+| 记录类型 | 长期 + 临时 | 仅长期 |
 
-## 与刷卡模式的差异
+## 启动流程
 
-| 对比项 | 刷卡+人脸 | 纯人脸出区 |
-|--------|-----------|------------|
-| Activity | `LivenessDetect*Activity` | `RegisterAndRecognizeActivity` |
-| ViewModel | `LivenessDetectViewModel` | `RecognizeViewModel` |
-| 读卡器 | RFID + 二维码串口 | 无 |
-| 触发方式 | 先刷卡再人脸 | 直接人脸 1:N |
-| Idle 页 | `Document1` | `Document11` |
-| 用途 | 进控制区 | 出控制区 |
+1. `RecognizeViewModel` 初始化，`FaceServer.init`
+2. `DualCameraHelper` 打开 RGB/IR
+3. `FaceHelper` 注册回调 `RecognizeCallback`
+4. 默认 Fragment：`Document11`（等待识别提示）
+5. 读取 `direction`、`isOffLine` 显示顶部状态
 
-## 主流程
+## 识别循环
 
 ```mermaid
-flowchart TD
-    A[启动 Activity] --> B[初始化 RGB/IR 双摄]
-    B --> C[FaceHelper 持续检测人脸]
-    C --> D{检测到人脸?}
-    D -->|是| E[提取特征 + 1:N 搜索]
-    E --> F{比对通过?}
-    F -->|是| G[展示 Document2 卡面]
-    G --> H[写 LongTermRecords]
-    H --> I[异步上传]
-    F -->|否| J[提示未识别]
-    I --> K[回到 Document11 idle]
-    J --> K
+sequenceDiagram
+    participant Cam as DualCameraHelper
+    participant FH as FaceHelper
+    participant FS as FaceServer
+    participant UI as Document2
+
+    loop 每帧
+        Cam->>FH: NV21 预览帧
+        FH->>FH: detect + liveness
+        FH->>FS: searchFace(feature)
+        FS-->>FH: CompareResult
+        alt similar >= threshold
+            FH->>UI: 切换 Document2 展示卡面
+            FH->>FH: saveLongTermRecords
+        end
+    end
 ```
 
-## 识别逻辑
+## RecognizeViewModel 职责
 
-`RecognizeViewModel` 核心步骤：
+| 方法/逻辑 | 说明 |
+|-----------|------|
+| 预览配置 | `PreviewConfig` 分辨率、旋转 |
+| 人脸框 | `FaceRectView` 坐标变换 |
+| 搜索 | 调用 `FaceServer.searchFace` |
+| 阈值 | `ConfigUtil.getRecognizeThreshold()` |
+| 去重触发 | 短时间同一人不重复写记录 |
 
-1. `FaceHelper` 从 RGB 相机帧检测人脸
-2. IR 相机帧做活体检测
-3. 提取 `FaceFeature` 调用 `FaceServer.searchFace()`
-4. 返回 `CompareResult`（含相似度、匹配的 `FaceEntity`）
-5. 相似度 ≥ 阈值 → 查 `LongTermPass` 展示卡面
+## 比对成功后
 
-## 卡面展示
+1. 根据 `CompareResult` 的 `faceId` 查 `LongTermPass`
+2. `replace` 为渠道 `Document2` Fragment
+3. `DocumentCardSupport` 加载加密头像、状态章
+4. 组装 `LongTermRecords`（`direction` 通常为 **-1** 出区）
+5. `needVerify` 受 `VerifyFeatureSettings` 控制
+6. 播放成功音 `SoundManager`
+7. 延时后回到 `Document11`
 
-识别成功后：
+## 不支持的能力
 
-1. 根据 `FaceEntity.faceId` 关联 `LongTermPass`
-2. 加载渠道定制 `Document2` Fragment
-3. `DocumentCardSupport` 处理状态章、AES 解密照片
+- 无临时证流程（出区仅长期证人证）
+- 无引领人刷卡环节
+- 洛阳渠道与刷卡模式相同，仅长期证
 
-## 通行记录
+## 运维能力
 
-与刷卡模式相同，写入 `LongTermRecords` 并定时上传，详见 [10-offline-records-upload.md](./10-offline-records-upload.md)。
+与刷卡页相同：
 
-## 运维功能
+- 隐藏入口打开 `CustomDrawerPopupView`
+- 可切换 direction / checkType（切换后需经 Login 重新路由）
+- `RecordsPopDialog` 查在线记录
 
-同样支持 `CustomDrawerPopupView` 侧边栏（连续点击隐藏区域触发），可切换进出方向、查验模式等。
+## 相关文档
+
+- 查验模式 → [06-check-modes.md](./06-check-modes.md)
+- 识别参数 → [14-recognize-settings.md](./14-recognize-settings.md)
+- 记录上传 → [10-offline-records-upload.md](./10-offline-records-upload.md)

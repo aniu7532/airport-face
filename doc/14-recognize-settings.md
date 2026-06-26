@@ -1,88 +1,100 @@
 # ArcFace 识别参数
 
-## 涉及类
+## 配置存储
 
-| 类 | 路径 | 职责 |
-|----|------|------|
-| `RecognizeSettingsActivity` | `ui/activity/RecognizeSettingsActivity.java` | 设置页入口 |
-| `RecognizeSettingsPreferenceFragment` | `preference/RecognizeSettingsPreferenceFragment.java` | Preference 加载 |
-| `ConfigUtil` | `util/ConfigUtil.java` | 参数读写 SP |
-| `FaceHelper` | `util/face/FaceHelper.java` | 识别引擎封装 |
-| `FaceServer` | `faceserver/FaceServer.java` | ArcFace 引擎 |
-| `CameraConfigureActivity` | `ui/activity/CameraConfigureActivity.java` | 相机配置 |
-| `CameraHelper` | `util/camera/CameraHelper.java` | 单摄辅助 |
-| `DualCameraHelper` | `util/camera/DualCameraHelper.java` | 双摄辅助 |
+**读写类**：`util/ConfigUtil.java`  
+**UI**：`RecognizeSettingsPreferenceFragment` + `res/xml/preferences_recognize.xml`  
+**SP 文件**：`PreferenceManager.getDefaultSharedPreferences`（与 Preference 组件共享）
 
-## 识别阈值
+> 修改识别参数后通常需重启查验 Activity 或重新初始化 `FaceHelper` 生效。
 
-| 参数 | Preference | 默认值域 | 说明 |
-|------|------------|----------|------|
-| 识别阈值 | `ThresholdPreference` | 0.0 ~ 1.0 | 1:N 比对通过最低相似度 |
-| 活体阈值 | `ThresholdLivePreference` | 0.0 ~ 1.0 | 活体检测通过最低分数 |
+## 推荐默认值（ConfigUtil 常量）
 
-对话框：`ThresholdPreferenceDialogFragmentCompat`、`ThresholdLivePreferenceDialogFragmentCompat`。
+| 参数 | 常量 | 默认值 |
+|------|------|--------|
+| 识别阈值 | `RECOMMEND_RECOGNIZE_THRESHOLD` | **0.80** |
+| 遮挡阈值 | `RECOMMEND_SHELTER_THRESHOLD` | 0.50 |
+| 睁眼阈值 | `RECOMMEND_EYE_OPEN_THRESHOLD` | 0.50 |
+| 闭嘴阈值 | `RECOMMEND_MOUTH_CLOSE_THRESHOLD` | 0.50 |
+| 戴眼镜阈值 | `RECOMMEND_WEAR_GLASSES_THRESHOLD` | 0.50 |
+| RGB 活体阈值 | `RECOMMEND_RGB_LIVENESS_THRESHOLD` | 0.50 |
+| IR 活体阈值 | `RECOMMEND_IR_LIVENESS_THRESHOLD` | 0.50 |
+| 活体 FQ 阈值 | `RECOMMEND_LIVENESS_FQ_THRESHOLD` | 0.65 |
+| 最小人脸尺寸 | `RECOMMEND_FACE_SIZE_LIMIT` | 160 px |
+| 帧间移动限制 | `RECOMMEND_FACE_MOVE_LIMIT` | 20 px |
+| 最大检测人脸数 | `DEFAULT_MAX_DETECT_FACE_NUM` | 1 |
+| 默认预览分辨率 | `DEFAULT_PREVIEW_SIZE` | 1280x720 |
 
-## 检测参数
+### 图像质量阈值
 
-| 参数 | 类 | 说明 |
-|------|-----|------|
-| 检测角度 | `ChooseDetectDegreeListPreference` | 人脸检测方向优先级（0°/90°/180°/270°） |
-| 最大检测人脸数 | `AdjustableIntegerPreference` | 单帧最大检测人脸数 |
-| 最小人脸尺寸 | `FaceSizeFilter` | 过滤过小的人脸 |
+| 场景 | 常量 | 值 |
+|------|------|-----|
+| 识别-未戴口罩 | `IMAGE_QUALITY_NO_MASK_RECOGNIZE_THRESHOLD` | 0.49 |
+| 注册-未戴口罩 | `IMAGE_QUALITY_NO_MASK_REGISTER_THRESHOLD` | 0.63 |
+| 识别-戴口罩 | `IMAGE_QUALITY_MASK_RECOGNIZE_THRESHOLD` | 0.29 |
 
-## 活体检测
+## Preference 组件
 
-| 类 | 说明 |
+| 类 | 用途 |
 |----|------|
-| `LivenessType` | 活体类型枚举（RGB / IR） |
-| `RequestLivenessStatus` | 活体检测状态常量 |
-| `RequestFeatureStatus` | 特征提取状态常量 |
+| `ThresholdPreference` | 识别阈值条 |
+| `ThresholdLivePreference` | 活体阈值条 |
+| `ThresholdPreferenceDialogFragmentCompat` | 识别阈值对话框 |
+| `ThresholdLivePreferenceDialogFragmentCompat` | 活体阈值对话框 |
+| `ChooseDetectDegreeListPreference` | 检测角度优先级 |
+| `AdjustableIntegerPreference` | 可调整数项 |
+| `IntegerPreferenceDialogFragmentCompat` | 整数输入对话框 |
 
-双摄模式下 RGB 做人脸检测，IR 做活体检测。
+## 人脸滤镜链
 
-## 人脸过滤器
+路径：`util/face/facefilter/`
 
-`util/face/facefilter/` 包：
-
-| 过滤器 | 说明 |
+| 过滤器 | 作用 |
 |--------|------|
-| `FaceSizeFilter` | 过滤尺寸过小的人脸 |
-| `FaceMoveFilter` | 过滤移动过快的人脸 |
-| `FaceRecognizeAreaFilter` | 限制识别区域范围内的人脸 |
+| `FaceSizeFilter` | 过滤小于 `RECOMMEND_FACE_SIZE_LIMIT` 的人脸 |
+| `FaceMoveFilter` | 过滤帧间移动超过 `RECOMMEND_FACE_MOVE_LIMIT` |
+| `FaceRecognizeAreaFilter` | 仅识别框定区域内的人脸 |
 | `FaceRecognizeFilter` | 过滤器链接口 |
 
-## 相机配置
-
-`CameraConfigureActivity` 管理：
-
-| 配置项 | 说明 |
-|--------|------|
-| RGB 相机 ID | 可见光相机设备号 |
-| IR 相机 ID | 红外相机设备号 |
-| 预览分辨率 | 宽 × 高 |
-| 双目水平偏移 | RGB 与 IR 人脸框对齐偏移量 |
-| 预览旋转角度 | `displayOrientation` |
-
-## 调试工具
+## 相机与预览
 
 | 类 | 说明 |
 |----|------|
-| `RecognizeDebugActivity` | 识别调试页 |
-| `RecognizeDebugViewModel` | 调试数据 |
-| `DebugFaceHelper` | 调试版 FaceHelper |
-| `DebugInfoDumper` | 导出调试 dump 文件 |
-| `DumpConfig` | dump 配置 |
+| `CameraHelper` | 单摄像头 |
+| `DualCameraHelper` | RGB + IR 双摄同步 |
+| `CameraGLSurfaceView` | OpenGL 预览 |
+| `NV21Drawer` | YUV 渲染 |
+| `FaceRectTransformer` | 预览坐标 → 人脸框坐标（含双目偏移） |
+| `CameraConfigureActivity` | 相机 ID、分辨率、偏移配置 |
 
-## 配置持久化
+## 活体类型
 
-所有参数通过 `ConfigUtil` 读写 SharedPreferences，应用启动时 `FaceHelper` / `FaceServer` 读取并应用到 ArcFace 引擎。
+`util/face/constants/LivenessType.java`：
 
-## ArcFace SDK 激活
+- RGB 单目活体
+- IR 红外活体（生产环境主用）
 
-| 类 | 说明 |
+状态常量：`RequestLivenessStatus`、`RequestFeatureStatus`、`RecognizeColor`。
+
+## SDK 激活
+
+| 入口 | 说明 |
+|------|------|
+| `Constants.APP_ID/SDK_KEY/ACTIVE_KEY` | 代码默认密钥 |
+| `AppKeyPopDialog` | 运维修改 SP |
+| `ActivationActivity` | 在线激活 UI |
+| `activeConfig.txt` | 外部配置文件激活（方式二） |
+
+## 调试
+
+| 类 | 用途 |
 |----|------|
-| `ActivationActivity` | 在线激活页面 |
-| `ActiveViewModel` | 激活状态管理 |
-| `Constants` | `APP_ID`、`SDK_KEY`、`ACTIVE_KEY` |
+| `RecognizeDebugActivity` | 实时参数与识别信息 |
+| `DebugFaceHelper` | 带 dump 的 FaceHelper |
+| `DebugInfoDumper` | 导出 NV21/比对结果到 `debugDump/` |
 
-SDK 密钥也可通过 `AppKeyPopDialog` 在运维侧边栏配置。
+## 相关文档
+
+- 查验比对流程 → [07-liveness-detect-flow.md](./07-liveness-detect-flow.md)
+- 人脸库 → [15-face-database.md](./15-face-database.md)
+- 运维入口 → [13-settings-and-ops-drawer.md](./13-settings-and-ops-drawer.md)

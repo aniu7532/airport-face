@@ -1,106 +1,168 @@
 # 数据模型说明
 
-## entity 包（网络实体）
+## 枚举与业务常量
 
-路径：`entity/`
+### 通行证 type
 
-| 类 | 说明 | 关键字段 |
-|----|------|----------|
-| `Login` | 登录响应 | `accessToken`, `refreshToken`, `userId` |
-| `User` | 用户信息 | `nickname`, `username`, `deptName` |
-| `ApiResponse<T>` | 通用 API 响应 | `code`, `msg`, `data` |
-| `Base` / `Base2` | 通用响应基类 | `code`, `msg` |
-| `LongPassCard` | 单条通行证 | `id`, `cardId`, `nickname`, `type`, `status`, `areaIds`, `leadingPeople` |
-| `LongPassCards` | 通行证分页 | `list`, `total` |
-| `Records` | 通行记录摘要 | `nickname`, `checkTime`, `direction` |
-| `CardRecords` | 卡记录 | 卡号、时间等 |
-| `Area` | 管制区域 | `id`, `name`, `code`, `children` |
-| `LeadingPeople` | 引领人 | `id`, `nickname`, `cardId` |
-| `TimeControl` | 时段控制 | 生效时间段 |
-| `Tag` | 标签 | `name`, `color` |
-| `Version` | 版本信息 | `versionCode`, `downloadUrl`, `tenantId` |
-| `CheckUnit` (kt) | 申办单位 | `id`, `name` |
-| `InOutStatisticsResult` (kt) | 进出统计 | 日期、人数 |
-| `DeviceResult` (kt) | 设备查询结果 | 设备列表 |
+| 值 | 含义 |
+|----|------|
+| 0 | 长期证 |
+| 1 | 临时证 |
 
-## db 包（Room 业务实体）
+### 通行证 status
 
-路径：`db/entity/`
+| 值 | 含义 |
+|----|------|
+| 2 | 已注销 |
+| 其他 | 正常/业务定义状态 |
 
-### LongTermPass（通行证主表）
+### 通行 direction（记录）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | String (PK) | 通行证 ID |
-| `cardId` | String | 实体卡号 |
-| `idCode` | String | 系统证件编号 |
-| `nickname` | String | 持卡人姓名 |
-| `companyName` | String | 单位名称 |
-| `orgName` | String | 部门名称 |
-| `type` | int | 0 长期 / 1 临时 |
-| `status` | int | 证件状态（2=注销） |
-| `expiryDate` | String | 有效期 |
-| `startDate` | String | 生效日期 |
-| `areaIds` | String | 可通行区域 ID（JSON） |
-| `areaCodes` | String | 可通行区域编码（JSON） |
-| `imagePath` | String | 本地加密照片路径 |
-| `featureData` | byte[] | 人脸特征（可选冗余） |
-| `leadingPeople` | String | 引领人 JSON |
+| 值 | 含义 |
+|----|------|
+| `"1"` | 进控制区 |
+| `"-1"` | 出控制区 |
+| `"2"` | 核验 |
 
-### LongTermRecords（长期证通行记录）
+### checkType（SP）
+
+| 值 | Activity |
+|----|----------|
+| 0~3 | 见 [06-check-modes.md](./06-check-modes.md) |
+
+---
+
+## entity 包（网络 JSON）
+
+### Login
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `id` | long (PK, 自增) | 本地记录 ID |
-| `passId` | String | 通行证 ID |
-| `direction` | int | 1 进 / -1 出 |
-| `checkTime` | long | 查验时间戳 |
-| `photoPath` | String | 现场抓拍路径 |
-| `uploaded` | boolean | 是否已上传 |
-| `mac` | String | 设备 MAC |
+| userId | String | 用户 ID |
+| accessToken | String | 访问令牌 |
+| refreshToken | String | 刷新令牌 |
+| expiresTime | String | 过期时间 |
 
-### TemporaryCardRecords（临时证通行记录）
+### LongPassCard（API 单条通行证）
 
-结构与 `LongTermRecords` 类似，额外包含：
+与 `LongTermPass` 字段基本对应，数组字段为 `String[]`，含 `leadingPeople` 对象数组、`timeControl` 等。
+
+### LongPassCards（分页包装）
 
 | 字段 | 说明 |
 |------|------|
-| `tempPassId` | 临时证 ID |
-| `leaderPassId` | 引领人通行证 ID |
+| list | `LongPassCard[]` |
+| total | 总条数 |
 
-## facedb 包（人脸实体）
+### CardRecords / ListDTO（施工人员列表项）
 
-### FaceEntity
+含 `nickname`、`idCode`、`checkTime`、`direction`、`companyName`、`needVerify` 等，供 Paging Adapter 展示。
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `faceId` | long (PK, 自增) | 人脸 ID |
-| `userName` | String | 关联姓名 |
-| `imagePath` | String | 注册原图路径 |
-| `featureData` | byte[] | 特征向量 BLOB |
-| `registerTime` | long | 注册时间 |
+### ApiResponse\<T\> / Base\<T\>
 
-## ui/model 包（UI 模型）
+| 字段 | 说明 |
+|------|------|
+| code | 200 成功 |
+| msg | 消息 |
+| data | 业务载荷 |
 
-| 类 | 说明 |
+### Version（更新）
+
+| 字段 | 说明 |
+|------|------|
+| version | 版本名字符串，与 `AppUtils.getAppVersionName()` 比较 |
+| url | APK 下载地址 |
+| remark | 更新说明 |
+| isForceUpdate | 1=强制 |
+
+### LeadingPeople
+
+| 字段 | 说明 |
+|------|------|
+| id | 引领人用户 ID |
+| nickname | 姓名 |
+| cardId | 卡号 |
+
+### TimeControl
+
+时段通行限制，序列化进 `LongTermPass.timeControl` JSON。
+
+---
+
+## db 包（Room）
+
+### 表 long_term_pass → LongTermPass
+
+主键：`id`（String）
+
+| 字段 | 说明 |
+|------|------|
+| cardId / cardIdLong | 短/长卡号 |
+| idCode | 证件编号 |
+| nickname / companyName / orgName | 人员与组织 |
+| type / status / score | 类型、状态、积分 |
+| expiryDate / startDate | 有效期 |
+| areaIds / areaCodes / areaRootIds | 通行区域 |
+| areaDisplayCode | 展示用区域编码 |
+| photo / photoBytes | 证件照 path 或二进制 |
+| leadingPeople | JSON 字符串 |
+| leadingPeopleId | 引领人 ID 数组 |
+| timeControl | 时段 JSON |
+| templateType | 1 蓝 / 2 黄 |
+| isBlacklist / isWithhold / isWithdraw | 风险状态 |
+| withholdStartDate / withholdEndDate | 暂扣区间 |
+| updateTime | 增量同步游标 |
+| businessScope / sex / idNo / unitName | 扩展信息 |
+
+### 表 long_term_records → LongTermRecords
+
+主键：`id`（String，业务生成）
+
+继承 `Records`，额外含：
+
+| 字段 | 说明 |
+|------|------|
+| passid | 通行证 ID |
+| sitePhoto | 现场照（先本地后服务端 path） |
+| faceSimilar / faceQuality | 比对与质量 |
+| deviceId / deviceName | 查验设备 |
+| checkUserId / checkUserName | 查验员 |
+| area / areaName | 通行区域 |
+| status / reason | 正常或异常 |
+| needVerify | 是否待核销 |
+| leadingPeopleld / parentld | 引领人关联 |
+
+### 表 temporary_card_records → TemporaryCardRecords
+
+结构类似长期记录，增加临时证 ID、引领人记录 ID 等字段。
+
+---
+
+## facedb → FaceEntity
+
+见 [15-face-database.md](./15-face-database.md)。
+
+---
+
+## ui/model
+
+| 类 | 用途 |
 |----|------|
-| `CompareResult` | 比对结果（faceEntity, similar, pass） |
-| `PreviewConfig` | 相机预览配置 |
-| `ItemShowInfo` | 列表展示项 |
+| CompareResult | faceEntity + similar + liveness + pass 标志 |
+| PreviewConfig | 预览宽高手旋转 |
+| ItemShowInfo | 调试列表项 |
 
-## DAO 接口
+---
 
-| DAO | 实体 | 主要方法 |
-|-----|------|----------|
-| `LongTermPassDao` | `LongTermPass` | `insert`, `queryByCardId`, `getCount`, `deleteAll` |
-| `LongTermRecordsDao` | `LongTermRecords` | `insert`, `queryNotUploaded`, `markUploaded` |
-| `TemporaryCardRecordsDao` | `TemporaryCardRecords` | 同上 |
-| `FaceDao` | `FaceEntity` | `insert`, `delete`, `getAll`, `queryByFaceId` |
+## Converters（Room）
 
-## 类型转换
+`util/Converters.java`：
 
-`util/Converters.java` 提供 Room `@TypeConverter`：
+- `String[]` ↔ JSON
+- `byte[]` 存储
+- 复杂对象列表序列化
 
-- `String[]` ↔ JSON String
-- `List<LeadingPeople>` ↔ JSON String
-- `byte[]` ↔ 数据库存储
+## 相关文档
+
+- 接口返回 → [16-api-reference.md](./16-api-reference.md)
+- 上传记录 → [10-offline-records-upload.md](./10-offline-records-upload.md)
