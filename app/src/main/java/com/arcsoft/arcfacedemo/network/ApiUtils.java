@@ -17,116 +17,73 @@ import com.lzy.okgo.request.PostRequest;
 import okhttp3.OkHttpClient;
 
 /**
- * 网络 API 请求工具类，封装 Token 管理及基于 OkGo 的 GET/POST 调用。
+ * 网络 API 请求工具类。
+ * <p>
+ * 职责：全局 Token 静态存储、统一请求头（{@code tenant-id}、{@code Authorization}）、
+ * 基于 OkGo 的 GET/POST 异步封装。项目内仍有大量请求直接使用 OkGo，未全部经本类。
+ * </p>
  */
 public class ApiUtils {
+    /** 信任所有证书的 OkHttpClient，当前未被 public 方法使用（遗留自旧版 OkHttp 实现） */
     private static final OkHttpClient client = getUnsafeOkHttpClient();
-    // 存储 accessToken 的静态变量
+
+    /** 访问令牌，登录成功后由 {@link com.arcsoft.arcfacedemo.ui.activity.LoginActivity} 写入 */
     public static String accessToken;
+    /** 刷新令牌，供 {@link com.arcsoft.arcfacedemo.service.TokenRefreshJobService} 刷新 */
     public static String refreshToken;
+    /** 当前登录用户 ID，写入通行记录时作为 checkUserId，无 getter/setter */
     public static String userId;
 
-    // 设置 accessToken 的方法
+    /** 设置访问令牌 */
     public static void setAccessToken(String token) {
         accessToken = token;
     }
 
-    // 设置 refreshToken 的方法
+    /** 设置刷新令牌 */
     public static void setRefreshToken(String token) {
         refreshToken = token;
     }
 
-    // 获取 refreshToken 的方法
+    /** 获取刷新令牌 */
     public static String getRefreshToken() {
         return refreshToken;
     }
 
-    // 获取 accessToken 的方法
+    /** 获取访问令牌 */
     public static String getAccessToken() {
         return accessToken;
     }
 
-    // 定义一个接口，用于回调 API 调用的结果
     /**
-     * API 异步请求结果回调接口。
+     * API 异步请求结果回调。
+     * <p>成功时返回原始 JSON 字符串，由调用方自行 Gson 解析。</p>
      */
     public interface ApiCallback {
+        /** HTTP 2xx 且 body 非空 */
         void onSuccess(String response);
 
+        /** 网络异常或 HTTP 非成功状态 */
         void onFailure(Throwable e);
     }
 
-    // 封装一个 GET 请求的方法
-    // public static void get(String url, Map<String, String> params, ApiCallback callback) {
-    // Request.Builder requestBuilder = new Request.Builder()
-    // .url(url)
-    // .addHeader("tenant-id", UrlConstants.TENANT_ID);
-    // // 检查是否有 accessToken，如果有则添加 Authorization 头
-    // if (accessToken!= null) {
-    // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-    // }
-    // Request request = requestBuilder.build();
-    //
-    // client.newCall(request).enqueue(new Callback() {
-    // @Override
-    // public void onFailure(Call call, IOException e) {
-    // callback.onFailure(e);
-    // }
-    //
-    // @Override
-    // public void onResponse(Call call, Response response) throws IOException {
-    // if (response.isSuccessful()) {
-    // callback.onSuccess(response.body().string());
-    // } else {
-    // callback.onFailure(new IOException("Unexpected code " + response));
-    // }
-    // }
-    // });
-    // }
-    // 封装一个 GET 请求的方法
     /**
-     * 发起 GET 请求，自动附加 tenant-id 与 Authorization 头。
+     * 发起 GET 请求。
+     * <p>自动附加请求头 {@code tenant-id}、{@code Authorization: Bearer}（有 token 时）；
+     * {@code params} 非空时会注入 {@code timestamp} 毫秒时间戳。</p>
+     *
+     * @param url      完整 URL
+     * @param params   Query 参数，可为 null
+     * @param callback 异步回调，在 OkGo 线程执行
      */
     public static void get(String url, Map<String, String> params, ApiCallback callback) {
-        // HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
-        // if (params != null) {
-        // for (Map.Entry<String, String> entry : params.entrySet()) {
-        // urlBuilder.addQueryParameter(entry.getKey(), entry.getValue());
-        // }
-        // }
-        // Request.Builder requestBuilder = new Request.Builder().url(urlBuilder.build()).addHeader("tenant-id", UrlConstants.TENANT_ID);
-        // // 检查是否有 accessToken，如果有则添加 Authorization 头
-        // if (accessToken != null) {
-        // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-        // }
-        // Request request = requestBuilder.build();
-        //
-        // client.newCall(request).enqueue(new Callback() {
-        // @Override
-        // public void onFailure(Call call, IOException e) {
-        // callback.onFailure(e);
-        // }
-        //
-        // @Override
-        // public void onResponse(Call call, Response response) throws IOException {
-        // if (response.isSuccessful()) {
-        // callback.onSuccess(response.body().string());
-        // } else {
-        // callback.onFailure(new IOException("Unexpected code " + response));
-        // }
-        // }
-        // });
-
         GetRequest<String> request = OkGo.<String> get(url).tag(url);
         if (params != null) {
-            // 更新或添加 timestamp 参数
             params.put("timestamp", String.valueOf(System.currentTimeMillis()));
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 request.params(entry.getKey(), entry.getValue());
             }
         }
         request.headers("tenant-id", UrlConstants.TENANT_ID);
-        // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (accessToken != null) {
             request.headers("Authorization", "Bearer " + accessToken);
         }
@@ -148,50 +105,18 @@ public class ApiUtils {
     }
 
     /**
-     * 发起通行证分页 GET 请求，自动附加时间戳参数。
+     * 发起通行证分页 GET 请求。
+     * <p>与 {@link #get} 行为一致，专用于 {@link UrlConstants#URL_GetLongPass} 等分页拉证场景。</p>
      */
     public static void getPassCard(String url, Map<String, String> params, ApiCallback callback) {
-        // HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
-        // if (params != null) {
-        // // 更新或添加 timestamp 参数
-        // params.put("timestamp", String.valueOf(System.currentTimeMillis()));
-        // for (Map.Entry<String, String> entry : params.entrySet()) {
-        // urlBuilder.addQueryParameter(entry.getKey(), entry.getValue());
-        // }
-        // }
-        // Request.Builder requestBuilder = new Request.Builder().url(urlBuilder.build()).addHeader("tenant-id", UrlConstants.TENANT_ID);
-        // // 检查是否有 accessToken，如果有则添加 Authorization 头
-        // if (accessToken != null) {
-        // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-        // }
-        // Request request = requestBuilder.build();
-        //
-        // client.newCall(request).enqueue(new Callback() {
-        // @Override
-        // public void onFailure(Call call, IOException e) {
-        // callback.onFailure(e);
-        // }
-        //
-        // @Override
-        // public void onResponse(Call call, Response response) throws IOException {
-        // if (response.isSuccessful()) {
-        // callback.onSuccess(response.body().string());
-        // } else {
-        // callback.onFailure(new IOException("Unexpected code " + response));
-        // }
-        // }
-        // });
-
         GetRequest<String> request = OkGo.<String> get(url).tag(url);
         if (params != null) {
-            // 更新或添加 timestamp 参数
             params.put("timestamp", String.valueOf(System.currentTimeMillis()));
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 request.params(entry.getKey(), entry.getValue());
             }
         }
         request.headers("tenant-id", UrlConstants.TENANT_ID);
-        // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (accessToken != null) {
             request.headers("Authorization", "Bearer " + accessToken);
         }
@@ -215,36 +140,15 @@ public class ApiUtils {
     }
 
     /**
-     * 发起 JSON 格式的 POST 请求。
+     * 发起 JSON 格式 POST 请求。
+     *
+     * @param url      完整 URL
+     * @param json     请求体 JSON 字符串
+     * @param callback 异步回调
      */
     public static void post(String url, String json, ApiCallback callback) {
-        // Request.Builder requestBuilder = new Request.Builder().url(url).addHeader("tenant-id", UrlConstants.TENANT_ID);
-        // // 检查是否有 accessToken，如果有则添加 Authorization 头
-        // if (accessToken != null) {
-        // requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-        // }
-        // Request request = requestBuilder
-        // .post(RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"))).build();
-        //
-        // client.newCall(request).enqueue(new Callback() {
-        // @Override
-        // public void onFailure(Call call, IOException e) {
-        // callback.onFailure(e);
-        // }
-        //
-        // @Override
-        // public void onResponse(Call call, Response response) throws IOException {
-        // if (response.isSuccessful()) {
-        // callback.onSuccess(response.body().string());
-        // } else {
-        // callback.onFailure(new IOException("Unexpected code " + response));
-        // }
-        // }
-        // });
-
         PostRequest<String> request = OkGo.<String> post(url).tag(url);
         request.headers("tenant-id", UrlConstants.TENANT_ID);
-        // 检查是否有 accessToken，如果有则添加 Authorization 头
         if (accessToken != null) {
             request.headers("Authorization", "Bearer " + accessToken);
         }
@@ -266,13 +170,19 @@ public class ApiUtils {
 
     }
 
-    // 上传图片
+    /**
+     * 上传图片（未实现，空方法占位）。
+     * <p>实际图片上传走 {@link com.arcsoft.arcfacedemo.util.ImageUploader}。</p>
+     */
     public static void upload(String url, String imgStr, ApiCallback callback) {
     }
 
+    /**
+     * 创建信任所有 SSL 证书的 OkHttpClient。
+     * <p>生产环境 HTTPS 信任策略以 {@link com.arcsoft.arcfacedemo.data.http.HttpInitUtils} 为准。</p>
+     */
     private static OkHttpClient getUnsafeOkHttpClient() {
         try {
-            // Create a trust manager that does not validate certificate chains
             final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
                 @Override
                 public void checkClientTrusted(X509Certificate[] chain, String authType) {
@@ -288,11 +198,9 @@ public class ApiUtils {
                 }
             } };
 
-            // Install the all-trusting trust manager
             final SSLContext sslContext = SSLContext.getInstance("SSL");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
 
-            // Create an ssl socket factory with our all-trusting manager
             final javax.net.ssl.SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
             OkHttpClient.Builder builder = new OkHttpClient.Builder();

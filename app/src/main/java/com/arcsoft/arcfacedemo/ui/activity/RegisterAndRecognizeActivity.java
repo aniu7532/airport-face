@@ -109,20 +109,43 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 使用：出页面。纯人脸识别，无刷卡
- * FaceHelper类searchFace函数
+ * 纯人脸出区查验 Activity。
+ * <p>
+ * checkType=3（人脸模式）：无读卡，相机预览 → {@code FaceHelper.searchFace}（1:N）→
+ * 用 {@code FaceEntity.userName}（通行证 id）查 {@link LongTermPass} → 业务校验 → 存记录。
+ * </p>
+ *
+ * @see RecognizeViewModel
+ * @see com.arcsoft.arcfacedemo.util.face.RecognizeCallback
  */
 public class RegisterAndRecognizeActivity extends BaseActivity
         implements ViewTreeObserver.OnGlobalLayoutListener, RecognizeCallback {
     private static final String TAG = "RegisterAndRecognize";
 
+    /* ---------- 相机与预览 ---------- */
+
+    /** RGB 相机辅助类 */
     private DualCameraHelper rgbCameraHelper;
+    /** 红外相机辅助类（IR 活体时使用） */
     private DualCameraHelper irCameraHelper;
+    /** RGB 预览人脸框坐标变换器 */
     private FaceRectTransformer rgbFaceRectTransformer;
+    /** IR 预览人脸框坐标变换器 */
     private FaceRectTransformer irFaceRectTransformer;
+    /** 是否在人脸框上绘制识别信息文字 */
+    private boolean openRectInfoDraw;
+    /** 限定识别区域的可视化 View */
+    private RecognizeAreaView recognizeAreaView;
+    /** RGB 预览尺寸调试 TextView */
+    private TextView textViewRgb;
+    /** IR 预览尺寸调试 TextView */
+    private TextView textViewIr;
+
+    /* ---------- 常量 ---------- */
 
     private static final int ACTION_REQUEST_PERMISSIONS = 0x001;
 
+    /** Activity 销毁后跳转目标：0=无，1=识别设置，2=识别调试 */
     int actionAfterFinish = 0;
     private static final int NAVIGATE_TO_RECOGNIZE_SETTINGS_ACTIVITY = 1;
     private static final int NAVIGATE_TO_RECOGNIZE_DEBUG_ACTIVITY = 2;
@@ -132,35 +155,55 @@ public class RegisterAndRecognizeActivity extends BaseActivity
      */
     private static final String[] NEEDED_PERMISSIONS =
             new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_PHONE_STATE };
+
+    /* ---------- View / ViewModel ---------- */
+
     private ActivityRegisterAndRecognizeBinding binding;
+    /** 人脸识别 ViewModel，封装 FaceHelper 与识别配置 */
     private RecognizeViewModel recognizeViewModel;
+    /** 活体检测类型：RGB / IR / null（禁用） */
     private LivenessType livenessType;
+    /** 是否启用活体检测 */
     private boolean enableLivenessDetect = false;
-    private RecognizeAreaView recognizeAreaView;
-    private TextView textViewRgb;
-    private TextView textViewIr;
-    private boolean openRectInfoDraw;
+
+    /* ---------- 证件 UI Fragment ---------- */
+
+    /** 默认占位 Fragment（Document11） */
     private Fragment fragment11;
     private Fragment fragment2;
     private Fragment fragment3;
     private ImageView iv_face1;
     private ImageView iv_face2;
     private ImageView iv_face3;
+    /** 跳转设置页按钮 */
 	private View button_set;
 
+    /* ---------- 数据访问与存储 ---------- */
+
+    /** 长期/临时通行证 DAO */
     private LongTermPassDao cardDao;
+    /** 人脸特征库 DAO（调试用） */
+    private FaceDao faceDao;
+    /** 现场抓拍图片上传工具 */
+    private ImageUploader imageUploader;
+    /** 设备/登录等本地 KV 存储 */
+    private InfoStorage infoStorage;
+    /** 当前区域下长期记录的主键，C 类卡引领场景使用 */
+    private String localLongId;
 
     // private MediaPlayer mediaGet;
     // private MediaPlayer mediaPass;
     // private MediaPlayer mediaReject;
     // private MediaPlayer mediaFailed;
-    private ImageUploader imageUploader;
-    private InfoStorage infoStorage;
-    private long countdownTime = 1 * 60 * 1000; // 1分钟倒计时
-    private String localLongId;
 
-    private FaceDao faceDao;
+    /* ---------- 倒计时 Handler ---------- */
 
+    /** 证件详情展示超时（默认 1 分钟）后恢复默认 Fragment */
+    private long countdownTime = 1 * 60 * 1000;
+
+    /**
+     * 统一定时任务 Handler：刷新在线/离线提示、时钟、版本检查、隐藏证件 UI、清除引领人缓存等。
+     */
     private WeakHandler countdownHandler = new WeakHandler(new Handler.Callback() {
         @Override
         public boolean handleMessage(@NonNull Message msg) {
@@ -296,17 +339,41 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             return false;
         }
     });
+
+    /* ---------- 查验状态与 UI ---------- */
+
+    /** 当前设备绑定区域名称（用于顶部提示） */
     String areaName;
+    /** 横向查验记录列表适配器 */
     private CheckLogListAdapter mListAdapter;
+    /** 最近查验记录缓存（最多 20 条） */
     private ArrayList<Records> checkList = new ArrayList<>();
     // boolean isOffLine;
     LinearLayout messageLayout;
     ImageView iv_icon;
     TextView tv_message;
+    /** 通行方向：1=进，-1=出 */
     int direction;
-    private int clickCount = 0; // 点击计数
-    private static final int REQUIRED_CLICKS = 5; // 需要的点击次数
+    /** 隐藏入口连续点击计数（达到 {@link #REQUIRED_CLICKS} 次打开运维抽屉） */
+    private int clickCount = 0;
+    /** 打开运维抽屉所需的连续点击次数 */
+    private static final int REQUIRED_CLICKS = 5;
 
+    /** 是否正在执行 queryPassCard，防止并发重复查验 */
+    boolean checking = false;
+    /** 上一次成功查验的通行证，用于 1500ms 内去重 */
+    public LongTermPass lastLongTermPass;
+    /** 上一次成功查验的时间戳 */
+    long lastTime;
+
+    /** 结果提示弹窗 */
+    CustomPopDialog popDialog;
+
+    /* ---------- 生命周期 ---------- */
+
+    /**
+     * 初始化布局、ViewModel、Fragment、查验列表及定时任务。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ALog.e("onCreate");
@@ -432,6 +499,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         // });
     }
 
+    /* ---------- 初始化 ---------- */
+
+    /** 从配置读取活体检测类型并设置是否启用活体。 */
     private void initData() {
         String livenessTypeStr = ConfigUtil.getLivenessDetectType(this);
         if (livenessTypeStr.equals((getString(R.string.value_liveness_type_rgb)))) {
@@ -445,6 +515,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
                 !ConfigUtil.getLivenessDetectType(this).equals(getString(R.string.value_liveness_type_disable));
     }
 
+    /** 创建 {@link RecognizeViewModel}，订阅引擎初始化与识别事件，注册 {@link RecognizeCallback}。 */
     private void initViewModel() {
         recognizeViewModel = new ViewModelProvider(getViewModelStore(),
                 new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(RecognizeViewModel.class);
@@ -508,6 +579,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         recognizeViewModel.setRecognizeCallback(this);
     }
 
+    /** 根据活体类型隐藏 IR 预览区，注册布局监听，设置证件详情 Fragment 位置。 */
     private void initView() {
         if (!DualCameraHelper.hasDualCamera() || livenessType != LivenessType.IR) {
             binding.flRecognizeIr.setVisibility(View.GONE);
@@ -541,6 +613,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /** 初始化证件 UI Fragment，默认展示 {@link Document11}。 */
     void initFragment() {
         fragment11 = new Document11();
         fragment2 = new Document2();
@@ -551,6 +624,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         fragmentTransaction.commit();
     }
 
+    /* ---------- 证件 UI Fragment 切换 ---------- */
+
+    /**
+     * 长期/临时通行证查验成功后，切换至 {@link Document2} 展示证件详情。
+     *
+     * @param longTermPass 通行证实体
+     * @param faceSimilar  人脸相似度（0~1）
+     */
     public void toggleFragment(LongTermPass longTermPass, float faceSimilar) {
         try {
             Fragment fragment2 = new Document2();
@@ -588,6 +669,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
     }
 
+    /** 点击查验记录列表项时，用历史记录数据切换 {@link Document2}。 */
     private void toggleFragment(Records records) {
         try {
             Fragment fragment2 = new Document2();
@@ -650,10 +732,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
     }
 
+    /** 切换至 {@link Document3}（长期 C 类卡，无相似度参数时使用 0）。 */
     private void switchFragment3(LongTermPass longTermPass) {
         switchFragment3(longTermPass, 0);
     }
 
+    /** 临时通行证查验成功后切换至 {@link Document3}。 */
     private void switchFragment3(TemporaryCardRecords temporaryCardRecords) {
         try {
             Fragment fragment3 = new Document3();
@@ -706,6 +790,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     //
     // }
     //
+    /** 长期 C 类卡查验成功后切换至 {@link Document3}，并传入人脸相似度。 */
     private void switchFragment3(LongTermPass longTermPass, float faceSimilar) {
         try {
             Fragment fragment3 = new Document3();
@@ -741,7 +826,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 根据hiddenCard判断,如果为true则五分钟后隐藏
+     * 证件详情展示超时后恢复默认 Fragment（Handler 消息 2）。
      */
     private void hiddenCard() {
         countdownHandler.removeMessages(2);
@@ -774,6 +859,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         // countdownHandler.postDelayed(countdownRunnable, countdownTime);
     }
 
+    /**
+     * 释放相机与识别引擎，按 {@link #actionAfterFinish} 跳转设置/调试页，清除 Handler 消息。
+     */
     @Override
     protected void onDestroy() {
         ALog.e("onDestroy");
@@ -801,6 +889,8 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         super.onDestroy();
         countdownHandler.removeCallbacksAndMessages(null);
     }
+
+    /* ---------- 音频（已弃用 MediaPlayer，现用 PlayerUtil） ---------- */
 
     private void initSound() {
         // // 初始化MediaPlayer实例
@@ -836,6 +926,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /**
+     * 从本地存储解析设备绑定区域名称（取层级最深子节点名称）。
+     */
     public String getArea() {
         String areaDetail = infoStorage.getString("deviceAreaDetail", "");
         ALog.i("infoStorage.areaDetail: " + GsonUtils.toJson(areaDetail));
@@ -894,58 +987,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     // });
     // }
 
+    /* ---------- 相机与预览 ---------- */
+
     /**
-     * 调整View的宽高，使2个预览同时显示
-     *
-     * @param previewView        显示预览数据的view
-     * @param faceRectView       画框的view
-     * @param previewSize        预览大小
-     * @param displayOrientation 相机旋转角度
-     * @return 调整后的LayoutParams
+     * 将预览 View 与人脸框 View 调整为全屏尺寸。
      */
-    // private ViewGroup.LayoutParams adjustPreviewViewSize(View rgbPreview, View previewView, FaceRectView
-    // faceRectView, Camera.Size previewSize, int displayOrientation, float scale) {
-    // ViewGroup.LayoutParams layoutParams = previewView.getLayoutParams();
-    // int measuredWidth = previewView.getMeasuredWidth();
-    // int measuredHeight = previewView.getMeasuredHeight();
-    // float ratio = ((float) previewSize.height) / (float) previewSize.width;
-    // if (ratio > 1) {
-    // ratio = 1 / ratio;
-    // }
-    // if (displayOrientation % 180 == 0) {
-    // layoutParams.width = measuredWidth;
-    // layoutParams.height = (int) (measuredWidth * ratio);
-    // } else {
-    // layoutParams.height = measuredHeight;
-    // layoutParams.width = (int) (measuredHeight * ratio);
-    // }
-    // if (scale < 1f) {
-    // ViewGroup.LayoutParams rgbParam = rgbPreview.getLayoutParams();
-    // layoutParams.width = (int) (rgbParam.width * scale);
-    // layoutParams.height = (int) (rgbParam.height * scale);
-    // } else {
-    // layoutParams.width *= scale;
-    // layoutParams.height *= scale;
-    // }
-    //
-    // DisplayMetrics metrics = new DisplayMetrics();
-    // getWindowManager().getDefaultDisplay().getMetrics(metrics);
-    //
-    // if (layoutParams.width >= metrics.widthPixels) {
-    // float viewRatio = layoutParams.width / ((float) metrics.widthPixels);
-    // layoutParams.width /= viewRatio;
-    // layoutParams.height /= viewRatio;
-    // }
-    // if (layoutParams.height >= metrics.heightPixels) {
-    // float viewRatio = layoutParams.height / ((float) metrics.heightPixels);
-    // layoutParams.width /= viewRatio;
-    // layoutParams.height /= viewRatio;
-    // }
-    //
-    // previewView.setLayoutParams(layoutParams);
-    // faceRectView.setLayoutParams(layoutParams);
-    // return layoutParams;
-    // }
     private ViewGroup.LayoutParams adjustPreviewViewSize(View rgbPreview, View previewView, FaceRectView faceRectView,
             Camera.Size previewSize, int displayOrientation, float scale) {
         // 获取当前视图的布局参数
@@ -968,6 +1014,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         return layoutParams;
     }
 
+    /** 初始化 RGB 相机：打开预览、注册 NV21 帧回调、绑定 FaceHelper 识别流水线。 */
     private void initRgbCamera() {
         CameraListener cameraListener = new CameraListener() {
             @Override
@@ -1163,6 +1210,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /**
+     * 权限申请完成后初始化识别引擎与相机。
+     */
     @Override
     protected void afterRequestPermission(int requestCode, boolean isAllGranted) {
         if (requestCode == ACTION_REQUEST_PERMISSIONS) {
@@ -1178,13 +1228,16 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /**
+     * 切换是否在人脸框上绘制识别调试信息。
+     */
     public void openRectInfoDraw(View view) {
         openRectInfoDraw = !openRectInfoDraw;
         recognizeViewModel.setDrawRectInfoTextValue(openRectInfoDraw);
     }
 
     /**
-     * 将准备注册的状态置为待注册
+     * 将准备注册的状态置为待注册。
      *
      * @param view 注册按钮
      */
@@ -1193,9 +1246,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 参数配置
+     * 跳转识别参数配置页（销毁当前 Activity 后打开 {@link RecognizeSettingsActivity}）。
      *
-     * @param view
+     * @param view 设置按钮
      */
     public void setting(View view) {
         this.actionAfterFinish = NAVIGATE_TO_RECOGNIZE_SETTINGS_ACTIVITY;
@@ -1204,9 +1257,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 识别分析界面
+     * 跳转识别分析调试页（销毁当前 Activity 后打开 {@link RecognizeDebugActivity}）。
      *
-     * @param view 注册按钮
+     * @param view 调试按钮
      */
     public void recognizeDebug(View view) {
         this.actionAfterFinish = NAVIGATE_TO_RECOGNIZE_DEBUG_ACTIVITY;
@@ -1215,7 +1268,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 在{@link ActivityRegisterAndRecognizeBinding#dualCameraTexturePreviewRgb}第一次布局完成后，去除该监听，并且进行引擎和相机的初始化
+     * RGB 预览 View 首次布局完成后移除监听，并初始化识别引擎与相机。
      */
     @Override
     public void onGlobalLayout() {
@@ -1231,12 +1284,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /** 页面恢复时重启 RGB/IR 相机预览。 */
     @Override
     protected void onResume() {
         super.onResume();
         resumeCamera();
     }
 
+    /** 启动 RGB/IR 相机预览。 */
     private void resumeCamera() {
         if (rgbCameraHelper != null) {
             rgbCameraHelper.start();
@@ -1246,12 +1301,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /** 页面暂停时停止相机预览以释放资源。 */
     @Override
     protected void onPause() {
         pauseCamera();
         super.onPause();
     }
 
+    /** 停止 RGB/IR 相机预览。 */
     private void pauseCamera() {
         if (rgbCameraHelper != null) {
             rgbCameraHelper.stop();
@@ -1261,11 +1318,25 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /* ---------- 识别回调（RecognizeCallback） ---------- */
+
+    /**
+     * CompareResult 形式识别回调（本 Activity 未使用，留空实现）。
+     */
     @Override
     public void onRecognized(CompareResult compareResult, Integer liveness, boolean similarPass) {
 
     }
 
+    /**
+     * 1:N 人脸搜索命中回调：相似度达标时异步查询本地通行证并执行业务校验。
+     *
+     * @param bitmap      现场抓拍 Bitmap
+     * @param faceSimilar 相似度（0~1）
+     * @param quality     图像质量分
+     * @param username    {@code FaceEntity.userName}，即通行证 id
+     * @param result      是否通过识别阈值
+     */
     @Override
     public void onRecognized(Bitmap bitmap, float faceSimilar, float quality, String username, boolean result) {
         ALog.i("userName:" + username + ", faceSimilar:" + faceSimilar + ", result:" + result);
@@ -1279,16 +1350,19 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /** 识别提示文案变更（仅写日志）。 */
     @Override
     public void onNoticeChanged(String notice) {
         ALog.v(notice + "");
     }
 
+    /* ---------- 通行证业务校验 ---------- */
+
     /**
-     * 判断证件是否正常
+     * 将通行证 status 码转为中文描述。
      *
-     * @param status
-     * @return
+     * @param status 1=正常，2=注销，3=过期，4=挂失，5=停用
+     * @return 状态中文描述
      */
     public String theCardIsExpired(int status) {
         String sta = "正常";
@@ -1310,25 +1384,37 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         return sta;
     }
 
-    boolean checking = false;
-    public LongTermPass lastLongTermPass;
-    long lastTime;
+    /* ---------- 查验并发控制 ---------- */
 
+    /**
+     * 是否正在查验中（防止识别回调并发触发多次 queryPassCard）。
+     */
     public boolean isChecking() {
         ALog.i("checking:" + checking);
         return checking;
     }
 
+    /** 标记进入查验流程，阻塞后续识别回调。 */
     public void startChecking() {
         checking = true;
     }
 
+    /** 查验结束，允许下一次识别回调。 */
     public void stopChecking() {
         checking = false;
     }
 
     /**
-     * 根据名字查询通行证
+     * 识别命中后按通行证 id 查本地库，执行业务校验、UI 反馈与存记录。
+     * <p>
+     * 流程：去重 → {@code cardDao.getById(name)} → {@link #checkCard} → C 类引领校验
+     * → 切换证件 Fragment → {@link #savePassRecord}。
+     * </p>
+     *
+     * @param name         通行证 id（FaceEntity.userName）
+     * @param bitmap       现场抓拍
+     * @param faceSimilar  相似度
+     * @param quality      图像质量
      */
     public void queryPassCard(String name, Bitmap bitmap, float faceSimilar, float quality) {
         // if (ArcFaceApplication.TEST) {
@@ -1589,6 +1675,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
     }
 
+    /**
+     * 通行证业务规则校验：类型、有效期、状态、黑名单、暂扣/收回、分数、时段控制。
+     *
+     * @param longTermPass 待校验通行证
+     * @return 通过返回 true；失败时播放提示音、弹窗并 {@link #stopChecking}
+     */
     public boolean checkCard(LongTermPass longTermPass) {
         if (longTermPass.type == 1 && !ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
             playAudio(R.raw.validation_failed);
@@ -1679,8 +1771,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         return true;
     }
 
+    /* ---------- 通行记录保存与上传 ---------- */
+
     /**
-     * 保存通行记录到本地数据库
+     * 按通行证类型分发：长期卡写 {@link #saveLongRecord}，临时卡写 {@link #saveShortRecord}。
+     *
+     * @param isPass 是否查验通过
      */
     public void savePassRecord(LongTermPass card, Bitmap bitmap, float faceSimilar, float quality, Boolean isPass) {
         // uploadPassRecord();
@@ -1698,7 +1794,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 保存长期通行记录到本地
+     * 组装长期通行记录实体，加密保存现场图并写入 Room；通过时刷新横向记录列表。
+     *
+     * @param isPass 是否查验通过
      */
     public void saveLongRecord(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             Boolean isPass) {
@@ -1831,6 +1929,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /**
+     * 将长期通行记录与加密现场图写入本地数据库（离线兜底或上传失败时调用）。
+     */
     public void saveLongTermRecordsToDb(LongTermRecords records, Bitmap bitmap) {
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SimpleTask() {
             @Override
@@ -1874,7 +1975,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 保存临时通信记录到本地
+     * 组装临时通行记录实体，加密保存现场图并写入 Room；通过时刷新横向记录列表。
+     *
+     * @param isPass 是否查验通过
      */
     public void saveShortRecord(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             Boolean isPass) {
@@ -2001,6 +2104,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
     }
 
+    /**
+     * 将临时通行记录与加密现场图写入本地数据库（离线兜底或上传失败时调用）。
+     */
     public void saveTemporaryRecordsToDb(TemporaryCardRecords records, Bitmap bitmap) {
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SimpleTask() {
             @Override
@@ -2044,7 +2150,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 上传长期证件通行记录到后端服务器
+     * 上传长期通行记录至服务端；成功后删除本地记录，失败则回写本地库。
      */
     public void uploadLongTermRecords(LongTermRecords longTermRecords) {
         // ALog.i("本地长期记录: " + GsonUtils.toJson(longTermRecords));
@@ -2110,7 +2216,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 上传临时证件通行记录到后端服务器
+     * 上传临时通行记录至服务端；成功后删除本地记录，失败则回写本地库。
      */
     public void uploadTemporaryRecords(TemporaryCardRecords temporaryCardRecords) {
         // ThreadUtils.executeByCached(new SmallTask() {
@@ -2172,6 +2278,10 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         });
     }
 
+    /**
+     * 非 C 类卡查验通过后，将引领人 userId 写入 {@code linshiID} 缓存（5 分钟后自动清除）。
+     * <p>供后续 C 类卡校验引领人时使用。</p>
+     */
     public void saveRecord(LongTermPass longTermPass) {
         if (longTermPass != null && ObjectUtils.isNotEmpty(longTermPass.userId)) {
             infoStorage.saveString("linshiID", longTermPass.userId);
@@ -2189,10 +2299,10 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         // }, 5 * 60 * 1000);
     }
 
-    CustomPopDialog popDialog;
+    /* ---------- 结果提示 ---------- */
 
     /**
-     * 显示成功弹窗
+     * 显示验证成功提示条。
      */
     public void showSuccessDialog() {
         if (popDialog != null) {
@@ -2202,7 +2312,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 显示成功弹窗
+     * 显示验证失败提示条（默认文案「验证失败」）。
      */
     public void showFailedDialog() {
         if (popDialog != null) {
@@ -2212,7 +2322,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
     }
 
     /**
-     * 显示成功弹窗
+     * 显示验证失败提示条，并指定失败原因文案。
+     *
+     * @param msg 失败提示文字
      */
     public void showFailedDialog(String msg) {
         if (popDialog != null) {
@@ -2221,6 +2333,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         showCustomDialog(2, msg);
     }
 
+    /**
+     * 在页面顶部展示成功/失败提示条，约 1 秒后自动隐藏。
+     *
+     * @param icon 1=成功，其他=失败
+     * @param msg  自定义文案；为空时使用默认成功/失败文字
+     */
     public void showCustomDialog(int icon, String msg) {
         // if (popDialog != null) {
         // popDialog.dismiss();
@@ -2259,6 +2377,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
     }
 
+    /* ---------- 后台维护 ---------- */
+
+    /**
+     * 定时检查应用更新（Handler 消息 7 触发）；有新版本时弹出 {@link UpdatePopDialog}。
+     */
     void check() {
         GetRequest<Base<Version>> getRequest =
                 OkGo.<Base<Version>> get(UrlConstants.URL_GET_APP_LAST_VERSION).params("type", 3);
@@ -2324,6 +2447,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         });
     }
 
+    /**
+     * 播放查验结果提示音。
+     *
+     * @param res raw 资源 id，如 {@code R.raw.verification_successful}
+     */
     public void playAudio(int res) {
         PlayerUtil.getInstance().initPlayer(RegisterAndRecognizeActivity.this, res);
         PlayerUtil.getInstance().startPlay();

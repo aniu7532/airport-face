@@ -39,8 +39,11 @@ import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnSelectListener;
 
 /**
- * Description: 自定义抽屉弹窗
- * Create by dance, at 2018/12/20
+ * 运维侧滑抽屉菜单（XPopup {@link DrawerPopupView}）。
+ * <p>
+ * 提供进出方向、查验模式、提示位置、串口配置、缓存清理、日志上传、
+ * 数据完整性检查、重复人脸清理、注销登录等运维入口。
+ * </p>
  */
 public class CustomDrawerPopupView extends DrawerPopupView {
     TextView text;
@@ -81,6 +84,8 @@ public class CustomDrawerPopupView extends DrawerPopupView {
 
         Button btnExit = findViewById(R.id.btnExit);
         tvVersion.setText(AppUtils.getAppVersionName().replace("-debug", ""));
+
+        // ========== 进出方向（SP: direction 1=进 -1=出）==========
         tvInOut.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -106,6 +111,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 查验模式（SP: checkType 0~3 对应四种 Activity）==========
         tvChayan.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -132,6 +138,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 识别特征开关（VerifyFeatureSettingsDialog）==========
         tvVerifyFeature.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -139,6 +146,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 证件提示窗位置（SP: tipsLoc 0~3）==========
         tvTipsLoc.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -162,6 +170,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== AppKey / 参数配置 ==========
         tvCanshu.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -169,6 +178,8 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                         .asCustom(new AppKeyPopDialog(getContext())).show();
             }
         });
+
+        // ========== RFID / 二维码串口配置 ==========
         tvCardSerial.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -183,6 +194,8 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                         .asCustom(new QrSerialConfigPopDialog(getContext())).show();
             }
         });
+
+        // ========== 删除本地缓存（photo/register/records/库文件）并退出 App ==========
         tvDelete.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -319,6 +332,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 底部文案配置（SP: wenan）==========
         tvWenan.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -341,6 +355,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 返回系统桌面 ==========
         tvGotoLuancher.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -380,6 +395,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 进入系统设置 ==========
         tvGotoSetting.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -394,6 +410,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 注销登录，回到 LoginActivity ==========
         btnExit.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -417,6 +434,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 上传本地日志（LogUploadUtils）==========
         tvUploadLog.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -445,6 +463,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 在线数据完整性检查（LongPassCardsReInitUtils）==========
         tvReInit.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -458,6 +477,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 本地数据补救（LongPassCardsRemedialMeasuresUtils）==========
         tvRemedial.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -471,6 +491,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }
         });
 
+        // ========== 清除重复人脸（DuplicateFaceCleanupUtils）==========
         tvClearDuplicateFace.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {

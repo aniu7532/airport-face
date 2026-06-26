@@ -99,12 +99,31 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 /**
- * 使用：登录，获取通行证
+ * 登录页。
+ * <p>
+ * 完整登录链路：零信任 VPN → 后台登录 → 设备/配置/用户/通行证初始化 → 人脸注册 → 跳转查验页。
+ * </p>
  */
-
 public class LoginActivity extends BaseActivity
         implements View.OnClickListener, ViewTreeObserver.OnGlobalLayoutListener {
+
     private static final String TAG = "LoginActivity";
+
+    /** 运行时所需权限列表（相机、网络、存储、定位等） */
+    private static final String[] NEEDED_PERMISSIONS =
+            new String[] { Manifest.permission.CAMERA, Manifest.permission.ACCESS_NETWORK_STATE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE,
+                    Manifest.permission.INTERNET, Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION };
+
+    /** 通行证分页拉取每页条数 */
+    private static final int PAGE_SIZE = 20;
+
+    /** 隐藏入口连续点击次数阈值，达到后弹出调试抽屉 */
+    private static final int REQUIRED_CLICKS = 5;
+
+    // ======================== UI 控件 ========================
+
     private EditText editTextUsername;
     private EditText editTextPassword;
     private Button buttonLogin;
@@ -117,34 +136,40 @@ public class LoginActivity extends BaseActivity
     private Dialog progressDialog;
     private ImageView to_regis;
     private LinearLayout btnGo;
-
-    // private RadioGroup radioGroup;
-    // private RadioButton radioIn, radioOut;
     private TextView android_id;
-
-    // Gson gson = new Gson(); // 创建 Gson 实例
-    // private YinchuanAirportDB db;
-    LongTermPassDao longTermPassDao;
-    private int page = 1; // 将 page 声明为成员变量
-    private static final int PAGE_SIZE = 20; // 每页大小
-    private CountDownLatch latch;
-    private FacePhotoViewModel facePhotoViewModel;
-    private static final String[] NEEDED_PERMISSIONS =
-            new String[] { Manifest.permission.CAMERA, Manifest.permission.ACCESS_NETWORK_STATE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.INTERNET, Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION };
-    private ActivityLoginBinding binding; // 添加 binding 变量
+    /** DataBinding 布局绑定 */
+    private ActivityLoginBinding binding;
     ProgressBar progressBar;
     TextView textViewMessage;
-    private int progress = 0;
-    private static int updatePage = 1;
-    private static int UPDATE_PAGE_SIZE = 10;
-    private static boolean updateNext = true;
+
+    // ======================== 设备与本地存储 ========================
+
+    /** 设备唯一标识（DEBUG 下为固定值，Release 下取系统设备 ID） */
     public String deviceId;
+    /** SharedPreferences 持久化工具，保存账号、设备信息、首次启动标记等 */
     InfoStorage infoStorage;
 
+    // ======================== 通行证同步 ========================
+
+    /** 长期通行证 DAO */
+    LongTermPassDao longTermPassDao;
+    /** 通行证分页拉取当前页码 */
+    private int page = 1;
+    /** 分页拉取同步计数器 */
+    private CountDownLatch latch;
+
+    // ======================== 人脸注册 ========================
+
+    /** 人脸照片 ViewModel，负责引擎初始化与批量注册 */
+    private FacePhotoViewModel facePhotoViewModel;
+
+    // ======================== 登录状态与调度 ========================
+
+    /** 主线程消息调度器，用于零信任成功后触发后台登录等 */
     private WeakHandler handler = new WeakHandler(new Handler.Callback() {
+        /**
+         * 消息分发：case 1 触发后台登录；case 2 在免密流程结束后延迟触发登录。
+         */
         @Override
         public boolean handleMessage(@NonNull Message message) {
             switch (message.what) {
@@ -168,16 +193,30 @@ public class LoginActivity extends BaseActivity
     });
     private Runnable runnable;
 
+    /** 零信任改密流程：旧密码 */
     String oldPassword;
+    /** 零信任改密流程：新密码 */
     String newPassword;
+    /** 是否正在登录中，防止重复触发 */
     boolean loging;
-
+    /** 是否为自动登录模式（免密/定时触发） */
     boolean auto;
+    /** 是否已尝试免密票据登录 */
     boolean autoTicket;
-    private int clickCount = 0; // 点击计数
-    private static final int REQUIRED_CLICKS = 5; // 需要的点击次数
+    /** 隐藏入口点击计数 */
+    private int clickCount = 0;
+    /** 自动登录进度弹窗 */
     LogingPopDialog logingPopDialog;
 
+    private int progress = 0;
+    private static int updatePage = 1;
+    private static int UPDATE_PAGE_SIZE = 10;
+    private static boolean updateNext = true;
+
+    /**
+     * 初始化登录页：绑定视图、读取设备 ID、初始化零信任、恢复账号密码、申请权限。
+     * 若 Intent 携带 auto 标记则延迟自动触发登录。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -341,6 +380,7 @@ public class LoginActivity extends BaseActivity
         super.onResume();
     }
 
+    /** 解除 DataBinding 绑定并清空 Handler 回调 */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -352,6 +392,7 @@ public class LoginActivity extends BaseActivity
 
     }
 
+    /** Activity 销毁前清除零信任认证回调，避免 onDestroy 晚于 onCreate 导致回调被误清 */
     @Override
     protected void onPause() {
         super.onPause();
@@ -367,6 +408,7 @@ public class LoginActivity extends BaseActivity
         }
     }
 
+    /** 布局完成后检查并申请运行时权限 */
     @Override
     public void onGlobalLayout() {
         if (!checkPermissions(NEEDED_PERMISSIONS)) {
@@ -377,6 +419,7 @@ public class LoginActivity extends BaseActivity
         }
     }
 
+    /** 将设备 ID 复制到系统剪贴板，便于现场配置与排查 */
     void copyAndroidID() {
 
         // 获取 ClipboardManager
@@ -390,9 +433,7 @@ public class LoginActivity extends BaseActivity
         }
     }
 
-    /**
-     * 获取MANAGE_EXTERNAL_STORAGE权限
-     */
+    /** 申请 MANAGE_EXTERNAL_STORAGE 存储管理权限 */
     void obtainStoragePermissions() {
         boolean b = PermissionUtils.hasManageExternalStoragePermission(this);
         if (!b) {
@@ -425,6 +466,11 @@ public class LoginActivity extends BaseActivity
         });
     }
 
+    /**
+     * 延迟自动触发登录按钮点击，并展示登录进度弹窗。
+     *
+     * @param time 延迟毫秒数
+     */
     public void startLogin(int time) {
         handler.postDelayed(new Runnable() {
             @Override
@@ -437,6 +483,10 @@ public class LoginActivity extends BaseActivity
         }, time);
     }
 
+    /**
+     * 处理登录页按钮点击。
+     * <p>登录按钮：配置 SPA → 免密或密码零信任认证；其他按钮为调试/跳转入口。</p>
+     */
     @Override
     public void onClick(View v) {
         handler.removeCallbacksAndMessages(null);
@@ -471,9 +521,10 @@ public class LoginActivity extends BaseActivity
                     ALog.e("spaConfig:" + spaConfig);
                     SFUemSDK.setSpaConfig(spaConfig, new SFSetSpaConfigListener() {
                         /**
-                         * 设置SPA的结果回调
-                         * @param result 对SPA配置解析到的结果, 登录的URL地址
-                         * @param error 如果error.mErrCode不为0,代表设置配置遇到了错误
+                         * SPA 配置结果回调：成功则走免密或密码认证，失败则提示安全码错误。
+                         *
+                         * @param result SPA 解析得到的登录地址
+                         * @param error  错误信息，mErrCode 为 0 表示成功
                          */
                         @Override
                         public void onSetSpaConfig(String result, SFBaseMessage error) {
@@ -610,6 +661,7 @@ public class LoginActivity extends BaseActivity
         }
     }
 
+    /** 人脸注册页返回后重新触发自动登录 */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -622,8 +674,11 @@ public class LoginActivity extends BaseActivity
         }
     }
 
+    // ======================== 零信任 ========================
+
     /**
-     * 初始化零信任
+     * 初始化深信服零信任 SDK，并注册认证结果监听。
+     * 认证成功后保存账号密码并调用 {@link #login()} 进入后台登录。
      */
     void initZeroTrust() {
         // 初始化零信任
@@ -633,6 +688,7 @@ public class LoginActivity extends BaseActivity
         SFUemSDK.getInstance().initSDK(this, SFSDKMode.MODE_SUPPORT_MUTABLE, sdkFlags, extra);
         // 监听认证结果
         SFUemSDK.getInstance().setAuthResultListener(new SFAuthResultListener() {
+            /** 零信任认证成功，触发后台登录；改密类型则清空密码并等待用户输入 */
             @Override
             public void onAuthSuccess(SFBaseMessage sfBaseMessage) {
 							ALog.d("零信任认证成功: " + GsonUtils.toJson(sfBaseMessage));
@@ -647,6 +703,7 @@ public class LoginActivity extends BaseActivity
 							login();// 后台登录
             }
 
+            /** 零信任认证失败，重置登录状态并提示错误信息 */
             @Override
             public void onAuthFailed(SFBaseMessage sfBaseMessage) {
                 Toast.makeText(LoginActivity.this, sfBaseMessage.mErrStr, Toast.LENGTH_SHORT).show();
@@ -654,6 +711,7 @@ public class LoginActivity extends BaseActivity
                 loging = false;
             }
 
+            /** 零信任认证进度回调；首次登录改密时弹出改密对话框 */
             @Override
             public void onAuthProgress(SFAuthType sfAuthType, SFBaseMessage sfBaseMessage) {
                 ALog.i("零信任认证进度: " + GsonUtils.toJson(sfBaseMessage) + "类型：" + sfAuthType);
@@ -668,6 +726,7 @@ public class LoginActivity extends BaseActivity
         });
     }
 
+    /** 弹出改密对话框，收集旧/新密码后调用二次认证 */
     void nextZeroLogin(SFAuthType sfAuthType) {
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.dialog_change_password, null);
@@ -705,6 +764,9 @@ public class LoginActivity extends BaseActivity
         dialog.show();
     }
 
+    // ======================== 人脸注册 ========================
+
+    /** 创建并初始化 {@link FacePhotoViewModel}，在子线程加载人脸引擎 */
     public void initFaceServer() {
         facePhotoViewModel = new ViewModelProvider(getViewModelStore(), new ViewModelProvider.Factory() {
             @NonNull
@@ -722,7 +784,12 @@ public class LoginActivity extends BaseActivity
         });
     }
 
-    // 登录
+    // ======================== 后台登录 ========================
+
+    /**
+     * 调用后台 OAuth 登录接口，成功后依次拉取设备详情、配置、用户信息，
+     * 首次启动或本地无通行证时同步通行证并注册人脸，否则直接跳转查验页。
+     */
     private void login() {
         showProgressDialog("初始化...");
         ALog.i("系统登录");
@@ -837,6 +904,9 @@ public class LoginActivity extends BaseActivity
         });
     }
 
+    /**
+     * 根据 checkType 配置跳转对应查验 Activity，释放人脸引擎并开启定时更新任务。
+     */
     void gotoActivity() {
 
         ALog.e("checkType:" + SPUtils.getInstance().getInt("checkType", 0));
@@ -871,7 +941,9 @@ public class LoginActivity extends BaseActivity
         finish();
     }
 
-    // 获取查验方式
+    // ======================== 初始化链 ========================
+
+    /** 从后台获取查验方式配置（当前未在登录主链路中调用） */
     private void getCheckMethod() {
         ALog.d("获取查验方式: ");
         Map<String, String> params = new HashMap<>();
@@ -908,7 +980,12 @@ public class LoginActivity extends BaseActivity
         });
     }
 
-    // 获取用户详情
+    /**
+     * 同步获取用户详情并保存昵称、手机号到本地。
+     *
+     * @param userId 登录返回的用户 ID
+     * @return 是否获取成功
+     */
     private boolean getUserDetail(String userId) {
         ALog.d("获得用户详情: ");
         GetRequest<String> request =
@@ -946,7 +1023,11 @@ public class LoginActivity extends BaseActivity
         return false;
     }
 
-    // 获得设备详细信息
+    /**
+     * 根据设备 MAC/ID 同步获取设备详情，保存 deviceId、deviceName 等到本地。
+     *
+     * @return 是否获取成功
+     */
     private boolean getMACDetail() {
         ALog.d("获得设备详细信息: ");
         ALog.d("MACAddress: " + deviceId);
@@ -1006,7 +1087,11 @@ public class LoginActivity extends BaseActivity
         return false;
     }
 
-    // 获取配置信息
+    /**
+     * 同步获取设备类型（type=5）与上报间隔（type=6）配置并持久化。
+     *
+     * @return 是否全部获取成功
+     */
     private boolean getConfigInfo() {
         ALog.d("获取配置信息: ");
 
@@ -1083,8 +1168,10 @@ public class LoginActivity extends BaseActivity
         return false;
     }
 
+    // ======================== 通行证同步 ========================
+
     /**
-     * 获取通信证数据,获取所有
+     * 分页拉取全部长期通行证，下载头像/核验照到本地，完成后写入数据库并触发人脸注册。
      */
     private void getLongPassCards() {
         List<LongPassCard> longPassCardList = new ArrayList<>();
@@ -1215,7 +1302,11 @@ public class LoginActivity extends BaseActivity
         });
     }
 
-    // 将通行证数据存入本地数据库
+    /**
+     * 将通行证列表转换并批量插入本地数据库，随后初始化人脸引擎并批量注册。
+     *
+     * @param longPassCards 从服务端拉取的通行证数据
+     */
     private void insertDataToLocalDb(List<LongPassCard> longPassCards) {
         List<LongTermPass> longTermPassList = new ArrayList<>();
         ALog.d("调用了存入本地数据库函数 ");
@@ -1255,9 +1346,7 @@ public class LoginActivity extends BaseActivity
         });
     }
 
-    /**
-     * 批量注册人脸
-     */
+    /** 从应用私有 register 目录批量注册人脸 */
     public void registerFace() {
         // 修改为私有目录
         File directory = new File(LoginActivity.this.getExternalFilesDir(null), "register");
@@ -1265,9 +1354,9 @@ public class LoginActivity extends BaseActivity
     }
 
     /**
-     * 批量注册
+     * 从指定目录解密并批量注册人脸，完成后跳转查验页。
      *
-     * @param dir 批量注册的文件夹
+     * @param dir 存放待注册人脸照片的文件夹
      */
     public void registerFromFile(File dir) {
         if (!checkPermissions(NEEDED_PERMISSIONS)) {
@@ -1285,6 +1374,7 @@ public class LoginActivity extends BaseActivity
 
         facePhotoViewModel.registerFromDecryptFile(getApplicationContext(), dir, new BatchRegisterCallback() {
 
+            /** 批量注册进度更新，全部完成时跳转查验页 */
             @Override
             public void onProcess(int current, int failed, int total) {
                 runOnUiThread(() -> snackbar.setText(getString(R.string.register_progress, current, failed, total)));
@@ -1293,6 +1383,7 @@ public class LoginActivity extends BaseActivity
                 }
             }
 
+            /** 批量注册结束，无论成败均跳转查验页 */
             @Override
             public void onFinish(int current, int failed, int total, String errMsg) {
                 if (errMsg != null) {
@@ -1306,6 +1397,7 @@ public class LoginActivity extends BaseActivity
         });
     }
 
+    /** 后台配置信息 JSON 映射（type=5 设备类型，type=6 上报间隔） */
     class ConfigInfo {
         int type;
         Params params;

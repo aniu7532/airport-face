@@ -102,10 +102,14 @@ public class ArcFaceApplication extends Application {
 
     private static ArcFaceApplication application;
     public static final String TAG = "YCJC";
+    /** ALog 日志目录绝对路径 */
     private String wlyCacheDir;
+    /** 测试模式开关，为 true 时缩短周期任务间隔 */
     public static boolean TEST = false;
+    /** 读卡相关超时/间隔（毫秒），查验页引用 */
     public static int READ_TIME = 1000;
 
+    /** 获取 ALog 日志目录 */
     public String getWlyCacheDir() {
         return wlyCacheDir;
     }
@@ -203,13 +207,18 @@ public class ArcFaceApplication extends Application {
     }
 
 //    public static int UPLOAD_LOG_TIME = 10 * 60 * 1000;
+    /** 通行记录批量上传定时间隔（毫秒），默认 30 秒 */
     public static int UPLOAD_LOG_TIME = 30 * 1000;
+    /** 增量同步默认定时间隔（分钟），可被 InfoStorage.interval 覆盖 */
     public static int UPDATE_DELAY_TIME = 5;
+    /** 网络 Ping 定时间隔（毫秒） */
     public static int PING_DELAY_TIME = 10 * 1000;
+    /** ThreadUtils 固定线程池大小 */
     public static int POOL_SIZE = 15;
     private ImageUploader imageUploader;
     private SmallTask task;
 
+    /** 防止上传任务重入，同一时刻仅允许一个上传批次 */
     private final AtomicBoolean isUploadingRecord = new AtomicBoolean(false);
 
 
@@ -392,19 +401,25 @@ public class ArcFaceApplication extends Application {
 
     // 在 Activity 中定时监测 CPU
     private CpuMonitor cpuMonitor = new CpuMonitor();
+    /** 增量同步分页大小 */
     private static int UPDATE_PAGE_SIZE = 20;
     private static int updatePage = 1;
+    /** 增量同步是否允许发起下一页请求 */
     private static boolean updateNext = true;
+    /** 设备/登录配置持久化 */
     InfoStorage infoStorage;
 
+    /** 获取业务 Room 数据库（通行证、通行记录） */
     public YinchuanAirportDB getDb() {
         return db;
     }
 
+    /** 替换业务库实例（测试或重建场景） */
     public void setDb(YinchuanAirportDB db) {
         this.db = db;
     }
 
+    /** 是否离线（Ping 失败时为 true） */
     boolean isOffLine;
     private YinchuanAirportDB db;
     private FaceRepository faceRepository;
@@ -412,11 +427,12 @@ public class ArcFaceApplication extends Application {
     private FaceDao faceDao;
     private MutableLiveData<List<FaceEntity>> faceEntityList = new MutableLiveData<>();
 
-    // 总数
+    /** 人脸库总数缓存 */
     private int faceCount = -1;
 
     private MutableLiveData<Integer> totalFaceCount = new MutableLiveData<>();
 
+    /** @return 当前是否处于离线状态 */
     public boolean isOffLine() {
         return isOffLine;
     }
@@ -565,7 +581,8 @@ public class ArcFaceApplication extends Application {
     }
 
     /**
-     * 获取更新通行证数据
+     * 分页拉取增量通行证（startPeriodicTask 内调用）。
+     * 以本地 maxUpdateTime 为 startDate，逐页 GET {@link UrlConstants#URL_GetLongPass}。
      */
     private void getLongPassCardsUpdate() {
 		if (!updateNext) {
@@ -593,6 +610,7 @@ public class ArcFaceApplication extends Application {
         fetchNextPage(params);
     }
 
+    /** 同步请求单页增量通行证，下载/删除图片后合并入库并注册人脸 */
     private synchronized void fetchNextPage(Map<String, String> params) {
         List<LongPassCard> longPassCardList = new ArrayList<>();
         GetRequest<String> request = OkGo.<String> get(UrlConstants.URL_GetLongPass).tag(UrlConstants.URL_GetLongPass);
@@ -713,6 +731,7 @@ public class ArcFaceApplication extends Application {
 		}
     }
 
+    /** 单页增量同步完成后：入库并触发人脸更新 */
     private void handleUpdateComplete(List<LongPassCard> longPassCardList) {
         if (longPassCardList.size() > 0) {
             updateLocalDatabase(longPassCardList);

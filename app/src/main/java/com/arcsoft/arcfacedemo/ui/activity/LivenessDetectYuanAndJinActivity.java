@@ -134,25 +134,45 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 使用：进页面。刷卡加人脸识别
+ * 长距+短距双读卡器 刷卡+人脸查验 Activity。
+ * <p>
+ * 主流程：短距 BasicOper PSAM 外部认证读卡 + 长距 EC_API RFID 盘点读卡 → 本地库查证件 →
+ * 区域/有效期/黑名单等校验 → 活体检测与人脸 1:1 比对 → 写入长期/临时通行记录并展示证件 Fragment。
+ * 支持大屏（BasicOper + EC_API 双读卡器）与小屏（AndroidSerialPort）两种方案，以及二维码串口读取临时通行证。
+ * </p>
+ *
+ * @see LivenessDetectViewModel 人脸引擎与预览帧处理
+ * @see Document2 长期证详情展示
+ * @see Document3 临时证 / C 类引领人详情展示
  */
 public class LivenessDetectYuanAndJinActivity extends BaseActivity
         implements ViewTreeObserver.OnGlobalLayoutListener, FaceFeatureCallback {
     private static final String TAG = "LivenessDetectActivity";
-    private DualCameraHelper rgbCameraHelper;
-    private DualCameraHelper irCameraHelper;
-    private FaceRectTransformer rgbFaceRectTransformer;
-    private FaceRectTransformer irFaceRectTransformer;
 
+    // ========== 相机与人脸引擎 ==========
+    /** RGB 预览相机辅助类 */
+    private DualCameraHelper rgbCameraHelper;
+    /** IR 预览相机辅助类 */
+    private DualCameraHelper irCameraHelper;
+    /** RGB 画面人脸框坐标变换器 */
+    private FaceRectTransformer rgbFaceRectTransformer;
+    /** IR 画面人脸框坐标变换器 */
+    private FaceRectTransformer irFaceRectTransformer;
+    /** 双摄像头预览配置（前后摄 ID、旋转角度等） */
     private PreviewConfig previewConfig;
+    /** 活体检测类型：RGB / IR */
     private LivenessType livenessType;
+    /** 当前待比对的人脸特征（刷卡成功后从本地解密底库提取） */
+    private FaceFeature faceFeature;
 
     private static final int ACTION_REQUEST_PERMISSIONS = 0x001;
+    /** 设备与登录信息本地存储 */
     InfoStorage infoStorage;
 
-    private FaceFeature faceFeature;
-    Gson gson = new Gson(); // 创建 Gson 实例
+    Gson gson = new Gson();
+    /** 现场抓拍图上传工具 */
     ImageUploader imageUploader = new ImageUploader();
+    /** 当前读到的卡 RFID，防重复刷卡 */
     private static String rfid = "";
 
     /**
@@ -161,27 +181,40 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     private static final String[] NEEDED_PERMISSIONS =
             new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_PHONE_STATE };
     private ActivityLivenessDetectBinding binding;
-
+    /** 活体检测与人脸比对 ViewModel */
     private LivenessDetectViewModel livenessDetectViewModel;
 
+    // ========== Fragment 与 UI ==========
+    /** 默认待机 Fragment（Document1） */
     private Fragment fragment1;
     private Fragment fragment2;
     private Fragment fragment3;
-    private View viewById;// logo
+    private View viewById;
     private View toast_verified_passed;
     private View toast_verified_fail;
     private View button_set;
+    /** 当前刷卡查到的长期/临时通行证实体 */
     public LongTermPass longTermPass;
+    /** 读卡成功提示音 */
     private MediaPlayer mediaGet;
+    /** 验证通过提示音 */
     private MediaPlayer mediaPass;
+    /** 验证失败提示音 */
     private MediaPlayer mediaReject;
+    /** 现场人脸抓拍展示 */
     private ImageView iv_face;
     private ImageView iv_face1;
     private ImageView iv_face2;
     private ImageView iv_face3;
+    /** 长期记录本地 ID，供临时证关联 parentId */
     private String localLongId;
+    /** 刷卡完成时间戳，用于人脸比对超时判断 */
     private Long xtTime;
+    /** 人脸比对是否已判定失败（防重复回调） */
     private boolean checkFailed;
+
+    // ========== 定时任务 Handler ==========
+    /** 统一定时任务：系统时间同步、证件页自动隐藏、读卡轮询、时钟刷新、版本检查等 */
     private final WeakHandler countdownHandler = new WeakHandler(new Handler.Callback() {
         @Override
         public boolean handleMessage(@NonNull Message msg) {
@@ -283,17 +316,28 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
             return false;
         }
     });
-    private final long countdownTime = 1 * 60 * 1000; // 1分钟倒计时
+    /** 证件详情页自动隐藏倒计时（默认 1 分钟） */
+    private final long countdownTime = 1 * 60 * 1000;
+    /** 当前设备所属区域名称（用于顶部标题） */
     String areaName;
+    /** 底部横向查验记录列表适配器 */
     private CheckLogListAdapter mListAdapter;
+    /** 最近查验记录缓存，最多保留 20 条 */
     private final ArrayList<Records> checkList = new ArrayList<>();
     LinearLayout messageLayout;
     ImageView iv_icon;
     TextView tv_message;
+    /** 通行方向：1 进 / -1 出 */
     int direction;
-    private int clickCount = 0; // 点击计数
-    private static final int REQUIRED_CLICKS = 5; // 需要的点击次数
+    /** Logo 连击次数，用于打开运维抽屉 */
+    private int clickCount = 0;
+    private static final int REQUIRED_CLICKS = 5;
 
+    // ========== 生命周期 ==========
+
+    /**
+     * 初始化布局、双读卡器/扫码串口、Fragment、Handler 定时任务与查验记录列表。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ALog.e("onCreate");
@@ -431,6 +475,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
+    // ========== 网络与提示音 ==========
+
+    /**
+     * 定时调用系统时间接口，用于保持与服务端时钟同步（Handler msg=1 触发）。
+     */
     private void callApi() {
         ApiUtils.get(UrlConstants.URL_GET_SYSTEM_TIME, new HashMap<String, String>(), new ApiUtils.ApiCallback() {
             @Override
@@ -445,6 +494,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
+    /** 初始化读卡/验证/拒绝三类提示音 MediaPlayer */
     void initSound() {
         // 初始化MediaPlayer实例
         mediaGet = MediaPlayer.create(this, R.raw.get);
@@ -452,6 +502,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         mediaReject = MediaPlayer.create(this, R.raw.validation_failed);
     }
 
+    /**
+     * 播放提示音；若已在播放则忽略。
+     *
+     * @param mediaPlayer 预加载的 MediaPlayer 实例
+     */
     private void playAudio(MediaPlayer mediaPlayer) {
         if (mediaPlayer != null) {
             if (!mediaPlayer.isPlaying()) {
@@ -460,6 +515,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /** 初始化 Document1/2/3 三个证件 Fragment，默认展示 Document1 */
     void initFragment() {
         fragment1 = new Document1();
         fragment2 = new Document2();
@@ -470,6 +526,14 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         fragmentTransaction.commit();
     }
 
+    // ========== Fragment 切换 ==========
+
+    /**
+     * 切换到 Document2 展示长期证详情（查验通过后带相似度）。
+     *
+     * @param longTermPass 长期通行证
+     * @param faceSimilar  人脸相似度 0~1
+     */
     private void toggleFragment(LongTermPass longTermPass, float faceSimilar) {
         try {
             // 根据idCode去本地加载图片
@@ -506,6 +570,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
+    /**
+     * 根据查验记录切换到 Document2 展示证件详情（点击底部记录列表时调用）。
+     *
+     * @param records 长期或临时通行记录
+     */
     private void toggleFragment(Records records) {
 
         try {
@@ -563,10 +632,20 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
+    /**
+     * 切换到 Document3 展示 C 类 / 临时证详情（无相似度）。
+     *
+     * @param longTermPass 通行证实体
+     */
     private void switchFragment3(LongTermPass longTermPass) {
         switchFragment3(longTermPass, 0);
     }
 
+    /**
+     * 切换到 Document3 展示临时证查验记录详情。
+     *
+     * @param temporaryCardRecords 临时证通行记录
+     */
     private void switchFragment3(TemporaryCardRecords temporaryCardRecords) {
         try {
             Fragment fragment3 = new Document3();
@@ -600,6 +679,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 切换到 Document3 展示 C 类 / 临时证详情（带人脸相似度）。
+     *
+     * @param longTermPass 通行证实体
+     * @param faceSimilar  人脸相似度 0~1
+     */
     private void switchFragment3(LongTermPass longTermPass, float faceSimilar) {
         try {
             Fragment fragment3 = new Document3();
@@ -634,7 +719,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 根据hiddenCard判断,如果为true则五分钟后隐藏
+     * 证件详情展示后启动倒计时，超时后恢复默认待机 Fragment（Handler msg=2，默认 1 分钟）。
      */
     private void hiddenCard() {
         countdownHandler.removeMessages(2);
@@ -667,12 +752,18 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         // countdownHandler.postDelayed(countdownRunnable, countdownTime);
     }
 
+    /**
+     * Activity 停止时回调（读卡轮询由 onDestroy 统一停止）。
+     */
     @Override
     protected void onStop() {
         super.onStop();
         // handler.removeCallbacks(runnable); // 停止循环调用
     }
 
+    /**
+     * 释放相机、ViewModel、MediaPlayer 与 Handler，停止短距/长距读卡并关闭 EC_API 读卡器。
+     */
     @Override
     protected void onDestroy() {
         ALog.e("onDestroy");
@@ -720,6 +811,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         super.onDestroy();
     }
 
+    // ========== 刷卡与串口（短距 + 长距双读卡器） ==========
+
+    /**
+     * 初始化读卡串口：按屏幕宽度选择 BasicOper（大屏，含 EC_API 长距读卡器）或 AndroidSerialPort（小屏），
+     * 打开成功后启动对应读卡轮询线程。
+     */
     public void initReadCard() {
         ALog.i("initReadCard: 初始化读卡串口函数");
         int[] screenSize = DeviceUtils.getScreenSize(this);
@@ -878,20 +975,38 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /** 读卡轮询线程是否运行中 */
     boolean reading = false;
+    /** 是否处于人脸比对/证件校验流程中，读卡线程在此期间暂停寻卡 */
+    boolean checking = false;
 
+    /**
+     * 是否正在执行人脸比对或证件校验流程。
+     *
+     * @return true 表示查验中，读卡线程应跳过寻卡
+     */
     public boolean isChecking() {
         return checking;
     }
 
+    /**
+     * 标记进入查验流程，暂停读卡线程寻卡。
+     */
     public void startChecking() {
         checking = true;
     }
 
+    /**
+     * 标记退出查验流程，读卡线程恢复寻卡。
+     */
     public void stopChecking() {
         checking = false;
     }
 
+    /**
+     * 启动大屏双读卡轮询：先尝试短距 BasicOper PSAM 外部认证读卡，失败则盘点长距 EC_API 标签，
+     * 循环执行直至 {@link #stopReadLongPassCardID()}。
+     */
     public void startReadLongPassCardID() {
         ALog.i("startReadLongPassCardID");
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
@@ -924,11 +1039,19 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
+    /**
+     * 停止大屏短距/长距读卡轮询。
+     */
     public void stopReadLongPassCardID() {
         ALog.i("stopReadLongPassCardID");
         reading = false;
     }
 
+    /**
+     * 启动小屏 AndroidSerialPort 读卡轮询：循环调用 {@link #getCarIDMini(Card)}。
+     *
+     * @param card 已打开并选协议的读卡器实例
+     */
     public void startReadCarIDMini(Card card) {
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SmallTask() {
             @Override
@@ -949,10 +1072,16 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
+    /**
+     * 停止小屏 AndroidSerialPort 读卡轮询。
+     */
     public void stopReadCarIDMini() {
         reading = false;
     }
 
+    /**
+     * 切换回默认待机 Fragment（Document1），用于验证失败或超时恢复。
+     */
     public void turnFragment1() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -960,14 +1089,21 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         fragmentTransaction.commit();
     }
 
+    }
+
+    /** 读卡流程 1 耗时采样（寻卡至取 UID） */
     List<Long> listTime1 = new ArrayList<>();
+    /** 读卡流程 2 耗时采样（外部认证至查库） */
     List<Long> listTime2 = new ArrayList<>();
 
     /**
-     * 测试卡片外部认证功能
-     * 读取权限认证 流程
-     * * psam：1. 选择应用，psam卡复位 4.加密初始化（参数：rfid） 5.送PSAM加密（参数：rand）  6. 取加密结果rand1
-     * * acpu：2. 激活卡片,得到rfid 3.取随机数rand 7.外部认证（参数：rand1） 8.9000代表成功，之后就是读卡的内容
+     * 短距读卡：BasicOper PSAM 外部认证流程读取长期卡 RFID。
+     * <p>
+     * PSAM：选择应用、PSAM 卡复位 → 加密初始化（rfid）→ 送 PSAM 加密（rand）→ 取加密结果 rand1；
+     * ACPU：激活卡片得 rfid → 取随机数 rand → 外部认证（rand1），9000 表示成功。
+     * </p>
+     *
+     * @return true 外部认证成功并已触发查库
      */
     public boolean getLongPassCardID() {
         try {
@@ -1173,6 +1309,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return false;
     }
 
+    /**
+     * 将 UID 字节序重排为标准 RFID 字符串（大端 ↔ 小端转换）。
+     *
+     * @param str 原始十六进制 UID
+     * @return 重排后的卡号
+     */
     String reorderString(String str) {
         // 获取输入字符串的字符数组
         char[] charArray = str.toCharArray();
@@ -1193,19 +1335,10 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 增加读卡逻辑
-     * add by slm 2025-01-22
-     * 流程：
-     * byte protocol = 0; //非接触式协议
-     * String path = "/dev/ttyS3";
-     * int band = 115200;
-     * 1.初始化 Card card = new AndroidSerialPort(context);
-     * 2.打开设备 short st = card.OpenReader(path, band);
-     * 3.设置协议 short st = card.rf_select_protocol(protocol);
-     * 4.读取卡号 short st = card.ContactlessCpuCardReset(rst, cardUID); //非接触式读卡 rst 返回复位信息 cardUID 为卡号
-     * 4.1 short st = MainActivity.card.CpuCardReset(cardSlot, rst); //接触式读卡 rst 返回复位信息 cardUID 为卡号
-     * 5.发送命令 card.ContactlessCpuCardSendCmd((short) cmd.length, cmd, rst);  //非接触式命令
-     * 5.1 发送命令 card.CpuCardSendCmd(cardSlot, (short) cmd.length, cmd, rst);   //接触式命令
+     * 小屏 AndroidSerialPort 非接触式 CPU 卡复位读卡，成功后以短距 cardId 查库。
+     *
+     * @param card 已打开并选协议的读卡器实例
+     * @return true 读到新卡号并已触发查库
      */
     boolean getCarIDMini(Card card) {
         try {
@@ -1262,8 +1395,8 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 二维码串口初始化
-     * 临时卡读卡使用
+     * 初始化二维码扫描串口（临时证扫码），收到数据后调用 {@link #getShortPassCardID(String)}。
+     * 当前渠道不支持临时证时直接返回。
      */
     public void initScanCard() {
         if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
@@ -1290,7 +1423,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
-    // 判断证件是否过期
+    /**
+     * 将证件状态码转为中文描述。
+     *
+     * @param status 1 正常 / 2 注销 / 3 过期 / 4 挂失 / 5 停用
+     * @return 状态中文文案
+     */
     public String theCardIsExpired(int status) {
         String sta = "正常";
         if (status == 1) {
@@ -1311,10 +1449,16 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return sta;
     }
 
+    /** 清空当前 RFID，允许再次刷同一张卡 */
     void setRfidNull() {
         rfid = "";
     }
 
+    /**
+     * 从本地存储解析设备所属区域，取最深层子区域名称用于界面展示。
+     *
+     * @return 区域名称，解析失败返回空字符串
+     */
     public String getArea() {
         String areaDetail = infoStorage.getString("deviceAreaDetail", "");
         ALog.i("infoStorage.areaDetail: " + gson.toJson(areaDetail));
@@ -1337,6 +1481,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return name;
     }
 
+    /** 判断通行证 areaIds 或 areaRootIds 是否包含当前设备区域 */
     boolean isAreaPass(String[] areaIds, String[] areaRootIds) {
         if (ObjectUtils.isEmpty(areaIds) || ObjectUtils.isEmpty(areaRootIds)) {
             return false;
@@ -1344,6 +1489,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return isAreaIdsPass(areaIds) || isAreaRootIdsPass(areaRootIds);
     }
 
+    /** 校验 areaIds 是否与设备绑定区域匹配 */
     boolean isAreaIdsPass(String[] areaIds) {
         if (ObjectUtils.isEmpty(areaIds)) {
             return false;
@@ -1384,6 +1530,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return false;
     }
 
+    /** 校验 areaRootIds 是否与设备绑定根区域匹配 */
     boolean isAreaRootIdsPass(String[] areaRootIds) {
         if (ObjectUtils.isEmpty(areaRootIds)) {
             return false;
@@ -1424,11 +1571,20 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return false;
     }
 
-    boolean checking = false;
+    /** 最近一次成功查证的通行证，用于 1500ms 内防重复查询 */
     public LongTermPass lastLongTermPass;
+    /** 最近一次成功查证的时间戳 */
     long lastTime;
 
-    // 长期证件的本地数据库查询
+    // ========== 证件查询与区域校验 ==========
+
+    /**
+     * 根据 RFID 从本地 Room 库查询长期证，校验区域与引领人后进入人脸比对流程。
+     * 长距读卡使用 cardIdLong 字段，短距读卡使用 cardId 字段。
+     *
+     * @param rfid   读卡得到的卡号
+     * @param isYuan true 长距 EC_API 读卡 / false 短距 BasicOper 或 AndroidSerialPort 读卡
+     */
     public void getLongPassCardInfo(String rfid, boolean isYuan) {
         ALog.i("根据rfid查询本地数据库: " + rfid + ",isYuan:" + isYuan);
         // toast_verified_passed.setVisibility(View.INVISIBLE);//页面更新
@@ -1613,7 +1769,17 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
-    // 长期通行证记录，保存本地数据库
+    // ========== 通行记录保存与上传 ==========
+
+    /**
+     * 构建并保存长期证通行记录（含现场图加密落盘、写入 Room、更新底部列表）。
+     *
+     * @param longTermPass 通行证实体
+     * @param bitmap       现场抓拍图
+     * @param faceSimilar  人脸相似度
+     * @param quality      人脸质量分
+     * @param status       true 验证通过 / false 人证不匹配
+     */
     public void saveLongTermRecords(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             boolean status) {
         float qualityvalue = livenessDetectViewModel.getFeatureValue(bitmap);
@@ -1741,6 +1907,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 将长期证通行记录与加密现场图写入本地 Room 数据库。
+     *
+     * @param records 长期通行记录实体
+     * @param bitmap  现场抓拍图，可为 null
+     */
     public void saveLongTermRecordsToDb(LongTermRecords records, Bitmap bitmap) {
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SimpleTask() {
             @Override
@@ -1783,7 +1955,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
-    // 上传长期证件日志
+    /**
+     * 上传长期证通行记录至服务端，成功后删除本地待同步记录。
+     *
+     * @param longTermRecords 待上传的长期通行记录
+     */
     public void uploadLongTermRecords(LongTermRecords longTermRecords) {
         ALog.i("本地长期记录: " + gson.toJson(longTermRecords));
         PostRequest<Base<String>> request =
@@ -1845,7 +2021,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         // });
     }
 
-    // 临时卡的本地数据库查询
+    /**
+     * 根据二维码/临时证 applyId 从本地库查询临时通行证并进入人脸比对流程。
+     * 须先刷长期卡作为引领人（linshiID 不为空）。
+     *
+     * @param carID 扫码或临时证 applyId
+     */
     public void getShortPassCardID(String carID) {
         if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
             ALog.i("当前渠道不支持临时通行证");
@@ -1949,6 +2130,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
+    /**
+     * 校验证件有效期、状态、黑名单、分数及通行时段等业务规则。
+     *
+     * @return true 全部校验通过；false 已提示用户并停止查验
+     */
     public boolean checkCard() {
         if (longTermPass.type == 1 && !ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
             setRfidNull();
@@ -2048,7 +2234,15 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return true;
     }
 
-    // 临时通行证记录，保存本地数据库
+    /**
+     * 构建并保存临时证通行记录（含现场图加密落盘、写入 Room、更新底部列表）。
+     *
+     * @param longTermPass 临时通行证实体
+     * @param bitmap       现场抓拍图
+     * @param faceSimilar  人脸相似度
+     * @param quality      人脸质量分
+     * @param status       true 验证通过 / false 人证不匹配
+     */
     public void saveTemporaryRecords(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             boolean status) {
         float qualityvalue = livenessDetectViewModel.getFeatureValue(bitmap);
@@ -2196,6 +2390,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 将临时证通行记录与加密现场图写入本地 Room 数据库。
+     *
+     * @param records 临时通行记录
+     * @param bitmap  现场抓拍图，可为 null
+     */
     public void saveTemporaryRecordsToDb(TemporaryCardRecords records, Bitmap bitmap) {
         ThreadUtils.executeByFixed(ArcFaceApplication.POOL_SIZE, new SimpleTask() {
             @Override
@@ -2238,7 +2438,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
-    // 上传临时证件日志
+    /**
+     * 上传临时证通行记录至服务端，成功后删除本地待同步记录。
+     *
+     * @param temporaryCardRecords 待上传记录
+     */
     public void uploadTemporaryRecords(TemporaryCardRecords temporaryCardRecords) {
         ALog.i("本地临时记录: " + gson.toJson(temporaryCardRecords));
 
@@ -2282,6 +2486,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
+    /**
+     * 缓存当前长期证 userId 作为 C 类临时证引领人 ID（linshiID）。
+     *
+     * @param longTermPass 刚刷的长期证，null 或空 userId 时清除缓存
+     */
     public void saveRecord(LongTermPass longTermPass) {
         if (longTermPass != null && ObjectUtils.isNotEmpty(longTermPass.userId)) {
             infoStorage.saveString("linshiID", longTermPass.userId);
@@ -2298,6 +2507,9 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         // }, 5 * 60 * 1000);
     }
 
+    // ========== 初始化 ==========
+
+    /** 从配置加载双摄像头预览参数与活体检测类型 */
     private void initModel() {
         boolean switchCamera = ConfigUtil.isSwitchCamera(this);
         previewConfig = new PreviewConfig(
@@ -2315,6 +2527,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /** 初始化 LivenessDetectViewModel 并注册人脸比对回调 */
     private void initViewModel() {
         livenessDetectViewModel = new ViewModelProvider(getViewModelStore(),
                 new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(LivenessDetectViewModel.class);
@@ -2323,6 +2536,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         livenessDetectViewModel.setFaceFeatureCallback(this);
     }
 
+    /** 初始化预览布局、证件 Fragment 位置与全局布局监听 */
     private void initView() {
         if (!DualCameraHelper.hasDualCamera() || livenessType != LivenessType.IR) {
             binding.flRecognizeIr.setVisibility(View.GONE);
@@ -2408,6 +2622,17 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     // faceRectView.setLayoutParams(layoutParams);
     // return layoutParams;
     // }
+    /**
+     * 调整 IR 预览 View 尺寸为全屏，使 RGB / IR 双预览同时显示。
+     *
+     * @param rgbPreview         RGB 预览容器（未使用，保留参数）
+     * @param previewView        待调整的预览 View
+     * @param faceRectView       人脸框绘制 View
+     * @param previewSize        相机预览分辨率
+     * @param displayOrientation 相机旋转角度
+     * @param scale              缩放比例（未使用，保留参数）
+     * @return 调整后的 LayoutParams
+     */
     private ViewGroup.LayoutParams adjustPreviewViewSize(View rgbPreview, View previewView, FaceRectView faceRectView,
             Camera.Size previewSize, int displayOrientation, float scale) {
         ViewGroup.LayoutParams layoutParams = previewView.getLayoutParams();
@@ -2422,6 +2647,9 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return layoutParams;
     }
 
+    // ========== 相机与人脸预览 ==========
+
+    /** 初始化 RGB 相机预览与人脸检测帧回调 */
     private void initRgbCamera() {
         CameraListener cameraListener = new CameraListener() {
             @Override
@@ -2494,6 +2722,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         rgbCameraHelper.start();
     }
 
+    /** 初始化 IR 相机预览（双摄像头 + IR 活体模式时启用） */
     private void initIrCamera() {
         CameraListener irCameraListener = new CameraListener() {
             @Override
@@ -2576,6 +2805,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 权限授予后初始化 RGB / IR 相机。
+     *
+     * @param requestCode   请求码
+     * @param isAllGranted  是否全部授权
+     */
     @Override
     protected void afterRequestPermission(int requestCode, boolean isAllGranted) {
         if (requestCode == ACTION_REQUEST_PERMISSIONS) {
@@ -2593,7 +2828,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     /**
      * 切换相机。注意：若切换相机发现检测不到人脸，则极有可能是检测角度导致的，需要销毁引擎重新创建或者在设置界面修改配置的检测角度
      *
-     * @param view
+     * @param view 触发按钮
      */
     public void switchCamera(View view) {
         try {
@@ -2613,6 +2848,9 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 预览布局完成后请求权限并初始化相机。
+     */
     @Override
     public void onGlobalLayout() {
         binding.dualCameraTexturePreviewRgb.getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -2627,15 +2865,18 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 参数配置
+     * 跳转人脸识别参数配置页并结束当前 Activity。
      *
-     * @param view
+     * @param view 触发按钮
      */
     public void setting(View view) {
         navigateToNewPage(RecognizeSettingsActivity.class);
         finish();
     }
 
+    /**
+     * 恢复 RGB / IR 相机预览。
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -2643,6 +2884,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         // token保活
     }
 
+    /** 启动 RGB / IR 相机预览 */
     private void resumeCamera() {
         if (rgbCameraHelper != null) {
             rgbCameraHelper.start();
@@ -2652,12 +2894,16 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 暂停 RGB / IR 相机预览。
+     */
     @Override
     protected void onPause() {
         pauseCamera();
         super.onPause();
     }
 
+    /** 停止 RGB / IR 相机预览 */
     private void pauseCamera() {
         if (rgbCameraHelper != null) {
             rgbCameraHelper.stop();
@@ -2667,7 +2913,16 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
-    // 接受识别结果
+    // ========== 人脸比对结果 ==========
+
+    /**
+     * 人脸 1:1 比对结果回调：成功则保存记录并展示通过 UI，失败则超时 3s 后记录失败。
+     *
+     * @param bitmap       现场抓拍图
+     * @param faceSimilar  相似度 0~1
+     * @param quality      人脸质量分
+     * @param result       true 比对通过
+     */
     @Override
     public void onFaceFeatureAvailable(Bitmap bitmap, float faceSimilar, float quality, boolean result) {
         ALog.i("onFaceFeatureAvailable: " + result + "，faceSimilar: " + faceSimilar + "，quality: " + quality);
@@ -2691,6 +2946,13 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         }
     }
 
+    /**
+     * 人脸比对通过：保存通行记录、播放成功音、展示证件 Fragment 与相似度。
+     *
+     * @param bitmap       现场抓拍图
+     * @param faceSimilar  相似度 0~1
+     * @param quality      人脸质量分
+     */
     public void chechSuccesse(Bitmap bitmap, float faceSimilar, float quality) {
         ALog.e("chechSuccesse");
         setRfidNull();
@@ -2736,6 +2998,13 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         lastTime = TimeUtils.getNowMills();
     }
 
+    /**
+     * 人脸比对失败：保存失败记录、播放拒绝音、恢复待机 Fragment。
+     *
+     * @param bitmap       现场抓拍图，可为 null
+     * @param faceSimilar  相似度 0~1
+     * @param quality      人脸质量分
+     */
     public void chechFailed(Bitmap bitmap, float faceSimilar, float quality) {
         ALog.e("chechFailed");
         setRfidNull();
@@ -2774,10 +3043,13 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         lastTime = 0;
     }
 
+    /** 自定义弹窗实例（当前主要使用 messageLayout 提示条） */
     CustomPopDialog popDialog;
 
+    // ========== UI 提示 ==========
+
     /**
-     * 显示成功弹窗
+     * 显示验证成功提示条（绿色背景）。
      */
     public void showSuccessDialog() {
         if (popDialog != null) {
@@ -2787,7 +3059,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 显示成功弹窗
+     * 显示验证失败提示条（红色背景）。
      */
     public void showFailedDialog() {
         if (popDialog != null) {
@@ -2796,6 +3068,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         showCustomDialog(2, null);
     }
 
+    /**
+     * 显示自定义顶部提示条，1 秒后自动隐藏。
+     *
+     * @param icon 1 成功样式 / 2 失败样式
+     * @param msg  自定义文案，为空时使用默认「验证成功/失败」
+     */
     public void showCustomDialog(int icon, String msg) {
         // if (popDialog != null) {
         // popDialog.dismiss();
@@ -2835,6 +3113,7 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
 
     }
 
+    /** 定时检查应用版本更新（Handler msg=7 触发） */
     void check() {
         GetRequest<Base<Version>> getRequest =
                 OkGo.<Base<Version>> get(UrlConstants.URL_GET_APP_LAST_VERSION).params("type", 3);
@@ -2898,11 +3177,17 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         });
     }
 
-    private RFdata rf = null;
+    // ========== 长距 EC_API 读卡器 ==========
 
-    private boolean iscmd;// 是否正在执行命令
+    /** EC_API 射频数据缓冲区 */
+    private RFdata rf = null;
+    /** 是否正在执行 EC_API 初始化命令 */
+    private boolean iscmd;
+    /** 长距 RFID 读卡器 EC_API 实例 */
     private final EC_API ecApi = new EC_API();
+    /** 已成功连接的 EC_API 串口路径 */
     String strCom;
+    /** 长距读卡轮询线程运行标志（当前由 startReadLongPassCardID 内联调用 readLongCard） */
     boolean readingLong = false;
 
     // public void startReadLongCard() {
@@ -2930,6 +3215,9 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     // readingLong = false;
     // }
 
+    /**
+     * 初始化长距 EC_API 读卡器：扫描可用串口，打开设备并执行初始化命令。
+     */
     public void initLongReader() {
         rf = new RFdata();
         // 设置设备类型
@@ -2962,13 +3250,18 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         iscmd = false;
     }
 
+    /**
+     * 关闭长距 EC_API 读卡器并释放串口。
+     */
     public void unInitLongReader() {
         ecApi.EC_Close();
         iscmd = false;
     }
 
     /**
-     * 执行命令
+     * 执行 EC_API 设备打开与获取设备信息命令（初始化阶段调用）。
+     *
+     * @param api EC_API 实例
      */
     private void runCmd(EC_API api) {
         RFdata rf = new RFdata();
@@ -3027,11 +3320,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 盘点标签
+     * 盘点 RFID 标签（长距读卡器 EC_API 盘点命令）。
      *
-     * @param api    EC_API实例对象
-     * @param antNum 要打开的天线口号(0~30，u单天线盘点)，0表示不打开（多天线盘点）
-     * @return 标签列表
+     * @param api    EC_API 实例对象
+     * @param antNum 要打开的天线口号(0~30，单天线盘点)，0 表示不打开（多天线盘点）
+     * @return 标签列表，失败返回 null
      */
     public List<Tag> ScanTab(EC_API api, int antNum) {
         List<Tag> tab_list = new ArrayList<Tag>();
@@ -3086,6 +3379,12 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         return tab_list;
     }
 
+    /**
+     * 长距读卡：盘点 EC_API 标签获取 UID，去重后返回 cardIdLong 卡号。
+     *
+     * @param api EC_API 实例
+     * @return 8 位十六进制卡号，无卡或重复读卡返回 null
+     */
     public String readLongCard(EC_API api) {
         ALog.e("readLongCard.rfid: " + rfid);
         RFdata rf = new RFdata();
@@ -3318,11 +3617,11 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
     }
 
     /**
-     * 字节数组转字符串
+     * 字节数组转十六进制字符串（调试用）。
      *
      * @param data 字节数组
      * @param len  要转换的长度
-     * @return
+     * @return 十六进制字符串，字节间空格分隔
      */
     private String HexToStr(byte[] data, int len) {
         String strData = "";
