@@ -20,6 +20,9 @@ import java.io.InputStream;
 
 import javax.crypto.SecretKey;
 
+/**
+ * Glide 加密文件加载器，读取本地加密文件并解密为 InputStream 供 Glide 加载。
+ */
 public class EncryptedFileModelLoader implements ModelLoader<EncryptedGlideFile, InputStream> {
     private final SecretKey secretKey;
 

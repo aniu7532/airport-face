@@ -16,6 +16,9 @@ import com.lzy.okgo.request.PostRequest;
 
 import okhttp3.OkHttpClient;
 
+/**
+ * 网络 API 请求工具类，封装 Token 管理及基于 OkGo 的 GET/POST 调用。
+ */
 public class ApiUtils {
     private static final OkHttpClient client = getUnsafeOkHttpClient();
     // 存储 accessToken 的静态变量
@@ -44,6 +47,9 @@ public class ApiUtils {
     }
 
     // 定义一个接口，用于回调 API 调用的结果
+    /**
+     * API 异步请求结果回调接口。
+     */
     public interface ApiCallback {
         void onSuccess(String response);
 
@@ -78,6 +84,9 @@ public class ApiUtils {
     // });
     // }
     // 封装一个 GET 请求的方法
+    /**
+     * 发起 GET 请求，自动附加 tenant-id 与 Authorization 头。
+     */
     public static void get(String url, Map<String, String> params, ApiCallback callback) {
         // HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
         // if (params != null) {
@@ -138,7 +147,9 @@ public class ApiUtils {
         });
     }
 
-    // 封装一个 GET 请求的方法
+    /**
+     * 发起通行证分页 GET 请求，自动附加时间戳参数。
+     */
     public static void getPassCard(String url, Map<String, String> params, ApiCallback callback) {
         // HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
         // if (params != null) {
@@ -203,7 +214,9 @@ public class ApiUtils {
 
     }
 
-    // 封装一个 POST 请求的方法
+    /**
+     * 发起 JSON 格式的 POST 请求。
+     */
     public static void post(String url, String json, ApiCallback callback) {
         // Request.Builder requestBuilder = new Request.Builder().url(url).addHeader("tenant-id", "1");
         // // 检查是否有 accessToken，如果有则添加 Authorization 头

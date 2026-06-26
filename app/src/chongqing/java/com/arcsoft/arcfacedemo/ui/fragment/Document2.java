@@ -21,6 +21,7 @@ public class Document2 extends AbstractDocument2 {
         return R.layout.document2;
     }
 
+    /** 绑定长期证各展示控件引用。 */
     @Override
     protected void bindViews(View view) {
         nicknameTextView = view.findViewById(R.id.nickname);
@@ -35,6 +36,7 @@ public class Document2 extends AbstractDocument2 {
         statusText = view.findViewById(R.id.statusText);
     }
 
+    /** 将证件字段填充到长期证卡面视图。 */
     @Override
     protected void bindCardContent() {
         if (nicknameTextView != null) {

@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+/**
+ * 通行记录页 ViewModel：管理筛选条件，通过 Paging3 分页加载查验通行记录。
+ */
 class AccessRecordViewModel : ViewModel() {
 
     private val _name = MutableStateFlow("")
@@ -64,6 +67,7 @@ class AccessRecordViewModel : ViewModel() {
         ).flow
     }.cachedIn(viewModelScope)
 
+    /** 重置筛选条件为默认值并触发查询。 */
     fun reset() {
         _name.value = ""
         _cardNo.value = ""
@@ -73,6 +77,7 @@ class AccessRecordViewModel : ViewModel() {
         search()
     }
 
+    /** 按当前筛选条件发起分页查询。 */
     fun search() {
         val q = CheckRecordQuery(
             nickname = _name.value,

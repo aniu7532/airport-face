@@ -10,6 +10,9 @@ import com.arcsoft.arcfacedemo.R
 import com.arcsoft.arcfacedemo.databinding.ActivityConstructionWorkersInputBinding
 import androidx.core.content.withStyledAttributes
 
+/**
+ * 施工人员表单文本输入项：标题 + 输入框，支持监听文本变化。
+ */
 class ConstructionWorkersInput @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -57,10 +60,12 @@ class ConstructionWorkersInput @JvmOverloads constructor(
         }
     }
 
+    /** 注册文本变化回调。 */
     fun addTextChangedListener(cb: (text: String) -> Unit) {
         onTextChangedCb = cb
     }
 
+    /** 清空输入内容。 */
     fun clear() {
         binding.input.text?.clear()
     }

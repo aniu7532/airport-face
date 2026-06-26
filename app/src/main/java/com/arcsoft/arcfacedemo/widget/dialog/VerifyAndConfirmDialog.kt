@@ -26,6 +26,9 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+/**
+ * 核实确认弹窗：将查验记录标记为已核实，可补充通行道口、时间、设备及备注。
+ */
 @SuppressLint("ViewConstructor")
 class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRecords.ListDTO, val successCb: ()-> Unit) :
     CenterPopupView(context) {
@@ -42,6 +45,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         return R.layout.verify_and_confirm_dialog
     }
 
+    /** 绑定布局、初始化各选择器与提交/取消按钮。 */
     override fun onCreate() {
         super.onCreate()
         val tvTitle = findViewById<AppCompatTextView>(R.id.tv_title)
@@ -81,6 +85,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
 
     }
 
+    /** 弹出设备编号选择列表，列表为空时先请求接口。 */
     fun showDeviceCodeDialog() {
         if (devices.isEmpty()) {
             getDevices()
@@ -130,6 +135,7 @@ class VerifyAndConfirmDialog(@JvmField val context: Context, val result: CardRec
         })
     }
 
+    /** 校验必填项后提交核实结果到服务端。 */
     private fun submit() {
         val recordId = result.id?.trim().orEmpty()
         if (recordId.isEmpty()) {

@@ -17,6 +17,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * Token 刷新后台任务服务，在 JobScheduler 触发时异步刷新 accessToken。
+ */
 public class TokenRefreshJobService extends JobService {
     private static final String TAG = "TokenRefreshJobService";
     private static final String REFRESH_TOKEN_URL = UrlConstants.URL_refresh_token;

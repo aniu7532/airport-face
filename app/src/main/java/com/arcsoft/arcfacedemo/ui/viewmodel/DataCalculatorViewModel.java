@@ -6,6 +6,9 @@ import androidx.lifecycle.ViewModel;
 import com.arcsoft.arcfacedemo.ArcFaceApplication;
 import com.arcsoft.arcfacedemo.R;
 
+/**
+ * 图像数据长度计算器 ViewModel，校验宽高输入并计算各像素格式数据大小。
+ */
 public class DataCalculatorViewModel extends ViewModel {
     private MutableLiveData<String> imageWidthNotice = new MutableLiveData<>();
     private MutableLiveData<String> imageHeightNotice = new MutableLiveData<>();
@@ -55,6 +58,7 @@ public class DataCalculatorViewModel extends ViewModel {
         imageHeightNotice.postValue(getHeightHelperText(s, maxLength));
     }
 
+    /** 根据宽高计算 BGR24/GRAY/DEPTH/NV21 等格式的数据长度。 */
     public void calculateSize(String imageWidthText, String imageHeightNotice) {
         int width = Integer.parseInt(imageWidthText);
         int height = Integer.parseInt(imageHeightNotice);

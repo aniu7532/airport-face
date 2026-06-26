@@ -2,7 +2,9 @@ package com.arcsoft.arcfacedemo.util.camera;
 
 import android.hardware.Camera;
 
-
+/**
+ * 相机操作回调接口，定义打开、预览、关闭及错误等生命周期事件。
+ */
 public interface CameraListener {
     /**
      * 当打开时执行

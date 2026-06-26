@@ -16,6 +16,9 @@ import androidx.preference.EditTextPreferenceDialogFragmentCompat;
 
 import com.arcsoft.arcfacedemo.R;
 
+/**
+ * 识别阈值设置对话框，支持通过加减按钮微调阈值。
+ */
 public class ThresholdPreferenceDialogFragmentCompat extends EditTextPreferenceDialogFragmentCompat implements View.OnClickListener {
 
     private EditText mDialogEditText;

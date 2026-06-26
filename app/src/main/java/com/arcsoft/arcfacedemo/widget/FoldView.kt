@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import com.arcsoft.arcfacedemo.databinding.FoldViewBinding
 
+/**
+ * 展开/收起切换控件，点击后在「展开」「收起」文案与箭头方向间切换。
+ */
 class FoldView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -33,6 +36,7 @@ class FoldView @JvmOverloads constructor(
         }
     }
 
+    /** 注册折叠状态变化回调，[isFold] 为 true 表示当前为收起状态。 */
     fun setOnFoldListener(cb: (isFold: Boolean)-> Unit) {
         onFoldCb = cb
     }

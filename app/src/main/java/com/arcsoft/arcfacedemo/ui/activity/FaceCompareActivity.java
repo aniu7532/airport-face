@@ -49,6 +49,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 人脸比对调试页：选择主图注册特征后，可逐张添加对比图并展示相似度及年龄、性别等信息。
+ */
 public class FaceCompareActivity extends BaseActivity {
 
     private static final String TAG = "MultiImageActivity";
@@ -80,6 +83,7 @@ public class FaceCompareActivity extends BaseActivity {
 
     private String[] neededPermissions = new String[] { Manifest.permission.READ_PHONE_STATE };
 
+    /** 申请权限、初始化人脸引擎与列表视图。 */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,6 +134,7 @@ public class FaceCompareActivity extends BaseActivity {
         }
     }
 
+    /** 释放人脸引擎资源。 */
     @Override
     protected void onDestroy() {
         unInitEngine();
@@ -176,6 +181,11 @@ public class FaceCompareActivity extends BaseActivity {
         }
     }
 
+    /**
+     * 处理选中的图片：检测人脸、提取特征，主图用于注册，对比图用于 1:1 相似度计算。
+     *
+     * @param type {@link #TYPE_MAIN} 主图注册，{@link #TYPE_ITEM} 对比图识别
+     */
     public void processImage(Bitmap bitmap, int type) {
         if (bitmap == null) {
             return;

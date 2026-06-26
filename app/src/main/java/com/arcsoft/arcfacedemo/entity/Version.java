@@ -1,20 +1,37 @@
 package com.arcsoft.arcfacedemo.entity;
 
+/**
+ * 应用版本信息，用于检查更新与强制升级策略。
+ */
 public class Version {
 
+    /** 创建时间 */
     private String createTime;
+    /** 更新时间 */
     private String updateTime;
+    /** 创建人 */
     private String creator;
+    /** 更新人 */
     private String updater;
+    /** 是否已逻辑删除 */
     private boolean deleted;
+    /** 租户 ID */
     private String tenantId;
+    /** 版本记录 ID */
     private String id;
+    /** 安装包下载地址 */
     private String url;
+    /** 版本号字符串 */
     private String version;
+    /** 版本序号，用于比较新旧版本 */
     private int sequence;
+    /** 版本类型 */
     private int type;
+    /** 是否已发布，1 已发布 */
     private int isReleased;
+    /** 是否强制更新，1 强制 */
     private int isForceUpdate;
+    /** 版本更新说明 */
     private String remark;
 
     public String getCreateTime() {

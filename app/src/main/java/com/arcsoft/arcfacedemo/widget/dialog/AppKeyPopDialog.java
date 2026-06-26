@@ -14,6 +14,9 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 
+/**
+ * ArcFace SDK 激活密钥配置弹窗，用于编辑并持久化 AppId、SdkKey、ActiveCode。
+ */
 public class AppKeyPopDialog extends CenterPopupView {
 
     public static String Appid = "GmRzWwTgM27MoXy2LbJKwcCcD4c29WnsJrwxRwhdUEoD";
@@ -29,6 +32,7 @@ public class AppKeyPopDialog extends CenterPopupView {
         return R.layout.dialog_key;
     }
 
+    /** 绑定布局并回填本地已保存的密钥信息。 */
     @Override
     protected void onCreate() {
         super.onCreate();

@@ -10,6 +10,9 @@ import android.net.Uri;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * 图片格式转换与缩放工具，支持 NV21/RGB 互转及按最大宽高约束缩放。
+ */
 public class ImageUtil {
     public static final int DEFAULT_MAX_WIDTH = 1920;
     public static final int DEFAULT_MAX_HEIGHT = 1080;

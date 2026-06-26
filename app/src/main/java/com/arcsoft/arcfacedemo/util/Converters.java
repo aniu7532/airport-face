@@ -11,6 +11,9 @@ import com.google.gson.reflect.TypeToken;
 
 import androidx.room.TypeConverter;
 
+/**
+ * Room 数据库类型转换器，负责基本类型、字节数组及业务实体之间的序列化与互转。
+ */
 public class Converters {
     @TypeConverter
     public static String[] fromString(String value) {
@@ -73,6 +76,9 @@ public class Converters {
         return gson.fromJson(json, type);
     }
 
+    /**
+     * 将网络层长期通行证实体转换为本地数据库实体。
+     */
     public static LongTermPass convertToLongTermPass(LongPassCard longPassCard) {
         LongTermPass longTermPass = new LongTermPass();
         longTermPass.id = longPassCard.id;
@@ -117,6 +123,9 @@ public class Converters {
         return longTermPass;
     }
 
+    /**
+     * 将本地数据库长期通行证实体转换为网络层实体。
+     */
     public static LongPassCard convertToLongPassCard(LongTermPass longTermPass1) {
         LongPassCard longPassCard = new LongPassCard();
         longPassCard.id = longTermPass1.id;

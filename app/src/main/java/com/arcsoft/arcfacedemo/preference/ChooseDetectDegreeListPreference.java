@@ -16,6 +16,9 @@ import com.arcsoft.arcfacedemo.widget.MarginImageSpan;
 import com.arcsoft.arcfacedemo.widget.VerticalAlignTextSpan;
 
 
+/**
+ * 人脸检测角度选择列表 Preference，在条目文本旁显示方向图标。
+ */
 public class ChooseDetectDegreeListPreference extends ListPreference {
     public ChooseDetectDegreeListPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);

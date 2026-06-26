@@ -18,6 +18,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
+/**
+ * 识别设置 Preference 页面，注册自定义 Preference 与对应对话框 Fragment 的映射关系。
+ */
 public class RecognizeSettingsPreferenceFragment extends PreferenceFragmentCompat {
 
     private static final String DIALOG_FRAGMENT_TAG =

@@ -7,10 +7,15 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * 通行记录分页查询结果，对应后台通行记录列表接口。
+ */
 public class CardRecords implements Serializable {
 
+    /** 通行记录列表 */
     @SerializedName("list")
     private List<ListDTO> list;
+    /** 总记录数 */
     @SerializedName("total")
     private int total;
 
@@ -30,49 +35,71 @@ public class CardRecords implements Serializable {
         this.total = total;
     }
 
+    /** 单条通行记录详情 */
     public static class ListDTO {
+        /** 记录 ID */
         @SerializedName("id")
         private String id;
+        /** 证件编号 */
         @SerializedName("idCode")
         private String idCode;
+        /** 通行方向，1 进，-1 出，2 核验 */
         @SerializedName("direction")
         private int direction;
+        /** 持卡人用户 ID */
         @SerializedName("userId")
         private String userId;
+        /** 持卡人姓名 */
         @SerializedName("nickname")
         private String nickname;
+        /** 性别 */
         @SerializedName("sex")
         private int sex;
+        /** 所属单位 ID */
         @SerializedName("companyId")
         private String companyId;
+        /** 所属单位名称 */
         @SerializedName("companyName")
         private String companyName;
+        /** 通行区域名称 */
         @SerializedName("areaName")
         private String areaName;
+        /** 通行状态，true 正常，false 异常 */
         @SerializedName("status")
         private boolean status;
+        /** 查验时间 */
         @SerializedName("checkTime")
         private String checkTime;
+        /** 证件类型 */
         @SerializedName("passType")
         private int passType;
+        /** 异常原因 */
         @SerializedName("reason")
         private String reason;
+        /** 携带物品类型名称 */
         @SerializedName("goodsTypeName")
         private String goodsTypeName;
+        /** 现场照片 */
         @SerializedName("sitePhoto")
         private String sitePhoto;
 
+        /** 核验比对照片 */
         @SerializedName("checkPhoto")
         private String checkPhoto;
 
+        /** 人脸相似度 */
         @SerializedName("faceSimilar")
         private double faceSimilar;
+        /** 查验人姓名 */
         @SerializedName("checkUserName")
         private String checkUserName;
+        /** 核验备注 */
         @SerializedName("verifyRemark")
         private String verifyRemark;
+        /** 查验设备名称 */
         @SerializedName("deviceName")
         private String deviceName;
+        /** 查验设备编码 */
         @SerializedName("deviceCode")
         private String deviceCode;
 

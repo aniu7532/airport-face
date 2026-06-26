@@ -9,6 +9,10 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+/**
+ * 施工人员时间选择器，继承 [ConstructionWorkersSelector]，
+ * 点击弹出日期时间选择框，支持仅日期、仅到小时等展示格式。
+ */
 class ConstructionWorkersTimeSelector @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -59,15 +63,18 @@ class ConstructionWorkersTimeSelector @JvmOverloads constructor(
         }
     }
 
+    /** 清空已选时间。 */
     override fun clear() {
         currentCalendar = null
         super.clear()
     }
 
+    /** 注册时间选择完成后的回调。 */
     fun addOnTimeChangedListener(cb: (calendar: Calendar) -> Unit) {
         onTimeChangedCb = cb
     }
 
+    /** 以 [Calendar] 设置选中时间并格式化展示。 */
     fun setValue(calendar: Calendar) {
         val normalized = normalizePickedTime(calendar)
         if (normalized.timeInMillis == currentCalendar?.timeInMillis) return

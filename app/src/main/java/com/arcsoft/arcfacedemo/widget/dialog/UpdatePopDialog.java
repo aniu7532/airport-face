@@ -33,6 +33,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
+/**
+ * 应用版本更新弹窗，展示更新说明、倒计时自动下载，并支持进度展示与安装。
+ */
 public class UpdatePopDialog extends CenterPopupView {
     NumberProgressBar npb_progress;
     Button btn_update;
@@ -76,6 +79,7 @@ public class UpdatePopDialog extends CenterPopupView {
         return R.layout.xupdate_dialog_update_port2;
     }
 
+    /** 初始化更新说明、倒计时与下载按钮。 */
     @Override
     protected void onCreate() {
         super.onCreate();
@@ -123,6 +127,7 @@ public class UpdatePopDialog extends CenterPopupView {
         return 0;
     }
 
+    /** 根据版本信息开始下载 APK 到本地缓存目录。 */
     public void download() {
         try {
             String apkName = UpdateUtils.getApkNameByDownloadUrl(version.getUrl());

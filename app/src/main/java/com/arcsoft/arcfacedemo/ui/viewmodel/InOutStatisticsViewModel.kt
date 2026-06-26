@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+/**
+ * 进出统计页 ViewModel：管理时间范围与申办单位筛选，请求每日进出人次汇总。
+ */
 class InOutStatisticsViewModel : ViewModel() {
 
     private val _startTime = MutableStateFlow(Calendar.getInstance().dayBefore(7))
@@ -38,6 +41,7 @@ class InOutStatisticsViewModel : ViewModel() {
         _endTime.value = endTime
     }
 
+    /** 按当前筛选条件请求进出统计数据。 */
     fun request() {
         val request =
             OkGo.get<Base<List<InOutStatisticsResult?>?>?>(UrlConstants.checkRecordStatisticNeedVerify)
@@ -68,6 +72,7 @@ class InOutStatisticsViewModel : ViewModel() {
     private fun formatCheckTime(cal: Calendar): String =
         SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA).format(cal.time)
 
+    /** 重置筛选条件为默认值并重新请求。 */
     fun reset() {
         _startTime.value = Calendar.getInstance().dayBefore(7)
         _endTime.value = Calendar.getInstance().dayEnd

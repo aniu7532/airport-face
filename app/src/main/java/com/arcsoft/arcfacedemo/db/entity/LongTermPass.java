@@ -12,58 +12,100 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+/**
+ * 长期/临时通行证本地持久化实体，对应表 long_term_pass。
+ * 复杂字段（引领人、时段限制）以 JSON 字符串存储。
+ */
 @Entity(tableName = "long_term_pass")
 public class LongTermPass {
+    /** 通行证 ID，主键 */
     @PrimaryKey
     @NonNull
     public String id;
+    /** 通行申请 ID */
     public String applyId;
+    /** 系统证件编号 */
     public String idCode;
+    /** 实体卡号 */
     public String cardId;
+    /** 证件积分 */
     public int score;
+    /** 证件状态，2 表示已注销 */
     public int status;
+    /** 证件类型，0 长期证，1 临时证 */
     public int type;
+    /** 持卡人用户 ID */
     public String userId;
+    /** 所属单位 ID */
     public String companyId;
+    /** 所属部门 ID */
     public String orgId;
+    /** 持卡人姓名 */
     public String nickname;
+    /** 所属单位名称 */
     public String companyName;
+    /** 所属部门名称 */
     public String orgName;
+    /** 证件有效期截止日期 */
     public String expiryDate;
+    /** 通行区域根节点 ID 列表 */
     public String[] areaRootIds;
+    /** 通行区域根节点编码列表 */
     public String[] areaRootCodes;
+    /** 可通行区域 ID 列表 */
     public String[] areaIds;
+    /** 可通行区域编码列表 */
     public String[] areaCodes;
+    /** 证件生效起始日期 */
     public String startDate;
+    /** 引领人信息 JSON 字符串 */
     public String leadingPeople;
+    /** 证件照片路径或 URL */
     public String photo;
+    /** 证件照片二进制数据 */
     public byte[] photoBytes;
+    /** 引领人用户 ID 列表 */
     public String[] leadingPeopleId;
+    /** 身份证号 */
     public String idNo;
+    /** 现场核验照片路径或 URL */
     public String checkPhoto;
+    /** 现场核验照片二进制数据 */
     public byte[] checkPhotoBytes;
+    /** 查验单位名称 */
     public String unitName;
-    public int templateType;// 证件模板类型,1:蓝，2：黄
+    /** 证件模板类型，1 蓝色，2 黄色 */
+    public int templateType;
+    /** 是否黑名单人员 */
     public boolean isBlacklist;
+    /** 是否暂扣证件 */
     public boolean isWithhold;
+    /** 是否已撤回 */
     public boolean isWithdraw;
+    /** 暂扣开始日期 */
     public String withholdStartDate;
+    /** 暂扣结束日期 */
     public String withholdEndDate;
+    /** 实体卡长卡号 */
     public String cardIdLong;
-    public String[] areaDisplayCode;// 通行区域展示Code
+    /** 通行区域展示编码列表 */
+    public String[] areaDisplayCode;
+    /** 经营范围 */
     public String businessScope;
+    /** 性别 */
     public int sex;
+    /** 数据最后更新时间，用于增量同步 */
     public String updateTime;
-    public String timeControl; // 时间控制，存储为 JSON 字符串
-    // 数组类型暂时先按字符串数组定义，后续添加类型转换器处理util.Converters
+    /** 通行时段限制 JSON 字符串 */
+    public String timeControl;
 
-    // 类型转换器：将 SomeObject[] 转换为 JSON 字符串
+    /** 将引领人数组序列化为 JSON 存入数据库 */
     public void setleadingPeople(LeadingPeople[] someObjectArray) {
         Gson gson = new Gson();
         this.leadingPeople = gson.toJson(someObjectArray);
     }
 
-    // 类型转换器：将 JSON 字符串转换为 SomeObject[]
+    /** 从 JSON 反序列化引领人数组 */
     public LeadingPeople[] getLeadingPeople() {
         Gson gson = new Gson();
         Type type = new TypeToken<LeadingPeople[]>() {
@@ -71,7 +113,7 @@ public class LongTermPass {
         return gson.fromJson(leadingPeople, type);
     }
 
-    // 类型转换器：将 TimeControl[] 转换为 JSON 字符串
+    /** 将时段限制数组序列化为 JSON 存入数据库 */
     public void setTimeControl(TimeControl[] timeControlArray) {
         if (timeControlArray == null) {
             this.timeControl = null;
@@ -81,7 +123,7 @@ public class LongTermPass {
         this.timeControl = gson.toJson(timeControlArray);
     }
 
-    // 类型转换器：将 JSON 字符串转换为 TimeControl[]
+    /** 从 JSON 反序列化时段限制数组 */
     public TimeControl[] getTimeControl() {
         if (timeControl == null || timeControl.isEmpty()) {
             return null;

@@ -51,6 +51,9 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
+/**
+ * 人脸识别调试 ViewModel，在识别能力基础上扩展调试信息导出与人脸轨迹追踪。
+ */
 public class RecognizeDebugViewModel extends ViewModel implements RecognizeCallback, DebugInfoCallback {
 
     /**

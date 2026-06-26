@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+/**
+ * 加载中提示弹窗，展示自定义等待文案。
+ */
 public class LoadingPopDialog extends CenterPopupView {
 
     String text;
@@ -22,6 +25,7 @@ public class LoadingPopDialog extends CenterPopupView {
         return R.layout.loading2;
     }
 
+    /** 设置加载提示文案。 */
     @Override
     protected void onCreate() {
         super.onCreate();

@@ -19,6 +19,9 @@ import com.arcsoft.arcfacedemo.ui.viewmodel.InOutStatisticsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * 进出统计页：按时间范围与申办单位查询每日进、出人次汇总列表。
+ */
 class InOutStatisticsFragment : Fragment() {
 
     companion object {
@@ -34,16 +37,19 @@ class InOutStatisticsFragment : Fragment() {
 
     private val adapter by lazy { InOutStatisticsAdapter() }
 
+    /** 创建并返回 Fragment 根视图。 */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = binding.root
 
+    /** 初始化筛选条件、统计列表及数据流订阅。 */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
     }
 
+    /** 非首次回到页面时自动重新请求统计数据。 */
     override fun onResume() {
         super.onResume()
         if (hasResumedOnce) {
@@ -53,6 +59,7 @@ class InOutStatisticsFragment : Fragment() {
         }
     }
 
+    /** 绑定筛选控件、统计列表及 ViewModel 状态同步，并触发首次加载。 */
     fun initView() {
         binding.apply {
             selectorStartTime.addOnTimeChangedListener {

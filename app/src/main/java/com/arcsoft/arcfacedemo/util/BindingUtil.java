@@ -18,8 +18,14 @@ import com.bumptech.glide.Glide;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-
+/**
+ * DataBinding 适配器工具类，为布局中的 ImageView、RecyclerView、TextView 提供自定义绑定逻辑。
+ */
 public class BindingUtil {
+
+    /**
+     * 通过 Glide 加载图片路径到 ImageView。
+     */
     @BindingAdapter("imgPath")
     public static void setImagePath(ImageView imageView, String path) {
         Glide.with(imageView.getContext())
@@ -27,6 +33,9 @@ public class BindingUtil {
                 .into(imageView);
     }
 
+    /**
+     * 为人脸比对结果列表配置网格布局的 RecyclerView 适配器。
+     */
     @BindingAdapter("compareResultList")
     public static void setCompareResultList(RecyclerView recyclerView, List<CompareResult> compareResultList) {
         Context context = recyclerView.getContext();
@@ -42,6 +51,9 @@ public class BindingUtil {
 
     private static final SimpleDateFormat REGISTER_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    /**
+     * 将时间戳格式化为 yyyy-MM-dd 并显示在 TextView 上。
+     */
     @BindingAdapter("date")
     public static void setDate(TextView textView, long date) {
         synchronized (REGISTER_DATE_FORMAT) {

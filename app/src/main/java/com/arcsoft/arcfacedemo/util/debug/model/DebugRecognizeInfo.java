@@ -6,6 +6,9 @@ import com.arcsoft.arcfacedemo.util.face.model.RecognizeInfo;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * 调试模式下的识别信息，扩展性能耗时与各阶段处理状态。
+ */
 public class DebugRecognizeInfo extends RecognizeInfo {
 
     private int status = RequestFeatureStatus.DEFAULT;
@@ -99,6 +102,9 @@ public class DebugRecognizeInfo extends RecognizeInfo {
         this.status = status;
     }
 
+    /**
+     * 将各阶段性能耗时序列化为 JSON 字符串。
+     */
     public String performanceDaraToJsonString() {
         JSONObject jsonObject = new JSONObject();
         try {

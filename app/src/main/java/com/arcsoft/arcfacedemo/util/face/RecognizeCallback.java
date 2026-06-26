@@ -4,6 +4,9 @@ import android.graphics.Bitmap;
 
 import com.arcsoft.arcfacedemo.ui.model.CompareResult;
 
+/**
+ * 人脸识别结果回调接口，通知比对结果、活体检测值及是否通过阈值判定。
+ */
 public interface RecognizeCallback {
     /**
      * 识别结果回调

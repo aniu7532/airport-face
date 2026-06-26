@@ -14,6 +14,9 @@ import com.arcsoft.arcfacedemo.R;
 
 import static androidx.annotation.RestrictTo.Scope.LIBRARY;
 
+/**
+ * 整数类型 Preference 设置对话框，支持通过加减按钮调整数值。
+ */
 public class IntegerPreferenceDialogFragmentCompat extends EditTextPreferenceDialogFragmentCompat implements View.OnClickListener {
 
     private EditText dialogEditText;

@@ -18,12 +18,16 @@ import com.yuyh.easyadapter.recyclerview.EasyRVHolder;
 import android.content.Context;
 import android.widget.ImageView;
 
+/**
+ * 查验日志列表适配器，根据记录类型加载长期证或临时证的本地加密照片。
+ */
 public class CheckLogListAdapter extends EasyRVAdapter<Records> {
 
     public CheckLogListAdapter(Context context, List<Records> list, int... layoutIds) {
         super(context, list, layoutIds);
     }
 
+    /** 绑定列表项数据并加载对应证件照片。 */
     @Override
     protected void onBindData(EasyRVHolder viewHolder, final int position, final Records item) {
         ImageView imageView = ((ImageView) viewHolder.getView(R.id.img));

@@ -26,6 +26,9 @@ import com.bumptech.glide.request.FutureTarget;
 
 import android.graphics.Bitmap;
 
+/**
+ * 远程人脸图片下载工具，支持携带 Token 请求并 AES 加密后落盘存储。
+ */
 public class ImageDownloader {
 
     private static final String TAG = "ImageDownloader";

@@ -14,19 +14,25 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+/**
+ * SDK 激活页 ViewModel，封装在线/离线激活及激活码格式化逻辑。
+ */
 public class ActiveViewModel extends ViewModel {
     private MutableLiveData<Integer> activeResult = new MutableLiveData<>();
 
+    /** 在线激活虹软 SDK。 */
     public void activeOnline(Context context, String activeKey, String appId, String sdkKey) {
         activeResult.postValue(FaceEngine.activeOnline(context, activeKey, appId, sdkKey));
     }
 
+    /** 使用本地激活文件离线激活。 */
     public void activeOffline(Context context, String path) {
         activeResult.postValue(FaceEngine.activeOffline(context, path));
     }
 
     private static final int ACTIVE_KEY_EFFECTIVE_LENGTH = 16;
 
+    /** 将激活码格式化为 XXXX-XXXX-XXXX-XXXX 形式。 */
     public String formatActiveKey(String activeKey) {
         String rawActiveKey = activeKey.replace("-", "").toUpperCase();
         StringBuilder newActiveKey = new StringBuilder();
@@ -47,6 +53,7 @@ public class ActiveViewModel extends ViewModel {
     }
 
 
+    /** 从外部存储读取激活配置文件。 */
     public Properties loadProperties() {
         Properties properties = new Properties();
         FileInputStream fis = null;

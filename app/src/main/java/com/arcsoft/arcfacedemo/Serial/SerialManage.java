@@ -13,7 +13,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 串口管理类
+ * 串口管理单例，负责串口初始化、打开/关闭、指令队列排队发送及线程池调度。
  */
 public class SerialManage {
 

@@ -10,6 +10,9 @@ import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+/**
+ * 自定义结果提示弹窗，按成功/失败展示图标与文案，约 1 秒后自动关闭。
+ */
 public class CustomPopDialog extends CenterPopupView {
 
     private ImageView ivIcon;
@@ -39,6 +42,7 @@ public class CustomPopDialog extends CenterPopupView {
         return R.layout.dialog_custom_toast;
     }
 
+    /** 根据类型设置图标与消息，并延时自动 dismiss。 */
     @Override
     protected void onCreate() {
         super.onCreate();

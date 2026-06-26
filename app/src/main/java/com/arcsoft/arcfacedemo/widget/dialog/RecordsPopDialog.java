@@ -28,6 +28,9 @@ import com.yuyh.easyadapter.recyclerview.EasyRVAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 底部查验记录列表弹窗，支持分页拉取记录并点击查看大图。
+ */
 public class RecordsPopDialog extends BottomPopupView {
     List<CardRecords.ListDTO> list = new ArrayList<>();
     InfoStorage infoStorage;
@@ -51,6 +54,7 @@ public class RecordsPopDialog extends BottomPopupView {
         return R.layout.dialog_records;
     }
 
+    /** 初始化列表、点击预览图片，并请求记录数据。 */
     @Override
     protected void onCreate() {
         super.onCreate();
@@ -88,7 +92,7 @@ public class RecordsPopDialog extends BottomPopupView {
         return 0;
     }
 
-    // 上传临时证件日志
+    /** 按设备与方向从服务端分页拉取查验记录。 */
     public void getAllRecords() {
         GetRequest<Base<CardRecords>> request =
                 OkGo.<Base<CardRecords>> get(UrlConstants.URL_GET_RESORD_PAGE).tag(UrlConstants.URL_GET_RESORD_PAGE);

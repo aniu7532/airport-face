@@ -1,22 +1,38 @@
 package com.arcsoft.arcfacedemo.entity;
 
+/**
+ * 登录用户基本信息，对应后台用户档案。
+ */
 public class User {
+    /** 用户 ID */
     private String id;
+    /** 登录用户名 */
     private String username;
+    /** 用户昵称/姓名 */
     private String nickname;
+    /** 备注 */
     private String remark;
+    /** 所属部门 ID */
     private String orgId;
+    /** 所属部门名称 */
     private String orgName;
+    /** 所属单位 ID */
     private String companyId;
+    /** 所属单位名称 */
     private String companyName;
+    /** 手机号 */
     private String mobile;
+    /** 头像地址 */
     private String avatar;
+    /** 最近登录 IP */
     private String loginIp;
+    /** 最近登录时间 */
     private String loginDate;
+    /** 账号创建时间 */
     private String createTime;
+    /** 身份证号 */
     private String idNo;
 
-    // 提供 Getter 方法，方便后续获取属性值
     public String getId() {
         return id;
     }

@@ -11,6 +11,7 @@ public final class ChannelConfig {
     /** 无租户路径前缀，接口为 域名/app-api/... */
     public static final String TENANT_PREFIX = "";
     public static final String TENANT_ID = "1";
+    /** 是否支持临时通行证业务 */
     public static final boolean SUPPORTS_TEMPORARY_PASS = true;
 
     private ChannelConfig() {

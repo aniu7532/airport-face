@@ -2,6 +2,9 @@ package com.arcsoft.arcfacedemo.network;
 
 import com.arcsoft.arcfacedemo.config.ChannelConfig;
 
+/**
+ * 接口 URL 常量类，按渠道配置拼接业务与系统 API 路径。
+ */
 public class UrlConstants {
     /** 各渠道在 src/{flavor}/java/.../config/ChannelConfig 中配置 BASE_URL */
     public static final String URL = ChannelConfig.BASE_URL;

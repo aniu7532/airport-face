@@ -83,6 +83,7 @@ class ConstructionWorkersCompanyAutoComplete @JvmOverloads constructor(
         }
     }
 
+    /** 绑定生命周期并拉取申办单位列表，注册名称变化回调。 */
     fun bind(lifecycleOwner: LifecycleOwner, onChanged: (String) -> Unit) {
         onCompanyNameChanged = onChanged
         lifecycleOwner.lifecycleScope.launch {
@@ -94,6 +95,7 @@ class ConstructionWorkersCompanyAutoComplete @JvmOverloads constructor(
         }
     }
 
+    /** 设置申办单位名称（不触发重复回调）。 */
     fun setCompanyName(name: String) {
         if (autoComplete.text?.toString() == name) return
         setCompanyNameInternal(name)

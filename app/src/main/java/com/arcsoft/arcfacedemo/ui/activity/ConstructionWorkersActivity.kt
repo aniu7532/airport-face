@@ -14,12 +14,16 @@ import com.arcsoft.arcfacedemo.ui.viewmodel.ConstructionWorkersTab
 import com.arcsoft.arcfacedemo.ui.viewmodel.ConstructionWorkersViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * 施工人员管理页：顶部 Tab 切换核销记录、通行记录、进出统计三个子页面。
+ */
 class ConstructionWorkersActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityConstructionWorkersBinding.inflate(layoutInflater) }
 
     private val viewModel by viewModels<ConstructionWorkersViewModel>()
 
+    /** 初始化布局并绑定 Tab 与 ViewPager。 */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -27,6 +31,7 @@ class ConstructionWorkersActivity : AppCompatActivity() {
         initData()
     }
 
+    /** 配置 ViewPager2、自定义 Tab 栏及 Tab 与页面的双向联动。 */
     fun initView() {
         binding.viewPager.apply {
             isUserInputEnabled = false
@@ -64,6 +69,7 @@ class ConstructionWorkersActivity : AppCompatActivity() {
         }
     }
 
+    /** 预留数据初始化入口，当前无额外逻辑。 */
     fun initData() {
 
     }

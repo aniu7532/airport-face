@@ -10,6 +10,9 @@ import com.lzy.okgo.convert.StringConvert;
 
 import okhttp3.Response;
 
+/**
+ * 字符串响应回调基类，统一处理网络异常并提示用户。
+ */
 public abstract class StringStateCallback extends AbsCallback<String> {
 
     private StringConvert convert;
@@ -18,6 +21,7 @@ public abstract class StringStateCallback extends AbsCallback<String> {
         convert = new StringConvert();
     }
 
+    /** 将响应体转换为字符串 */
     @Override
     public String convertResponse(Response response) throws Throwable {
         String s = convert.convertResponse(response);
@@ -25,6 +29,7 @@ public abstract class StringStateCallback extends AbsCallback<String> {
         return s;
     }
 
+    /** 根据异常类型向用户展示对应的网络错误提示 */
     @Override
     public void onError(com.lzy.okgo.model.Response<String> response) {
         super.onError(response);

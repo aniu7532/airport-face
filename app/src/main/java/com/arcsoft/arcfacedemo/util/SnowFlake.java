@@ -1,5 +1,8 @@
 package com.arcsoft.arcfacedemo.util;
 
+/**
+ * 雪花算法分布式 ID 生成器，用于生成全局唯一的业务流水号。
+ */
 public class SnowFlake {
     // 因为二进制里第一个 bit 为如果是 1，那么都是负数，但是我们生成的 id 都是正数，所以第一个 bit 统一都是 0。
 

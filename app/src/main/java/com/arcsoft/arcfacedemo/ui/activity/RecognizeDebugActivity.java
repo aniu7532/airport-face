@@ -46,6 +46,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
+/**
+ * 人脸识别调试页：双路相机预览、实时人脸框绘制、识别结果展示及调试信息导出。
+ */
 public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String TAG = "RegisterAndRecognize";
 
@@ -69,6 +72,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
     TextView textViewRgb;
     TextView textViewIr;
 
+    /** 初始化数据绑定、ViewModel、沉浸式状态栏及预览布局监听。 */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -185,6 +189,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
         });
     }
 
+    /** 释放相机资源并销毁识别引擎。 */
     @Override
     protected void onDestroy() {
         ALog.e("onDestroy");
@@ -475,6 +480,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
         }
     }
 
+    /** 页面恢复时重启相机预览。 */
     @Override
     protected void onResume() {
         super.onResume();
@@ -490,6 +496,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
         }
     }
 
+    /** 页面暂停时停止相机预览以释放资源。 */
     @Override
     protected void onPause() {
         pauseCamera();

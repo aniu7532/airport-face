@@ -17,17 +17,17 @@ import androidx.annotation.NonNull;
 import okhttp3.OkHttpClient;
 
 /**
- * Created by Administrator on 2016/11/30.
- * https://github.com/hongyangAndroid/okhttputils
+ * OkGo 网络库初始化工具，配置超时、SSL 证书策略及请求日志拦截器。
  */
-
 public class HttpInitUtils {
     private static final long TIMEOUT = 2 * 60 * 1000L;
 
+    /** 使用默认超时（2 分钟）初始化 OkGo */
     public static void init(@NonNull Application context) {
         HttpInitUtils.init(context, TIMEOUT);
     }
 
+    /** 使用自定义超时时间初始化 OkGo */
     public static void init(@NonNull Application context, long time) {
         // ---------这里给出的是示例代码,告诉你可以这么传,实际使用的时候,根据需要传,不需要就不传-------------//
         HttpHeaders headers = new HttpHeaders();
@@ -96,6 +96,7 @@ public class HttpInitUtils {
 
     }
 
+    /** 清除会话信息（预留接口） */
     public void clearSession() {
     }
 

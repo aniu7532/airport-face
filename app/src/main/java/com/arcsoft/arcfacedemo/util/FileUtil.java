@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * 文件读写工具类，提供二进制数据与文件互转等基础操作。
+ */
 public class FileUtil {
     /**
      * 读取文件中的数据内容

@@ -36,6 +36,9 @@ import androidx.core.content.ContextCompat;
 
 import es.dmoral.toasty.Toasty;
 
+/**
+ * Activity 基类，统一管理子线程执行、权限申请、页面跳转动画、Toast/Snackbar 提示及相册选图等通用能力。
+ */
 public abstract class BaseActivity extends AppCompatActivity {
     private static ExecutorService executor;
     private static List<Activity> activityList;
@@ -53,6 +56,7 @@ public abstract class BaseActivity extends AppCompatActivity {
      */
     private static final int SNACK_BAR_MAX_LINES = 50;
 
+    /** 注册 Activity 实例并初始化全局单线程池。 */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +83,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         executor.execute(runnable);
     }
 
+    /** 从 Activity 栈移除当前实例，最后一个销毁时释放线程池。 */
     @Override
     protected void onDestroy() {
         activityList.remove(this);

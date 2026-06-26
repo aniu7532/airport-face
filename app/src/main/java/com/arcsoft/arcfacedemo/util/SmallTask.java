@@ -3,6 +3,9 @@ package com.arcsoft.arcfacedemo.util;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ThreadUtils;
 
+/**
+ * 轻量级后台任务基类，封装 ThreadUtils 任务的取消、失败与成功回调日志。
+ */
 public abstract class SmallTask extends ThreadUtils.Task<String> {
     @Override
     public void onCancel() {

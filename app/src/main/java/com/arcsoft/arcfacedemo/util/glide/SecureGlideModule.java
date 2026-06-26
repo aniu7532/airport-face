@@ -16,6 +16,9 @@ import com.arcsoft.arcfacedemo.network.OkHttpUtils;
 import android.content.Context;
 import okhttp3.OkHttpClient;
 
+/**
+ * Glide 模块配置，注册 HTTPS 信任证书及加密文件解密加载链路。
+ */
 @GlideModule
 public class SecureGlideModule extends AppGlideModule {
     @Override

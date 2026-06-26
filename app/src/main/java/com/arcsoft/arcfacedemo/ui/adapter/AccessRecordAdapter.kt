@@ -18,10 +18,14 @@ import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.model.LazyHeaders
 import java.io.File
 
+/**
+ * 通行记录分页列表适配器，展示单条通行查验信息及现场/抓拍照片。
+ */
 class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordAdapter.VH>(
     DiffCallback()
 ) {
 
+    /** 与列表头部适配器拼接为完整列表。 */
     fun withListHeader(header: AccessRecordHeaderAdapter): ConcatAdapter =
         ConcatAdapter(header, this)
 
@@ -55,6 +59,7 @@ class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordA
 
     class VH(val binding: AccessRecordItemBinding) : RecyclerView.ViewHolder(binding.root) {
 
+        /** 将通行记录数据绑定到列表项视图。 */
         fun bind(value: CardRecords.ListDTO) {
             binding.apply {
                 tvName.text = value.nickname
@@ -118,6 +123,9 @@ class AccessRecordAdapter : PagingDataAdapter<CardRecords.ListDTO, AccessRecordA
 
 }
 
+/**
+ * 通行记录列表顶部标题行，固定展示「通行记录列表」。
+ */
 class AccessRecordHeaderAdapter : RecyclerView.Adapter<AccessRecordHeaderAdapter.HeaderVH>() {
 
     private var total: Int? = null

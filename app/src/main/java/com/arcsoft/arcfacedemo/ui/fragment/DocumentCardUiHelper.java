@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * 通行证卡片 UI 辅助类，负责二维码生成、区域标签渲染及证件信息排版。
+ */
 public final class DocumentCardUiHelper {
 
     private DocumentCardUiHelper() {

@@ -24,6 +24,9 @@ import com.lxj.xpopup.core.BasePopupView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * 核销记录（有进无出）列表页：支持多条件筛选、分页加载及单条记录核实操作。
+ */
 class WriteOffRecordFragment : Fragment() {
 
     companion object {
@@ -46,17 +49,20 @@ class WriteOffRecordFragment : Fragment() {
 
     private val adapter by lazy { WriteOffRecordAdapter() }
 
+    /** 创建并返回 Fragment 根视图。 */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         return binding.root
     }
 
+    /** 初始化筛选条件、分页列表及加载状态监听。 */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
     }
 
+    /** 非首次回到页面时自动刷新列表数据。 */
     override fun onResume() {
         super.onResume()
         if (hasResumedOnce) {
@@ -66,6 +72,7 @@ class WriteOffRecordFragment : Fragment() {
         }
     }
 
+    /** 绑定筛选控件、分页列表、总数展示及刷新加载弹窗。 */
     fun initView() {
         binding.apply {
             inputName.addTextChangedListener {
@@ -177,6 +184,7 @@ class WriteOffRecordFragment : Fragment() {
         loadingPopup?.takeIf { it.isShow }?.dismiss()
     }
 
+    /** 销毁视图时关闭加载弹窗，避免内存泄漏。 */
     override fun onDestroyView() {
         dismissLoadingPopup()
         loadingPopup = null

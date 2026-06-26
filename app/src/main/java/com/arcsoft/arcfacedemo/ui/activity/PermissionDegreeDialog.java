@@ -13,14 +13,19 @@ import androidx.fragment.app.DialogFragment;
 
 import com.arcsoft.arcfacedemo.R;
 
+/**
+ * 权限说明弹窗：用户可选择拒绝或同意继续，结果通过 {@link Callback} 回传。
+ */
 public class PermissionDegreeDialog extends DialogFragment {
 
     private Callback callback;
 
+    /** 设置用户点击按钮后的回调。 */
     public void setCallback(Callback callback) {
         this.callback = callback;
     }
 
+    /** 加载弹窗布局并初始化按钮事件。 */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -53,6 +58,7 @@ public class PermissionDegreeDialog extends DialogFragment {
         });
     }
 
+    /** 禁止点击外部或返回键关闭弹窗。 */
     @Override
     public void onStart() {
         super.onStart();
@@ -63,6 +69,7 @@ public class PermissionDegreeDialog extends DialogFragment {
 
     public interface Callback {
 
+        /** @param refuse true 表示用户拒绝，false 表示用户同意 */
         void onRefuse(boolean refuse);
     }
 }

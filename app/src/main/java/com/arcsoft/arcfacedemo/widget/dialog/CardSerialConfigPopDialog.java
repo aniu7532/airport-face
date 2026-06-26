@@ -20,6 +20,9 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 
+/**
+ * 读卡器串口配置弹窗，保存串口路径与波特率后重启相关页面使配置生效。
+ */
 public class CardSerialConfigPopDialog extends CenterPopupView {
 
     public CardSerialConfigPopDialog(@NonNull Context context) {
@@ -31,6 +34,7 @@ public class CardSerialConfigPopDialog extends CenterPopupView {
         return R.layout.dialog_card_serial;
     }
 
+    /** 初始化表单、加载当前配置并处理保存逻辑。 */
     @Override
     protected void onCreate() {
         super.onCreate();

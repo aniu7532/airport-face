@@ -20,12 +20,16 @@ import com.yuyh.easyadapter.recyclerview.EasyRVHolder;
 import android.content.Context;
 import android.widget.ImageView;
 
+/**
+ * 通行记录列表适配器（非分页版），展示姓名、单位、通过状态、时间及抓拍照片。
+ */
 public class RecordsListAdapter extends EasyRVAdapter<CardRecords.ListDTO> {
 
     public RecordsListAdapter(Context context, List<CardRecords.ListDTO> list, int... layoutIds) {
         super(context, list, layoutIds);
     }
 
+    /** 绑定通行记录文本信息并加载查验照片（网络或本地）。 */
     @Override
     protected void onBindData(EasyRVHolder viewHolder, final int position, final CardRecords.ListDTO item) {
         // tvPass tvTime

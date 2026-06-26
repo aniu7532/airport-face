@@ -10,6 +10,9 @@ import android.util.Log;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+/**
+ * 基于 OpenGL ES 的相机预览 SurfaceView，使用 NV21 着色器渲染 YUV 帧数据。
+ */
 public class CameraGLSurfaceView extends GLSurfaceView {
     private static final String TAG = "CameraGLSurfaceView";
 

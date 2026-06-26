@@ -37,13 +37,7 @@ import okhttp3.internal.http.HttpHeaders;
 import okio.Buffer;
 
 /**
- * ================================================
- * 作    者：jeasonlzy（廖子尧）Github地址：https://github.com/jeasonlzy
- * 版    本：1.0
- * 创建日期：2016/1/12
- * 描    述：OkHttp拦截器，主要用于打印日志
- * 修订历史：
- * ================================================
+ * HTTP 请求/响应日志拦截器，将网络交互详情输出到控制台及本地日志文件。
  */
 public class HttpLog implements Interceptor {
 
@@ -53,6 +47,7 @@ public class HttpLog implements Interceptor {
     private java.util.logging.Level colorLevel;
     private Logger logger;
 
+    /** 日志打印详细程度 */
     public enum Level {
         NONE, // 不打印log
         BASIC, // 只打印 请求首行 和 响应首行
@@ -60,10 +55,12 @@ public class HttpLog implements Interceptor {
         BODY // 所有数据全部打印
     }
 
+    /** @param tag 日志标签 */
     public HttpLog(String tag) {
         logger = Logger.getLogger(tag);
     }
 
+    /** 设置日志打印详细程度 */
     public void setPrintLevel(Level level) {
         if (printLevel == null) {
             throw new NullPointerException("printLevel == null. Use Level.NONE instead.");
@@ -71,6 +68,7 @@ public class HttpLog implements Interceptor {
         printLevel = level;
     }
 
+    /** 设置控制台日志颜色级别 */
     public void setColorLevel(java.util.logging.Level level) {
         colorLevel = level;
     }

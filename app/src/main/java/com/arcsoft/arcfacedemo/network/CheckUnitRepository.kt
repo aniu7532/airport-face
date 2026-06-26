@@ -8,10 +8,18 @@ import com.lzy.okgo.model.Response
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
+/**
+ * 申办单位数据仓库，负责拉取并缓存简易单位列表。
+ */
 object CheckUnitRepository {
 
     private var cached: List<CheckUnit>? = null
 
+    /**
+     * 获取申办单位简易列表，默认使用内存缓存。
+     *
+     * @param forceRefresh 为 true 时强制重新请求
+     */
     suspend fun fetchSimpleList(forceRefresh: Boolean = false): List<CheckUnit> {
         if (!forceRefresh) {
             cached?.let { return it }
@@ -37,6 +45,9 @@ object CheckUnitRepository {
         }
     }
 
+    /**
+     * 清除内存缓存，下次请求将重新拉取。
+     */
     fun invalidateCache() {
         cached = null
     }

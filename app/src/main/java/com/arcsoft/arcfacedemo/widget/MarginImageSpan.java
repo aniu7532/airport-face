@@ -7,6 +7,9 @@ import android.text.style.ImageSpan;
 
 import androidx.annotation.NonNull;
 
+/**
+ * 支持垂直对齐与缩放的行内图片 Span，用于在文本中嵌入图标并保持视觉居中。
+ */
 public class MarginImageSpan extends ImageSpan {
     Drawable drawable;
 
@@ -15,6 +18,9 @@ public class MarginImageSpan extends ImageSpan {
         this.drawable = drawable;
     }
 
+    /**
+     * 按对齐方式计算纵向偏移并缩放绘制图片。
+     */
     @Override
     public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
         Drawable b = drawable;

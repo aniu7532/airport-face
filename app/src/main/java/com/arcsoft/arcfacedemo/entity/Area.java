@@ -2,17 +2,27 @@ package com.arcsoft.arcfacedemo.entity;
 
 import java.util.List;
 
+/**
+ * 通行区域节点，支持树形结构，用于区域选择与权限校验。
+ */
 public class Area {
+    /** 区域 ID */
     private String id;
+    /** 区域名称 */
     private String name;
+    /** 区域编码 */
     private String code;
+    /** 父级区域 ID */
     private String parentId;
+    /** 区域分类 */
     private int category;
+    /** 区域类型 */
     private int type;
+    /** 区域类型名称 */
     private String typeName;
+    /** 子区域列表 */
     private List<Area> children;
 
-    // Getter 和 Setter 方法
     public String getId() {
         return id;
     }

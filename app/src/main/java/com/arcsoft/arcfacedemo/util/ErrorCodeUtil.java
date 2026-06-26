@@ -6,6 +6,9 @@ import com.arcsoft.imageutil.ArcSoftImageUtilError;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+/**
+ * ArcFace / ArcSoft 错误码转换工具，将数值错误码映射为常量名便于排查。
+ */
 public class ErrorCodeUtil {
     /**
      * 将ArcFace错误码转换为对应的错误码常量名，便于理解

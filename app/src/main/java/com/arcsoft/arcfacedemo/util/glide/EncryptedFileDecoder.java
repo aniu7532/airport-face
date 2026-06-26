@@ -13,6 +13,9 @@ import com.bumptech.glide.load.resource.bitmap.BitmapResource;
 
 import android.graphics.Bitmap;
 
+/**
+ * Glide 加密文件解码器，将本地加密文件解密为 Bitmap 资源。
+ */
 public class EncryptedFileDecoder implements ResourceDecoder<File, Bitmap> {
     private final BitmapPool bitmapPool;
     private final SecretKey secretKey;

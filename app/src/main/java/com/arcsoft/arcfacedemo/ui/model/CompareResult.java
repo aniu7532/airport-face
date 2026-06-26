@@ -3,6 +3,9 @@ package com.arcsoft.arcfacedemo.ui.model;
 
 import com.arcsoft.arcfacedemo.facedb.entity.FaceEntity;
 
+/**
+ * 人脸识别比对结果，关联本地人脸库实体、相似度、追踪 ID 及耗时等信息。
+ */
 public class CompareResult {
     private FaceEntity faceEntity;
     private float similar;

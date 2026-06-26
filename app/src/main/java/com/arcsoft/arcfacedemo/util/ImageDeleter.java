@@ -4,8 +4,16 @@ import com.arcsoft.arcfacedemo.util.log.ALog;
 
 import java.io.File;
 
+/**
+ * 本地图片删除工具类，按目录与文件名删除加密存储的人脸图片。
+ */
 public class ImageDeleter {
 
+	/**
+	 * 删除指定目录下的图片文件。
+	 *
+	 * @return 删除成功返回 true
+	 */
 	public static boolean deleteImage(File directory, String imageUrl, String imageName, String nickname) {
 		File file = new File(directory, imageName + ".jpg");
 		if (!file.exists()) {

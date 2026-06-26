@@ -22,6 +22,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * 设备信息采集工具类，提供 MAC 地址、屏幕尺寸、系统时间等能力。
+ */
 public class DeviceUtils {
 
     public static String getDeviceId(Context context) {

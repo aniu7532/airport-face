@@ -10,6 +10,9 @@ import com.arcsoft.arcfacedemo.entity.CardRecords;
 import com.bumptech.glide.Glide;
 import com.lxj.xpopup.core.DrawerPopupView;
 
+/**
+ * 侧边抽屉式查验记录图片预览弹窗，展示证件照与现场照。
+ */
 public class DrawPopDialog extends DrawerPopupView {
     CardRecords.ListDTO item;
 
@@ -27,6 +30,7 @@ public class DrawPopDialog extends DrawerPopupView {
         return R.layout.dialog_image;
     }
 
+    /** 使用 Glide 加载记录中的大图与小图。 */
     @Override
     protected void onCreate() {
         super.onCreate();

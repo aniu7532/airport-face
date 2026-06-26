@@ -16,11 +16,15 @@ import com.arcsoft.arcfacedemo.util.camera.DualCameraHelper;
 
 import java.util.HashMap;
 
+/**
+ * 人脸识别参数设置页，加载识别阈值、活体检测方式等 Preference 配置项。
+ */
 public class RecognizeSettingsActivity extends BaseActivity {
 
     private static final int ACTION_REQUEST_CAMERA = 1;
     private static final String[] NEEDED_PERMISSIONS = { Manifest.permission.CAMERA };
 
+    /** 检查相机权限后加载设置 Fragment。 */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -2,6 +2,9 @@ package com.arcsoft.arcfacedemo.ui.model;
 
 import android.hardware.Camera;
 
+/**
+ * 双路相机预览配置，包含 RGB/IR 相机 ID 及额外旋转角度。
+ */
 public class PreviewConfig {
     /**
      * 默认的可见光相机ID

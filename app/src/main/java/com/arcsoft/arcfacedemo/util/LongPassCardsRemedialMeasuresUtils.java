@@ -49,6 +49,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+/**
+ * 长期通行证补救措施工具，用于批量修复缺失人脸、重新注册特征等异常数据。
+ */
 public class LongPassCardsRemedialMeasuresUtils {
 
     /**

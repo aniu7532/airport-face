@@ -18,11 +18,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+/**
+ * AES 加解密工具类，用于本地人脸图片的加密存储与解密加载。
+ */
 public class AESUtils {
     // 固定 IV（16 字节）
     private static final byte[] FIXED_IV = "1Hbfh667adfDEJ78".getBytes(StandardCharsets.UTF_8);
 
-    // 加密 Bitmap 并保存到文件
+    /**
+     * 将 Bitmap 加密后写入文件。
+     */
     public static void encryptBitmapToFile(Bitmap bitmap, File outputFile, SecretKey key) throws Exception {
 		// 将 Bitmap 转换为字节流
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -42,6 +47,9 @@ public class AESUtils {
 		fos.close();
     }
 
+    /**
+     * 解密注册目录下的加密图片为 Bitmap。
+     */
     public static Bitmap decryptRegisterFileToBitmap(String fileName) {
         return decryptFileToBitmap("register", fileName);
     }
@@ -192,7 +200,9 @@ public class AESUtils {
         }
     }
 
-    // 生成固定密钥（示例，实际应使用安全存储）
+    /**
+     * 生成 AES 密钥（演示用途，生产环境应使用安全存储）。
+     */
     public static SecretKey generateKey() {
         // 注意：此处仅用于演示，实际应使用 Android Keystore 存储密钥
         String keyString = "1Hbfh667adfDEJ78"; // 密钥长度需符合 AES 要求（如 16/24/32 字节）

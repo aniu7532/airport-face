@@ -10,6 +10,9 @@ import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.lxj.xpopup.util.XPopupUtils;
 
+/**
+ * 弹窗工具类，基于 XPopup 封装确认框、强制确认框及输入确认框。
+ */
 public class DialogUtils {
     static ConfirmPopupView dialog;
 
@@ -25,6 +28,9 @@ public class DialogUtils {
         void onConfirm(String text);
     }
 
+    /**
+     * 显示提交确认弹窗。
+     */
     public static ConfirmPopupView startUploadDialog(Context context, ConfirmListener confirmListener) {
         return startConfirmDialog(context, "提交确认", "确请仔细核对信息填写是否正确后，再提交数据！", "取消", "确认", confirmListener, null);
     }
@@ -44,6 +50,9 @@ public class DialogUtils {
         return startConfirmDialog(context, title, content, cancelBtnText, confirmBtnText, confirmListener, null);
     }
 
+    /**
+     * 显示可自定义标题与内容的确认弹窗。
+     */
     public static ConfirmPopupView startConfirmDialog(Context context, String title, String content,
             String cancelBtnText, String confirmBtnText, ConfirmListener confirmListener,
             CancelListener cancelListener) {
@@ -71,6 +80,9 @@ public class DialogUtils {
         return dialog;
     }
 
+    /**
+     * 显示不可通过返回键或点击外部关闭的强制确认弹窗。
+     */
     public static ConfirmPopupView startForceDialog(Context context, String title, String content, String cancelBtnText,
             String confirmBtnText, ConfirmListener confirmListener, CancelListener cancelListener) {
         if (dialog != null && dialog.isShow()) {
@@ -97,6 +109,9 @@ public class DialogUtils {
         return dialog;
     }
 
+    /**
+     * 显示带输入框的确认弹窗。
+     */
     public static InputConfirmPopupView startInputConfirm(Context context, String title, String content, String input,
             String hint, OnInputListener inputListener, CancelListener cancelListener) {
         InputConfirmPopupView dialog = new XPopup.Builder(context).hasStatusBarShadow(false)

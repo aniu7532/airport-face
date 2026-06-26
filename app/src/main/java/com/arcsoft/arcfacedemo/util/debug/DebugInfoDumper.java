@@ -18,6 +18,9 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 
+/**
+ * 人脸识别调试信息导出器，将跟踪帧、比对结果等数据 dump 到本地目录供离线分析。
+ */
 public class DebugInfoDumper {
     /**
      * 存储检测不到人脸的时长

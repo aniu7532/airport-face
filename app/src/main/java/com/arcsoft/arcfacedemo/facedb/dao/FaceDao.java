@@ -10,6 +10,9 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+/**
+ * 人脸特征库数据访问接口，提供注册、查询、删除等操作。
+ */
 @Dao
 public interface FaceDao {
     /**
@@ -40,7 +43,7 @@ public interface FaceDao {
     int updateFaceEntity(FaceEntity faceEntity);
 
     /**
-     * updateOrInsertFaceEntity
+     * 更新或插入人脸记录（冲突时更新）
      */
     @Update
     int updateOrInsertFaceEntity(FaceEntity faceEntity);
@@ -79,13 +82,15 @@ public interface FaceDao {
     @Query("SELECT COUNT(1) from face")
     int getFaceCount();
 
+    /** 按人脸 ID 查询单条记录 */
     @Query("SELECT * FROM face WHERE faceId = :faceId limit 1")
     FaceEntity queryByFaceId(int faceId);
 
+    /** 按用户名查询单条记录 */
     @Query("SELECT * FROM face WHERE user_name = :user_name limit 1")
     FaceEntity queryByUserName(String user_name);
 
-    // 查询所有数据
+    /** 按用户名查询全部匹配记录 */
     @Query("SELECT * FROM face WHERE user_name = :user_name")
     List<FaceEntity> queryByName(String user_name);
 }

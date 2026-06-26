@@ -5,6 +5,9 @@ import android.util.Log;
 
 import java.nio.IntBuffer;
 
+/**
+ * OpenGL ES 工具类，封装着色器编译、纹理创建及 YUV 渲染所需的顶点/纹理坐标。
+ */
 public class GLUtil {
     private static final String TAG = "GLUtil";
 

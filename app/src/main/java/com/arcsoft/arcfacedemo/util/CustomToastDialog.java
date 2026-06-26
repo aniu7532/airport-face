@@ -10,6 +10,9 @@ import android.widget.TextView;
 
 import com.arcsoft.arcfacedemo.R;
 
+/**
+ * 自定义 Toast 风格提示弹窗，用于展示成功/失败图标与文案。
+ */
 public class CustomToastDialog extends Dialog {
 
     private ImageView ivIcon;

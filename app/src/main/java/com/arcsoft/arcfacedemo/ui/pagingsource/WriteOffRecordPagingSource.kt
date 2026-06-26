@@ -23,12 +23,16 @@ data class CheckRecordQuery(
     val companyName: String = "",
 )
 
+/**
+ * 核销记录（有进无出）分页数据源，按页请求待核实记录并在首页回传总条数。
+ */
 class WriteOffRecordPagingSource(
     private val query: CheckRecordQuery = CheckRecordQuery(),
     /** 仅第一页会带上接口里的总条数，用于 UI（如列表 header）。 */
     private val onQueryTotal: ((Int) -> Unit)? = null,
 ) : PagingSource<Int, CardRecords.ListDTO>() {
 
+    /** 加载指定页码的核销记录列表。 */
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CardRecords.ListDTO> {
         return try {
             val pageIndex = params.key ?: 1
@@ -43,6 +47,7 @@ class WriteOffRecordPagingSource(
         }
     }
 
+    /** 发起网络请求获取单页核销记录数据，首页成功时回调总条数。 */
     suspend fun loadData(pageNo: Int, query: CheckRecordQuery): List<CardRecords.ListDTO> {
         return suspendCancellableCoroutine { continuation ->
             val request =

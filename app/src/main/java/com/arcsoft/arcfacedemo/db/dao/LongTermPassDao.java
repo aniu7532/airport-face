@@ -10,91 +10,92 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+/**
+ * 长期/临时通行证本地数据访问接口，支持增量同步与证件查询。
+ */
 @Dao
 public interface LongTermPassDao {
+    /** 插入或替换单条通行证记录 */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(LongTermPass entity);
 
-    // 批量插入数据
+    /** 批量插入或替换通行证记录 */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<LongTermPass> longTermPasses);
 
-    // 查询所有数据
+    /** 查询全部通行证记录 */
     @Query("SELECT * FROM long_term_pass")
     List<LongTermPass> getAll();
 
+    /** 查询通行证总数 */
     @Query("select count(*) from long_term_pass")
     int getCount();
 
-    // 根据 ID 查询数据
+    /** 按通行证 ID 查询 */
     @Query("SELECT * FROM long_term_pass WHERE id = :id")
     LongTermPass getById(String id);
 
-    // 根据 cardId 查询数据
+    /** 按实体卡号查询 */
     @Query("SELECT * FROM long_term_pass WHERE cardId = :cardId")
     LongTermPass getByCardId(String cardId);
 
-    // 根据 cardId 查询数据
+    /** 按长卡号查询长期证（type=0） */
     @Query("SELECT * FROM long_term_pass WHERE cardIdLong = :cardIdLong AND type = 0")
     LongTermPass getBycardIdLong(String cardIdLong);
 
+    /** 按通行申请 ID 查询 */
     @Query("SELECT * FROM long_term_pass WHERE applyId = :applyId")
     LongTermPass getByApplyId(String applyId);
 
+    /** 按持卡人姓名查询 */
     @Query("SELECT * FROM long_term_pass WHERE nickname = :nickname")
     LongTermPass getByNickname(String nickname);
 
-
-
-
-    // SELECT * FROM records ORDER BY timestamp DESC LIMIT 1;
-
-    // SELECT MAX(时间列) FROM 表名;
-
+    /** 获取本地库中最新的 updateTime，用于增量同步 */
     @Query("SELECT MAX(updateTime) FROM long_term_pass WHERE updateTime IS NOT NULL;")
     String getMaxUpdateTime();
 
+    /** 获取最近更新的一条通行证记录 */
     @Query("SELECT * FROM long_term_pass ORDER BY updateTime DESC  LIMIT 1")
     LongTermPass getByLast();
 
+    /** 按证件类型获取最近更新的一条记录 */
     @Query("SELECT * FROM long_term_pass WHERE type=:type ORDER BY updateTime DESC  LIMIT 1")
     LongTermPass getByLastAndType(int type);
 
-    /**
-     * @param cardId
-     * @return
-     */
+    /** 按实体卡号或申请 ID 模糊匹配查询 */
     @Query("SELECT * FROM long_term_pass WHERE cardId = :cardId OR applyId = :cardId")
     List<LongTermPass> getCardByID(String cardId);
 
+    /** 按证件编号查询 */
     @Query("SELECT * FROM long_term_pass WHERE idCode = :idCode")
     List<LongTermPass> getAllByIdCode(String idCode);
 
-    // 查询 status != 2 (非注销) 的记录
+    /** 查询未注销（status != 2）的通行证 */
     @Query("SELECT * FROM long_term_pass WHERE status != 2")
     List<LongTermPass> getByStatusNotCancelled();
 
+    /** 按用户 ID 查询其全部通行证 */
     @Query("SELECT * FROM long_term_pass WHERE userId = :userId")
     List<LongTermPass> getByUserId(String userId);
 
-    /** 有效证件：status=1，临时证优先，再按更新时间倒序 */
+    /** 查询用户有效证件：status=1，临时证优先，再按更新时间倒序 */
     @Query("SELECT * FROM long_term_pass WHERE userId = :userId AND status = 1 ORDER BY type DESC, updateTime DESC")
     List<LongTermPass> getActiveByUserId(String userId);
 
+    /** 批量插入或更新通行证（冲突时替换） */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrUpdateUsers(List<LongTermPass> longTermPasses);
 
-
-
-    // 更新数据
+    /** 更新单条通行证记录 */
     @Update
     void update(LongTermPass longTermPass);
 
-    // 批量更新数据
+    /** 批量更新通行证记录 */
     @Update
     void updateAll(LongTermPass... entities);
 
-    // 根据 updateTime 删除传入时间及之后的数据
+    /** 删除 updateTime 大于等于指定时间的记录，用于同步回滚 */
     @Query("DELETE FROM long_term_pass WHERE updateTime >= :updateTime")
     void deleteByUpdateTime(String updateTime);
 

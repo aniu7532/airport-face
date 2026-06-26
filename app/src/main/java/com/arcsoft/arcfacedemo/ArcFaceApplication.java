@@ -95,6 +95,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+/**
+ * 应用全局入口类，负责初始化数据库、网络、人脸引擎、定时任务及日志上传等核心组件。
+ */
 public class ArcFaceApplication extends Application {
 
     private static ArcFaceApplication application;
@@ -192,6 +195,9 @@ public class ArcFaceApplication extends Application {
         super.onTerminate();
     }
 
+    /**
+     * 获取 Application 单例实例。
+     */
     public static ArcFaceApplication getApplication() {
         return application;
     }
@@ -207,6 +213,9 @@ public class ArcFaceApplication extends Application {
     private final AtomicBoolean isUploadingRecord = new AtomicBoolean(false);
 
 
+    /**
+     * 启动定时上传任务，周期性将本地通行记录、日志等数据同步至服务端。
+     */
     public void startUpDataToServer() {
         // if (ArcFaceApplication.TEST) {
         // return;
@@ -359,6 +368,9 @@ public class ArcFaceApplication extends Application {
         ThreadUtils.executeByFixedAtFixRate(POOL_SIZE, task, UPLOAD_LOG_TIME, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * 重启定时上传任务（先取消当前任务再重新启动）。
+     */
     public void reset() {
         if (task != null) {
             ThreadUtils.cancel(task);
@@ -367,6 +379,9 @@ public class ArcFaceApplication extends Application {
         startUpDataToServer();
     }
 
+    /**
+     * 停止所有定时上传任务。
+     */
     public void resetAll() {
         if (task != null) {
             ThreadUtils.cancel(task);
@@ -776,6 +791,9 @@ public class ArcFaceApplication extends Application {
         });
     }
 
+    /**
+     * 将 Bitmap 注册到人脸库。
+     */
     public void registerFace(Bitmap bitmap, OnRegisterFinishedCallback callback, String applyId) {
         Bitmap alignedBitmap = ArcSoftImageUtil.getAlignedBitmap(bitmap, true);
         ALog.e("alignedBitmap.getWidth():" + alignedBitmap.getWidth() + ",alignedBitmap.getHeight():"

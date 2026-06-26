@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * 人脸库中的单挑人脸记录
+ * 人脸库中的单条人脸记录，包含特征向量与注册信息。
  */
 @Entity(tableName = "face")
 public class FaceEntity implements Parcelable {
@@ -41,6 +41,7 @@ public class FaceEntity implements Parcelable {
     @ColumnInfo(name = "register_time")
     private long registerTime;
 
+    /** 从证件照片注册人脸，自动记录注册时间 */
     public FaceEntity(String userName, String imagePath, byte[] featureData) {
         this.userName = userName;
         this.imagePath = imagePath;
@@ -48,6 +49,7 @@ public class FaceEntity implements Parcelable {
         registerTime = System.currentTimeMillis();
     }
 
+    /** 拷贝构造，用于传递人脸记录副本 */
     public FaceEntity(FaceEntity faceEntity) {
         this.faceId = faceEntity.faceId;
         this.userName = faceEntity.userName;
@@ -168,6 +170,7 @@ public class FaceEntity implements Parcelable {
                 + '\'' + ", featureData=" + Arrays.toString(featureData) + ", registerTime=" + registerTime + '}';
     }
 
+    /** 输出不含特征数据的简要信息，用于日志 */
     public String toString2() {
         return "FaceEntity{" + "faceId=" + faceId + ", userName='" + userName + '\'' + ", imagePath='" + imagePath
                 + '\'' + ", registerTime=" + registerTime + '}';

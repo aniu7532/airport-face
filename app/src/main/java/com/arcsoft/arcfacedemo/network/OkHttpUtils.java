@@ -11,7 +11,13 @@ import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
 
+/**
+ * OkHttp 客户端工具类，提供信任所有证书的 HTTPS 客户端（用于自签名证书环境）。
+ */
 public class OkHttpUtils {
+    /**
+     * 创建忽略证书校验与主机名验证的 OkHttpClient。
+     */
     public static OkHttpClient getUnsafeOkHttpClient() {
         try {
             // 创建一个信任所有证书的 TrustManager

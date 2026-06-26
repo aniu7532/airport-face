@@ -5,6 +5,9 @@ import com.arcsoft.arcfacedemo.util.WeakHandler;
 
 import android.content.Context;
 
+/**
+ * Toast 弹窗管理器，统一管理成功/失败/自定义提示弹窗的显示与自动关闭。
+ */
 public class ToastDialogManager {
 
     private static CustomToastDialog dialog;

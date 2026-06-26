@@ -12,49 +12,80 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+/**
+ * 长期证通行记录本地持久化实体，对应表 long_term_records。
+ */
 @Entity(tableName = "long_term_records")
 public class LongTermRecords extends Records {
+    /** 记录 ID，主键 */
     @PrimaryKey()
     @NonNull
     public String id;
-    public String passid;// 通行证id"id"
-    public String cardId;// 通行证实体卡id
-    public String idCode;// 系统生成的编号
-    public String applyId;// 通行申请id(二维码扫描信息)
-    public String direction;// 通行方向（1：进，-1出，2：核验)
+    /** 通行证 ID */
+    public String passid;
+    /** 实体卡号 */
+    public String cardId;
+    /** 系统证件编号 */
+    public String idCode;
+    /** 通行申请 ID（二维码扫描信息） */
+    public String applyId;
+    /** 通行方向，1 进，-1 出，2 核验 */
+    public String direction;
+    /** 持卡人姓名 */
     public String nickname;
+    /** 证件照片 */
     public String photo;
+    /** 引领人信息 JSON 字符串 */
     public String leadingPeople;
-    public String deviceId;// 查验设备ID
-    public String deviceName;// 查验设备名称
-    public String checkUserId;// 查验人ID
-    public String checkUserName;// 查验人姓名
-    public String companyName;// 查验人姓名
-    public String expiryDate;// 过期日期
-    public int templateType;// 证件模板类型,1:蓝，2：黄
-    public String[] areaDisplayCode;// 通行区域展示Code
-    public String area;// 通行区域id
-    public String areaName;// 通行区域名称(通行区域编码+名称)
-    public String status;// false,通行状态（正常/异常）,默认正常
-    public String reason;// false,异常原因，根据校验异常抛出的原因填写
-    public String parentld;// 引领人通行记录id
+    /** 查验设备 ID */
+    public String deviceId;
+    /** 查验设备名称 */
+    public String deviceName;
+    /** 查验人 ID */
+    public String checkUserId;
+    /** 查验人姓名 */
+    public String checkUserName;
+    /** 持卡人所属单位名称 */
+    public String companyName;
+    /** 证件有效期截止日期 */
+    public String expiryDate;
+    /** 证件模板类型，1 蓝色，2 黄色 */
+    public int templateType;
+    /** 通行区域展示编码列表 */
+    public String[] areaDisplayCode;
+    /** 通行区域 ID */
+    public String area;
+    /** 通行区域名称（编码+名称） */
+    public String areaName;
+    /** 通行状态，正常/异常 */
+    public String status;
+    /** 异常原因 */
+    public String reason;
+    /** 引领人通行记录 ID */
+    public String parentld;
 
-    public String sitePhoto;// 照片名字
-    public String checkTime;// 查验时间
-    public String faceSimilar;// 相似度
-    public String faceQuality;// 质量
+    /** 现场照片 */
+    public String sitePhoto;
+    /** 查验时间 */
+    public String checkTime;
+    /** 人脸相似度 */
+    public String faceSimilar;
+    /** 人脸质量评分 */
+    public String faceQuality;
 
-    public String leadingPeopleld;// 引领人id，C类证件进出需要校验，查验不需要校验
-    // public int upstate;// 上传与否0:未上传，1:上传了
+    /** 引领人用户 ID，C 类证件进出需校验 */
+    public String leadingPeopleld;
 
+    /** 是否需要人工复核 */
     public Boolean needVerify;
 
+    /** 将引领人数组序列化为 JSON 存入数据库 */
     public void setleadingPeople(LeadingPeople[] someObjectArray) {
         Gson gson = new Gson();
         this.leadingPeople = gson.toJson(someObjectArray);
     }
 
-    // 类型转换器：将 JSON 字符串转换为 SomeObject[]
+    /** 从 JSON 反序列化引领人数组 */
     public LeadingPeople[] getLeadingPeople() {
         Gson gson = new Gson();
         Type type = new TypeToken<LeadingPeople[]>() {

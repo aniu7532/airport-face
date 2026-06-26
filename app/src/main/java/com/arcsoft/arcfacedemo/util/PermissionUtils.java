@@ -8,6 +8,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 
+/**
+ * Android 权限检查工具，处理 MANAGE_EXTERNAL_STORAGE 等特殊权限的申请跳转。
+ */
 public class PermissionUtils {
 
     /**

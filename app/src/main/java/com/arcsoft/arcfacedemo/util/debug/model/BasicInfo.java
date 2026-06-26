@@ -4,6 +4,9 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
+/**
+ * 调试信息中的设备与 SDK 基础信息模型。
+ */
 public class BasicInfo {
     private String cpu;
     private String memory;
@@ -32,6 +35,9 @@ public class BasicInfo {
                 "sdkVersion:" + sdkVersion;
     }
 
+    /**
+     * 获取包含设备型号、Android 版本等完整基础信息字符串。
+     */
     public String getBasicInfoString() {
         return this.toString() + "\r\n" +
                 "androidVersion:" + Build.VERSION.RELEASE + "\r\n" +

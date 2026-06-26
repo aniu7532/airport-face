@@ -33,8 +33,14 @@ import com.lzy.okgo.request.base.Request;
 import android.app.Activity;
 import android.content.Context;
 
+/**
+ * 日志上传工具类，将本地日志文件压缩后上传至服务端。
+ */
 public class LogUploadUtils {
 
+	/**
+	 * 在 Activity 上下文中上传本地日志，显示加载弹窗并提示上传结果。
+	 */
 	public static void upload(Activity activity) {
 		if (ObjectUtils.isEmpty(ALog.getLogFiles())) {
 			return;
@@ -144,6 +150,9 @@ public class LogUploadUtils {
 			});
 	}
 
+	/**
+	 * 静默上传本地日志文件，不显示 UI 提示。
+	 */
 	public static void upload(Context context) {
 		if (ObjectUtils.isEmpty(ALog.getLogFiles())) {
 			return;
@@ -234,6 +243,11 @@ public class LogUploadUtils {
 			});
 	}
 
+	/**
+	 * 将指定文本内容压缩为 zip 后上传。
+	 *
+	 * @param data 待上传的文本内容
+	 */
 	public static void upload(Context context, String data) {
 		if (ObjectUtils.isEmpty(data)) {
 			return;

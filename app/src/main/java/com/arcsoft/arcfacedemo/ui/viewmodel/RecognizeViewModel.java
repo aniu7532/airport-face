@@ -53,6 +53,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
+/**
+ * 实时人脸识别 ViewModel，管理人脸引擎、相机预览帧处理及识别结果回调。
+ */
 public class RecognizeViewModel extends ViewModel implements RecognizeCallback {
     /**
      * 人脸识别过程中数据的更新类型

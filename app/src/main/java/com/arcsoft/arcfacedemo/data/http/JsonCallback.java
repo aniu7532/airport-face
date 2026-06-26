@@ -30,13 +30,9 @@ import com.lzy.okgo.request.base.Request;
 import okhttp3.Response;
 
 /**
- * ================================================
- * 作    者：jeasonlzy（廖子尧）Github地址：https://github.com/jeasonlzy
- * 版    本：1.0
- * 创建日期：2016/1/14
- * 描    述：默认将返回的数据解析成需要的Bean,可以是 BaseBean，String，List，Map
- * 修订历史：
- * ================================================
+ * JSON 响应回调基类，将接口返回的 JSON 自动反序列化为指定类型。
+ *
+ * @param <T> 目标数据类型
  */
 public abstract class JsonCallback<T> extends AbsCallback<T> {
 
@@ -46,10 +42,12 @@ public abstract class JsonCallback<T> extends AbsCallback<T> {
     public JsonCallback() {
     }
 
+    /** @param type 反序列化目标类型 */
     public JsonCallback(Type type) {
         this.type = type;
     }
 
+    /** @param clazz 反序列化目标类 */
     public JsonCallback(Class<T> clazz) {
         this.clazz = clazz;
     }
@@ -70,9 +68,7 @@ public abstract class JsonCallback<T> extends AbsCallback<T> {
     }
 
     /**
-     * 该方法是子线程处理，不能做ui相关的工作
-     * 主要作用是解析网络返回的 response 对象,生产onSuccess回调中需要的数据对象
-     * 这里的解析工作不同的业务逻辑基本都不一样,所以需要自己实现,以下给出的时模板代码,实际使用根据需要修改
+     * 在子线程中将 HTTP 响应体解析为目标类型，支持 String、JSONObject、JSONArray 及 Gson Bean。
      */
     @Override
     public T convertResponse(Response response) throws Throwable {

@@ -20,6 +20,7 @@ public class Document3 extends AbstractDocument3 {
         return R.layout.document3;
     }
 
+    /** 绑定临时证各展示控件引用。 */
     @Override
     protected void bindViews(View view) {
         passers_by = view.findViewById(R.id.passers_by);
@@ -36,6 +37,7 @@ public class Document3 extends AbstractDocument3 {
         statusText = view.findViewById(R.id.statusText);
     }
 
+    /** 将证件字段填充到临时证卡面视图，含陪同人员与通行区域。 */
     @Override
     protected void bindCardContent() {
         if (passers_by != null) {

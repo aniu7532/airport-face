@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 
 import com.arcsoft.face.GenderInfo;
 
-
+/**
+ * 人脸比对结果展示项，包含对比图、年龄、性别及与主图的相似度。
+ */
 public class ItemShowInfo {
     private Bitmap bitmap;
     private int age;

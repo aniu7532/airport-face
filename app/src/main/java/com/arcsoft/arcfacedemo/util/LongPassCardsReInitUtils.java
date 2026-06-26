@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 长期通行证重新初始化工具，对比本地与线上数量差异并同步缺失数据。
+ */
 public class LongPassCardsReInitUtils {
 
     private static volatile LongPassCardsReInitUtils instance = null;
@@ -31,6 +34,9 @@ public class LongPassCardsReInitUtils {
     private LongPassCardsReInitUtils() {
     }
 
+    /**
+     * 获取单例实例。
+     */
     public static LongPassCardsReInitUtils getInstance() {
         if (instance == null) {
             synchronized (FaceServer.class) {
@@ -49,6 +55,9 @@ public class LongPassCardsReInitUtils {
         return doing;
     }
 
+    /**
+     * 启动重新初始化流程：比对本地与线上通行证数量，必要时拉取并写入本地数据库。
+     */
     public void start() {
         if (doing) {
             ToastUtils.showShort("正在处理中...");

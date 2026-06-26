@@ -8,6 +8,9 @@ import android.text.style.ReplacementSpan;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+/**
+ * 垂直居中对齐的文本 ReplacementSpan，可选指定字号（sp）。
+ */
 public class VerticalAlignTextSpan extends ReplacementSpan {
     private int fontSizeSp = -1;//单位:sp
 
@@ -18,12 +21,14 @@ public class VerticalAlignTextSpan extends ReplacementSpan {
         this.fontSizeSp = fontSizeSp;
     }
 
+  /** 测量文本宽度，供布局阶段分配 Span 占位。 */
     @Override
     public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
         Paint newPaint = getCustomTextPaint(paint);
         return (int) newPaint.measureText(text, start, end);
     }
 
+    /** 在绘制阶段将文本纵向居中后绘制到画布。 */
     @Override
     public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int
             bottom, @NonNull Paint paint) {

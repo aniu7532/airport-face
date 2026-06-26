@@ -14,6 +14,7 @@ public class Document3 extends AbstractDocument3 {
         return R.layout.document3;
     }
 
+    /** 绑定占位布局控件引用。 */
     @Override
     protected void bindViews(View view) {
         card_img = view.findViewById(R.id.card_img);
@@ -22,6 +23,7 @@ public class Document3 extends AbstractDocument3 {
         statusText = view.findViewById(R.id.statusText);
     }
 
+    /** 洛阳渠道不支持临时证，留空实现。 */
     @Override
     protected void bindCardContent() {
         // 洛阳渠道不支持临时证展示

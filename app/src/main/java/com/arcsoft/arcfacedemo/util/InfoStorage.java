@@ -3,7 +3,9 @@ package com.arcsoft.arcfacedemo.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-
+/**
+ * 应用信息本地存储工具，基于 SharedPreferences 封装键值对的读写与清理。
+ */
 public class InfoStorage {
     private static final String PREF_NAME = "yunduanchayan";
     private SharedPreferences sharedPreferences;

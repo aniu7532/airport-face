@@ -17,6 +17,9 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+/**
+ * 核销记录（有进无出）页 ViewModel：管理筛选条件，分页加载待核实记录及总条数。
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WriteOffRecordViewModel : ViewModel() {
 
@@ -73,6 +76,7 @@ class WriteOffRecordViewModel : ViewModel() {
         ).flow
     }.cachedIn(viewModelScope)
 
+    /** 重置筛选条件为默认值并触发查询。 */
     fun reset() {
         _name.value = ""
         _cardNo.value = ""
@@ -82,6 +86,7 @@ class WriteOffRecordViewModel : ViewModel() {
         search()
     }
 
+    /** 按当前筛选条件发起分页查询。 */
     fun search() {
         val q = CheckRecordQuery(
             nickname = _name.value,

@@ -13,6 +13,9 @@ import com.arcsoft.arcfacedemo.R;
 
 import static androidx.annotation.RestrictTo.Scope.LIBRARY;
 
+/**
+ * 活体检测阈值设置对话框，支持通过加减按钮微调阈值。
+ */
 public class ThresholdLivePreferenceDialogFragmentCompat extends EditTextPreferenceDialogFragmentCompat implements View.OnClickListener {
 
     private EditText mDialogEditText;

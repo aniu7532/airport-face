@@ -19,6 +19,9 @@ import com.arcsoft.arcfacedemo.ui.bindCompanyUnitField
 import com.arcsoft.arcfacedemo.ui.viewmodel.AccessRecordViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * 通行记录列表页：支持按姓名、证件号、时间、申办单位筛选，分页展示查验通行记录。
+ */
 class AccessRecordFragment : Fragment() {
 
     companion object {
@@ -36,16 +39,19 @@ class AccessRecordFragment : Fragment() {
 
     private val adapter by lazy { AccessRecordAdapter() }
 
+    /** 创建并返回 Fragment 根视图。 */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = binding.root
 
+    /** 初始化筛选条件、列表及数据流订阅。 */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
     }
 
+    /** 非首次回到页面时自动刷新列表数据。 */
     override fun onResume() {
         super.onResume()
         if (hasResumedOnce) {
@@ -55,6 +61,7 @@ class AccessRecordFragment : Fragment() {
         }
     }
 
+    /** 绑定筛选控件、分页列表及 ViewModel 状态同步。 */
     fun initView() {
         binding.apply {
             inputName.addTextChangedListener {

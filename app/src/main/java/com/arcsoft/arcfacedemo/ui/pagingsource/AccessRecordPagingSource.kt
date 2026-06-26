@@ -12,10 +12,14 @@ import com.lzy.okgo.model.Response
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
+/**
+ * 通行记录分页数据源，按页请求需核实的查验通行记录接口。
+ */
 class AccessRecordPagingSource(
     private val query: CheckRecordQuery = CheckRecordQuery()
 ) : PagingSource<Int, CardRecords.ListDTO>() {
 
+    /** 加载指定页码的通行记录列表。 */
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CardRecords.ListDTO> {
         return try {
             val pageIndex = params.key ?: 1
@@ -30,6 +34,7 @@ class AccessRecordPagingSource(
         }
     }
 
+    /** 发起网络请求获取单页通行记录数据。 */
     suspend fun loadData(pageNo: Int, query: CheckRecordQuery): List<CardRecords.ListDTO> {
         return suspendCancellableCoroutine { continuation ->
             val request =

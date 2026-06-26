@@ -7,6 +7,9 @@ import androidx.preference.EditTextPreference;
 
 
 
+/**
+ * 可调节整数类型的 Preference，默认值以 int 类型读取。
+ */
 public class AdjustableIntegerPreference extends EditTextPreference {
 
     public AdjustableIntegerPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {

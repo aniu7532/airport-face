@@ -39,6 +39,9 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * App 版本更新工具，封装 XUpdate 检查新版本、下载安装包及自定义解析逻辑。
+ */
 public class UpdateUtils {
     public static final String mJsonAddr = UrlConstants.URL_GET_APP_LAST_VERSION;
 

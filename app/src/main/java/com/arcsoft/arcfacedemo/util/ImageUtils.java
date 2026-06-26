@@ -14,6 +14,9 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * 网络图片加载与 Bitmap 处理工具，提供 URL 转字节数组、本地文件解码等能力。
+ */
 public class ImageUtils {
     private static final String TAG = "ImageUtils";
     // 将网址图片转化为 byte[]

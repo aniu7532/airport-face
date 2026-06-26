@@ -10,27 +10,29 @@ import com.arcsoft.arcfacedemo.db.entity.LongTermRecords;
 
 import java.util.List;
 
+/**
+ * 长期证通行记录本地数据访问接口。
+ */
 @Dao
 public interface LongTermRecordsDao {
 
+    /** 插入或替换单条长期证通行记录 */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(LongTermRecords entity);
 
-    // 根据 ID 查询数据
+    /** 按记录 ID 查询 */
     @Query("SELECT * FROM long_term_records WHERE id = :id")
     LongTermRecords getById(String id);
 
-    // 根据 ID 查询数据
+    /** 查询全部长期证通行记录 */
     @Query("SELECT * FROM long_term_records")
     List<LongTermRecords> getAll();
 
+    /** 获取最近一条通行记录 */
     @Query("SELECT * FROM long_term_records ORDER BY checkTime DESC  LIMIT 1")
     LongTermRecords getByLast();
 
-
-    /**
-    * 根据 item 删除
-    **/
+    /** 删除指定通行记录 */
     @Delete
     void delete(LongTermRecords item);
 

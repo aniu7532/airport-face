@@ -1,5 +1,8 @@
 package com.arcsoft.arcfacedemo.util.debug;
 
+/**
+ * 调试信息导出配置，控制各类识别异常与性能数据的 dump 开关。
+ */
 public class DumpConfig {
     boolean dumpFaceTrackError;
     boolean dumpLivenessDetectResult;

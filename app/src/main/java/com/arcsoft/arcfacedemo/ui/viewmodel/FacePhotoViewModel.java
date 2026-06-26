@@ -36,6 +36,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+/**
+ * 人脸库管理 ViewModel，负责人脸照片批量注册、分页查询及本地人脸数据维护。
+ */
 public class FacePhotoViewModel extends ViewModel {
     private static final String TAG = "FacePhotoViewModel";
     private static final String SUFFIX_JPEG = ".jpeg";

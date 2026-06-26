@@ -20,6 +20,9 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.lxj.xpopup.core.CenterPopupView;
 import com.lxj.xpopup.util.XPopupUtils;
 
+/**
+ * 二维码读头串口配置弹窗，保存设备路径及串口参数后重启页面生效。
+ */
 public class QrSerialConfigPopDialog extends CenterPopupView {
 
     public QrSerialConfigPopDialog(@NonNull Context context) {
@@ -31,6 +34,7 @@ public class QrSerialConfigPopDialog extends CenterPopupView {
         return R.layout.dialog_qr_serial;
     }
 
+    /** 初始化表单、加载当前配置并处理保存逻辑。 */
     @Override
     protected void onCreate() {
         super.onCreate();

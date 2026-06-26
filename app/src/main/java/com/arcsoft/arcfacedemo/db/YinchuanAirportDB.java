@@ -13,7 +13,9 @@ import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-//exportSchema = false
+/**
+ * 银川机场通行业务本地数据库，存储通行证档案及进出港通行记录。
+ */
 @Database(entities = { LongTermPass.class, LongTermRecords.class,
         TemporaryCardRecords.class }, version = 19, exportSchema = true, autoMigrations = {
                 @AutoMigration(from = 10, to = 11), @AutoMigration(from = 11, to = 12),
@@ -25,10 +27,13 @@ import androidx.room.TypeConverters;
 })
 @TypeConverters({ Converters.class })
 public abstract class YinchuanAirportDB extends RoomDatabase {
+    /** 长期/临时通行证数据访问 */
     public abstract LongTermPassDao longTermPassDao();
 
+    /** 长期证通行记录数据访问 */
     public abstract LongTermRecordsDao longTermRecordsDao();
 
+    /** 临时证通行记录数据访问 */
     public abstract TemporaryCardRecordsDao temporaryCardRecordsDao();
 
     // // @DeleteTable(tableName)

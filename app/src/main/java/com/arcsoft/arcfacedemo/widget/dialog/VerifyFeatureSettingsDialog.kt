@@ -12,11 +12,15 @@ import com.lxj.xpopup.XPopup
 import com.lxj.xpopup.core.CenterPopupView
 import com.lxj.xpopup.util.XPopupUtils
 
+/**
+ * 核实功能设置弹窗，配置总开关及各核实字段是否必填。
+ */
 @SuppressLint("ViewConstructor")
 class VerifyFeatureSettingsDialog(context: Context) : CenterPopupView(context) {
 
     override fun getImplLayoutId(): Int = R.layout.dialog_verify_feature_settings
 
+    /** 从 SP 加载开关状态并绑定各 Switch 的持久化逻辑。 */
     override fun onCreate() {
         super.onCreate()
         val sp = SPUtils.getInstance()
@@ -72,6 +76,7 @@ class VerifyFeatureSettingsDialog(context: Context) : CenterPopupView(context) {
         (XPopupUtils.getAppWidth(context) * 0.88f).toInt()
 
     companion object {
+        /** 显示核实功能设置弹窗。 */
         @JvmStatic
         fun show(context: Context) {
             XPopup.Builder(context)

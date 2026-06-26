@@ -15,6 +15,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * 本地日志写入工具，将运行日志持久化到外部存储目录。
+ */
 public class LogUtils {
 
     private static final String TAG = "LogUtils";

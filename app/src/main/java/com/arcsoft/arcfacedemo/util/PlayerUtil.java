@@ -13,6 +13,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 
+/**
+ * 音频播放单例工具，用于播放通行提示音等 assets 中的音效文件。
+ */
 public class PlayerUtil implements OnCompletionListener, OnPreparedListener {
     private static PlayerUtil instance;
     int mAudioModeBackup;

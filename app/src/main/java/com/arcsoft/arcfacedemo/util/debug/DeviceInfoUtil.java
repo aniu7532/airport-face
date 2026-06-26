@@ -4,6 +4,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+/**
+ * 设备硬件信息读取工具，从系统文件获取 CPU 型号等底层参数。
+ */
 public class DeviceInfoUtil {
     /**
      * 获取CPU型号，即/proc/cpuinfo中的Hardware字段

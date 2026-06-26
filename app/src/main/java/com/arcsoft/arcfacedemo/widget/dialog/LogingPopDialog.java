@@ -7,6 +7,9 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+/**
+ * 登录过程等待弹窗，展示登录中的加载状态。
+ */
 public class LogingPopDialog extends CenterPopupView {
 
     public LogingPopDialog(@NonNull Context context) {

@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 
+/**
+ * 音效管理器，基于 SoundPool 封装提示音的加载、播放与释放。
+ */
 public class SoundManager {
     private SoundPool soundPool;
     private Map<Integer, Integer> soundMap;
@@ -34,12 +37,18 @@ public class SoundManager {
     }
 
 
+    /**
+     * 预加载指定资源 ID 的音效文件。
+     */
     public void loadSound(int soundResId) {
         int soundId = soundPool.load(context, soundResId, 1);
         soundMap.put(soundResId, soundId);
     }
 
 
+    /**
+     * 播放已加载的音效。
+     */
     public void playSound(int soundResId, float volumeLeft, float volumeRight, int loop, float rate) {
         Integer soundId = soundMap.get(soundResId);
         if (soundId!= null) {
@@ -65,6 +74,9 @@ public class SoundManager {
     }
 
 
+    /**
+     * 释放 SoundPool 资源。
+     */
     public void release() {
         soundPool.release();
         soundPool = null;
@@ -76,6 +88,9 @@ public class SoundManager {
     }
 
 
+    /**
+     * 批量预加载多个音效资源。
+     */
     public void preloadSounds(int[] soundResIds) {
         for (int soundResId : soundResIds) {
             if (!isSoundLoaded(soundResId)) {

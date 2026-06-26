@@ -10,21 +10,21 @@ import com.arcsoft.arcfacedemo.db.entity.TemporaryCardRecords;
 
 import java.util.List;
 
+/**
+ * 临时证通行记录本地数据访问接口。
+ */
 @Dao
 public interface TemporaryCardRecordsDao {
 
+    /** 插入或替换单条临时证通行记录 */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(TemporaryCardRecords entity);
 
-
-    // 根据 ID 查询数据
+    /** 查询全部临时证通行记录 */
     @Query("SELECT * FROM temporary_card_records")
     List<TemporaryCardRecords> getAll();
 
-
-    /**
-     * 根据 item 删除
-     **/
+    /** 删除指定通行记录 */
     @Delete
     void delete(TemporaryCardRecords item);
 }

@@ -28,12 +28,18 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+/**
+ * 图片上传工具类，将 Bitmap 以 multipart 形式上传至加密文件接口。
+ */
 public class ImageUploader {
 
     private static final OkHttpClient client = OkHttpUtils.getUnsafeOkHttpClient(); // 使用安全的 OkHttpClient 实例
     private static final String TAG = "ImageUploader";
     Gson gson = new Gson();
 
+    /**
+     * 同步上传 Bitmap 图片，成功时返回服务端文件路径。
+     */
     public String uploadBitmap2(Bitmap bitmap) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);

@@ -11,13 +11,18 @@ import com.arcsoft.arcfacedemo.databinding.InOutStatisticsItemBinding
 import com.arcsoft.arcfacedemo.entity.InOutStatisticsResult
 
 
+/**
+ * 进出统计列表适配器，展示每日进入与出来人次。
+ */
 class InOutStatisticsAdapter : RecyclerView.Adapter<InOutStatisticsAdapter.VH>() {
 
+    /** 拼接标题区、表头与数据列表。 */
     fun withListHeader(): ConcatAdapter =
         ConcatAdapter(InOutStatisticsHeader(), InOutStatisticsTitle(), this)
 
     val list = mutableListOf<InOutStatisticsResult>()
 
+    /** 全量替换统计数据并刷新列表。 */
     fun setList(list: List<InOutStatisticsResult>) {
         this.list.clear()
         this.list.addAll(list)
@@ -55,6 +60,7 @@ class InOutStatisticsAdapter : RecyclerView.Adapter<InOutStatisticsAdapter.VH>()
 
 }
 
+/** 进出统计列表顶部标题行。 */
 class InOutStatisticsHeader : RecyclerView.Adapter<InOutStatisticsHeader.VH>() {
 
     override fun onCreateViewHolder(
@@ -81,6 +87,7 @@ class InOutStatisticsHeader : RecyclerView.Adapter<InOutStatisticsHeader.VH>() {
 
 }
 
+/** 进出统计列表表头行（日期、进入人次、出来人次）。 */
 class InOutStatisticsTitle : RecyclerView.Adapter<InOutStatisticsTitle.VH>() {
 
     override fun onCreateViewHolder(
