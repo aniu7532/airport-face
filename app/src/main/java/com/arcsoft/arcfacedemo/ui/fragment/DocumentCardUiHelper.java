@@ -26,11 +26,17 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 通行证卡片 UI 辅助类，负责二维码生成、区域标签渲染及证件信息排版。
  */
 public final class DocumentCardUiHelper {
+
+    /** 洛阳长期证：版面 8 格，区域 A–G 各占固定位，第 8 格恒空。 */
+    private static final String[] LUOYANG_AREA_SLOTS = {"A", "B", "C", "D", "E", "F", "G", ""};
+    /** 石河子：版面 7 格，C1/C2/C 与 D1/D2/D 分别归并到 C、D 位。 */
+    private static final String[] SHIHEZI_AREA_SLOTS = {"A", "B", "C", "D", "E", "F", "G"};
 
     private DocumentCardUiHelper() {
     }
@@ -117,25 +123,37 @@ public final class DocumentCardUiHelper {
     }
 
     /**
-     * 洛阳长期证：底部区域块网格（红框红字，每行 columnsPerRow 个）。
+     * 洛阳长期证：固定 8 格网格（红框红字，每行 4 个），有权限的格子填区域码，其余留空。
      */
-    public static void bindAreaBadgeGrid(LinearLayout container, String areaDisplayCode,
+    public static void bindLuoyangAreaBadgeGrid(LinearLayout container, String areaDisplayCode,
             @DrawableRes int badgeBackgroundRes, int textColor, int columnsPerRow) {
-        if (container == null) {
+        List<String> slotTexts = mapCodesToFixedSlots(splitAreaCodes(areaDisplayCode),
+                LUOYANG_AREA_SLOTS, DocumentCardUiHelper::normalizePlainAreaCode);
+        bindFixedAreaBadgeGrid(container, slotTexts, badgeBackgroundRes, textColor, columnsPerRow);
+    }
+
+    /**
+     * 石河子长期/临时证：固定 7 格横排，C1/C2/C 占第 3 格，D1/D2/D 占第 4 格。
+     */
+    public static void bindShiheziAreaBadges(LinearLayout container, String areaDisplayCode,
+            @DrawableRes int badgeBackgroundRes) {
+        List<String> slotTexts = mapCodesToFixedSlots(splitAreaCodes(areaDisplayCode),
+                SHIHEZI_AREA_SLOTS, DocumentCardUiHelper::normalizeShiheziAreaCode);
+        bindFixedAreaBadges(container, slotTexts, badgeBackgroundRes);
+    }
+
+    private static void bindFixedAreaBadgeGrid(LinearLayout container, List<String> slotTexts,
+            @DrawableRes int badgeBackgroundRes, int textColor, int columnsPerRow) {
+        if (container == null || slotTexts.isEmpty()) {
             return;
         }
         container.removeAllViews();
-        List<String> codes = splitAreaCodes(areaDisplayCode);
-        if (codes.isEmpty()) {
-            container.setVisibility(android.view.View.GONE);
-            return;
-        }
         container.setVisibility(android.view.View.VISIBLE);
         float density = container.getResources().getDisplayMetrics().density;
         int margin = (int) (6 * density);
         int cellHeight = (int) (40 * density);
 
-        for (int i = 0; i < codes.size(); i += columnsPerRow) {
+        for (int i = 0; i < slotTexts.size(); i += columnsPerRow) {
             LinearLayout row = new LinearLayout(container.getContext());
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
@@ -147,16 +165,98 @@ public final class DocumentCardUiHelper {
             }
             container.addView(row, rowParams);
 
-            int end = Math.min(i + columnsPerRow, codes.size());
+            int end = Math.min(i + columnsPerRow, slotTexts.size());
             for (int j = i; j < end; j++) {
                 TextView badge = createGridBadge(row, badgeBackgroundRes, textColor, cellHeight);
-                badge.setText(codes.get(j));
+                badge.setText(slotTexts.get(j));
                 row.addView(badge, createGridBadgeLayoutParams(j > i, margin, cellHeight));
             }
             for (int pad = end - i; pad < columnsPerRow; pad++) {
                 TextView badge = createGridBadge(row, badgeBackgroundRes, textColor, cellHeight);
                 row.addView(badge, createGridBadgeLayoutParams(pad > 0 || end > i, margin, cellHeight));
             }
+        }
+    }
+
+    private static void bindFixedAreaBadges(LinearLayout container, List<String> slotTexts,
+            @DrawableRes int badgeBackgroundRes) {
+        if (container == null || slotTexts.isEmpty()) {
+            return;
+        }
+        container.removeAllViews();
+        container.setVisibility(android.view.View.VISIBLE);
+        float density = container.getResources().getDisplayMetrics().density;
+        int horizontalPadding = (int) (5 * density);
+        int verticalPadding = (int) (1 * density);
+        int margin = (int) (3 * density);
+        int minWidth = (int) (20 * density);
+        int minHeight = (int) (20 * density);
+
+        for (int i = 0; i < slotTexts.size(); i++) {
+            TextView badge = new TextView(container.getContext());
+            badge.setText(slotTexts.get(i));
+            badge.setTextColor(Color.WHITE);
+            badge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+            badge.setGravity(Gravity.CENTER);
+            badge.setBackgroundResource(badgeBackgroundRes);
+            badge.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
+            badge.setMinWidth(minWidth);
+            badge.setMinHeight(minHeight);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            if (i > 0) {
+                params.setMarginStart(margin);
+            }
+            container.addView(badge, params);
+        }
+    }
+
+    private static List<String> mapCodesToFixedSlots(List<String> userCodes, String[] slotLabels,
+            Function<String, String> normalizer) {
+        List<String> slots = new ArrayList<>(slotLabels.length);
+        for (String slotLabel : slotLabels) {
+            slots.add("");
+        }
+        for (String code : userCodes) {
+            String normalized = normalizer.apply(code);
+            if (TextUtils.isEmpty(normalized)) {
+                continue;
+            }
+            for (int i = 0; i < slotLabels.length; i++) {
+                String slotLabel = slotLabels[i];
+                if (!TextUtils.isEmpty(slotLabel) && slotLabel.equalsIgnoreCase(normalized)) {
+                    slots.set(i, slotLabel);
+                    break;
+                }
+            }
+        }
+        return slots;
+    }
+
+    private static String normalizePlainAreaCode(String code) {
+        if (TextUtils.isEmpty(code)) {
+            return "";
+        }
+        return code.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static String normalizeShiheziAreaCode(String code) {
+        String upper = normalizePlainAreaCode(code);
+        if (TextUtils.isEmpty(upper)) {
+            return "";
+        }
+        switch (upper) {
+            case "C":
+            case "C1":
+            case "C2":
+                return "C";
+            case "D":
+            case "D1":
+            case "D2":
+                return "D";
+            default:
+                return upper;
         }
     }
 

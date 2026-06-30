@@ -1089,8 +1089,6 @@ public class LivenessDetectYuanAndJinActivity extends BaseActivity
         fragmentTransaction.commit();
     }
 
-    }
-
     /** 读卡流程 1 耗时采样（寻卡至取 UID） */
     List<Long> listTime1 = new ArrayList<>();
     /** 读卡流程 2 耗时采样（外部认证至查库） */

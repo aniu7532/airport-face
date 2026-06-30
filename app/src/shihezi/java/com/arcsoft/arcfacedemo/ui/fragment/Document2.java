@@ -45,7 +45,7 @@ public class Document2 extends AbstractDocument2 {
         if (expiryDateTextView != null) {
             expiryDateTextView.setText(DocumentCardUiHelper.formatValidityPeriod(startDate, expiryDate));
         }
-        DocumentCardUiHelper.bindAreaBadges(access_area_badges, areaDisplayCode,
+        DocumentCardUiHelper.bindShiheziAreaBadges(access_area_badges, areaDisplayCode,
                 R.drawable.shihezi_area_badge_blue);
     }
 }
