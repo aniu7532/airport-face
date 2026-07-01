@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="luoyang_type2_accent">#3e7d72</color>
+    <color name="luoyang_temp_title_red">#E60012</color>
+    <color name="luoyang_temp_label">#333333</color>
+    <color name="luoyang_temp_underline">#666666</color>
+</resources>

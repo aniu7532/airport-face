@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 临时证整卡比例 1053:818 -->
+    <dimen name="luoyang_temp_card_width">380dp</dimen>
+    <dimen name="luoyang_temp_card_height">295dp</dimen>
+    <!-- 人像比例 295:412，按卡宽等比缩放 -->
+    <dimen name="luoyang_temp_photo_width">106dp</dimen>
+    <dimen name="luoyang_temp_photo_height">149dp</dimen>
+    <!-- 原图装饰条按卡高 295 等比缩放：顶 84px→31dp，底 100px→37dp -->
+    <dimen name="luoyang_temp_wave_top_height">31dp</dimen>
+    <dimen name="luoyang_temp_wave_bottom_height">37dp</dimen>
+    <dimen name="luoyang_temp_title_text_size">24sp</dimen>
+    <!-- 标题落在顶纹与内容区之间 -->
+    <dimen name="luoyang_temp_title_margin_top">38dp</dimen>
+</resources>

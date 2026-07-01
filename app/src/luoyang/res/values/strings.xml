@@ -4,4 +4,14 @@
     <string name="channel_airport_name">洛阳北郊机场</string>
     <string name="channel_login_airport_name">洛阳北郊机场控制区通行证云服务平台</string>
     <string name="channel_airport_name_en">LUOYANG BEIJIAO AIRPORT</string>
+
+    <string name="luoyang_temp_pass_title">洛阳机场控制区临时通行证</string>
+    <string name="luoyang_temp_label_id_code">证件编号：</string>
+    <string name="luoyang_temp_label_name">姓\u3000\u3000名：</string>
+    <string name="luoyang_temp_label_area">通行区域：</string>
+    <string name="luoyang_temp_label_unit">单\u3000\u3000位：</string>
+    <string name="luoyang_temp_label_escort">引\u2002领\u2002人：</string>
+    <string name="luoyang_temp_label_escort_id">引领人通行证编号：</string>
+    <string name="luoyang_temp_label_escort_unit">引领人单位：</string>
+    <string name="luoyang_temp_label_validity">有\u2002效\u2002期：</string>
 </resources>

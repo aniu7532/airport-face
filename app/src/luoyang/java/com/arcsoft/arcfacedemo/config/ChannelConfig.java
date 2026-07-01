@@ -14,8 +14,8 @@ public final class ChannelConfig {
     /** 租户路径前缀，拼在域名与 app-api 之间 */
     public static final String TENANT_PREFIX = "fy";
     public static final String TENANT_ID = "2054084946120802305";
-    /** 洛阳渠道无临时通行证 */
-    public static final boolean SUPPORTS_TEMPORARY_PASS = false;
+    /** 洛阳渠道支持临时通行证（UI 定制，业务逻辑与其他渠道一致） */
+    public static final boolean SUPPORTS_TEMPORARY_PASS = true;
 
     private ChannelConfig() {
     }

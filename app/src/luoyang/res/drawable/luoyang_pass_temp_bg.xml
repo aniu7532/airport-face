@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#f0f4fd" />
+        </shape>
+    </item>
+    <item
+        android:width="@dimen/luoyang_temp_card_width"
+        android:height="@dimen/luoyang_temp_wave_top_height"
+        android:gravity="top">
+        <bitmap
+            android:gravity="fill"
+            android:src="@drawable/luoyang_temp_wave_top_strip" />
+    </item>
+    <item
+        android:width="@dimen/luoyang_temp_card_width"
+        android:height="@dimen/luoyang_temp_wave_bottom_height"
+        android:gravity="bottom">
+        <bitmap
+            android:gravity="fill"
+            android:src="@drawable/luoyang_temp_wave_bottom_strip" />
+    </item>
+</layer-list>

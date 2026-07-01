@@ -41,6 +41,11 @@ public final class DocumentCardUiHelper {
     private DocumentCardUiHelper() {
     }
 
+    /** 洛阳二类长期证：证件编号全部为数字。 */
+    public static boolean isLuoyangType2Pass(String idCode) {
+        return !TextUtils.isEmpty(idCode) && idCode.matches("\\d+");
+    }
+
     public static String formatValidityPeriod(String startDate, String endDate) {
         String start = formatCardDate(startDate);
         String end = formatCardDate(endDate);
