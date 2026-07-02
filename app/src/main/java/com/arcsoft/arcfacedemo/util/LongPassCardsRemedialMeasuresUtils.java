@@ -645,8 +645,9 @@ public class LongPassCardsRemedialMeasuresUtils {
         }
     }
 
-    private void tellServer(List<Map<String, String>> passIdsWithMsg) {
-        if (passIdsWithMsg.isEmpty()) {
+    /** 上报通行证图片下载/注册等异常到服务端 */
+    public static void reportCheckAbnormal(List<Map<String, String>> passIdsWithMsg) {
+        if (passIdsWithMsg == null || passIdsWithMsg.isEmpty()) {
             return;
         }
         List<String> finalPassIds = passIdsWithMsg.stream()
@@ -692,11 +693,15 @@ public class LongPassCardsRemedialMeasuresUtils {
         });
     }
 
-    private Map<String, String> buildFailedContent(String id, String reason) {
+    public static Map<String, String> buildFailedContent(String id, String reason) {
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("id", id);
         hashMap.put("reason", reason);
         return hashMap;
+    }
+
+    private void tellServer(List<Map<String, String>> passIdsWithMsg) {
+        reportCheckAbnormal(passIdsWithMsg);
     }
 
     private Map<String, String> buildFileFailedContent(File file, String reason) {

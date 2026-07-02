@@ -41,6 +41,7 @@ import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.LogUploadUtils;
 import com.arcsoft.arcfacedemo.util.LongPassCardsReInitUtils;
+import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.debug.DebugInfoDumper;
 import com.arcsoft.arcfacedemo.util.face.model.FacePreviewInfo;
@@ -645,6 +646,7 @@ public class ArcFaceApplication extends Application {
                     if (longPassCards != null && longPassCards.getList() != null
                             && !longPassCards.getList().isEmpty()) {
                         if (!ArcFaceApplication.TEST) {
+                            List<Map<String, String>> downloadFailures = new ArrayList<>();
                             for (LongPassCard longPassCard : longPassCards.list) {
 								// 如果是注销的 需要删除之前的缓存
 								if (longPassCard.status == 2) {
@@ -671,8 +673,8 @@ public class ArcFaceApplication extends Application {
 										longPassCard.id, longPassCard.nickname, false);
 									if (!result) {
 										ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
-										updateNext = true;
-										return;
+                                        downloadFailures.add(LongPassCardsRemedialMeasuresUtils
+                                                .buildFailedContent(longPassCard.id, "checkPhoto下载失败"));
 									}
 									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
 									if (!directory2.exists()) {
@@ -682,11 +684,12 @@ public class ArcFaceApplication extends Application {
 										longPassCard.nickname, true);
 									if (!result) {
 										ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
-										updateNext = true;
-										return;
+                                        downloadFailures.add(LongPassCardsRemedialMeasuresUtils
+                                                .buildFailedContent(longPassCard.id, "photo下载失败"));
 									}
 								}
                             }
+                            LongPassCardsRemedialMeasuresUtils.reportCheckAbnormal(downloadFailures);
                         }
 						needFetchNext = true;
                         longPassCardList.addAll(longPassCards.getList());
