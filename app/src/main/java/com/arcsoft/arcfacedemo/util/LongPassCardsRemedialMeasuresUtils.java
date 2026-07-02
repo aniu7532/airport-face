@@ -269,6 +269,11 @@ public class LongPassCardsRemedialMeasuresUtils {
 
                     currentIndex[0]++;  // 当前处理的序号+1
 
+                    // 开始处理前先更新进度，避免单条下载阻塞时 UI 仍显示上一条
+                    if (callback != null) {
+                        callback.onProgress(currentIndex[0], failedCount[0], totalCount);
+                    }
+
                     boolean hasFailure = false;  // 本次是否有失败
 
                     // 下载注册照片

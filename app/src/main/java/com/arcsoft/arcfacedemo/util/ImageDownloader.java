@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.Key;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -14,17 +15,18 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import com.arcsoft.arcfacedemo.network.ApiUtils;
+import com.arcsoft.arcfacedemo.network.OkHttpUtils;
 import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.util.glide.AESUtils;
 import com.arcsoft.arcfacedemo.util.log.ALog;
-import com.blankj.utilcode.util.Utils;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.model.GlideUrl;
-import com.bumptech.glide.load.model.LazyHeaders;
-import com.bumptech.glide.request.FutureTarget;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * 远程人脸图片下载工具，支持携带 Token 请求并 AES 加密后落盘存储。
@@ -35,35 +37,55 @@ public class ImageDownloader {
     private static final String ALGORITHM = "AES";
     public static final String KEY = "1Hbfh667adfDEJ78"; // 16字节密钥
 
+    private static final int CONNECT_TIMEOUT_SECONDS = 15;
+    private static final int READ_TIMEOUT_SECONDS = 30;
+    private static final int MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024;
+    /** 注册照最长边上限（人脸注册用） */
+    private static final int MAX_REGISTER_DIMENSION = 1024;
+    /** 展示照最长边上限 */
+    private static final int MAX_PHOTO_DIMENSION = 400;
+
+    private static final OkHttpClient DOWNLOAD_CLIENT = OkHttpUtils.getUnsafeOkHttpClient().newBuilder()
+            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .callTimeout(READ_TIMEOUT_SECONDS + CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build();
+
     public static boolean downloadImage(File directory, String imageUrl, String imageName, String nickname, boolean zip) {
 
         File file = new File(directory, imageName + ".jpg");
         ALog.i("Image imageName: " + imageName);
 
-        // 拼接基础下载地址
         String baseUrl = UrlConstants.fileStreamUrl(imageUrl);
-
-        // 构造带有 Authorization 头的 GlideUrl
-        LazyHeaders.Builder headersBuilder = new LazyHeaders.Builder();
-        // 携带 accessToken（如果存在）
+        Request.Builder requestBuilder = new Request.Builder().url(baseUrl);
         if (ApiUtils.getAccessToken() != null) {
-            headersBuilder.addHeader("Authorization", "Bearer " + ApiUtils.getAccessToken());
+            requestBuilder.addHeader("Authorization", "Bearer " + ApiUtils.getAccessToken());
         }
-        GlideUrl glideUrl = new GlideUrl(baseUrl, headersBuilder.build());
 
-        FutureTarget<Bitmap> futureTarget = Glide.with(Utils.getApp()).asBitmap().load(glideUrl)
-                .encodeFormat(Bitmap.CompressFormat.JPEG).diskCacheStrategy(DiskCacheStrategy.NONE).submit();
-        try {
-            Bitmap bitmap = futureTarget.get();
-            if (bitmap == null) {
-                ALog.e("下载图片失败，bitmap 为 null, url=" + baseUrl);
+        Bitmap bitmap = null;
+        try (Response response = DOWNLOAD_CLIENT.newCall(requestBuilder.build()).execute()) {
+            if (!response.isSuccessful()) {
+                ALog.e("下载图片失败，HTTP " + response.code() + ", url=" + baseUrl);
                 return false;
             }
-            if (bitmap.isRecycled()) {
-                ALog.e("下载图片失败，bitmap 已被回收, url=" + baseUrl);
+            ResponseBody body = response.body();
+            if (body == null) {
+                ALog.e("下载图片失败，响应体为空, url=" + baseUrl);
                 return false;
             }
-            // 如果启用压缩
+            byte[] imageBytes = readBodyWithLimit(body);
+            if (imageBytes == null) {
+                ALog.e("下载图片失败，读取响应体失败或超出大小限制, url=" + baseUrl);
+                return false;
+            }
+
+            int maxDimension = zip ? MAX_PHOTO_DIMENSION : MAX_REGISTER_DIMENSION;
+            bitmap = decodeSampledBitmap(imageBytes, maxDimension);
+            if (bitmap == null || bitmap.isRecycled()) {
+                ALog.e("下载图片失败，解码 bitmap 失败, url=" + baseUrl);
+                return false;
+            }
             if (zip) {
                 bitmap = compressBitmap(bitmap);
                 if (bitmap == null || bitmap.isRecycled()) {
@@ -76,10 +98,63 @@ public class ImageDownloader {
             ALog.i("Image downloaded successfully: " + nickname + "," + file.getAbsolutePath());
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
-            ALog.e("加密失败", e);
+            ALog.e("下载或加密图片失败, url=" + baseUrl, e);
+        } finally {
+            if (bitmap != null && !bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
         }
         return false;
+    }
+
+    private static byte[] readBodyWithLimit(ResponseBody body) throws java.io.IOException {
+        long contentLength = body.contentLength();
+        if (contentLength > MAX_DOWNLOAD_BYTES) {
+            ALog.e("下载图片失败，文件过大: " + contentLength + " bytes");
+            return null;
+        }
+        try (InputStream inputStream = body.byteStream();
+             java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int read;
+            int total = 0;
+            while ((read = inputStream.read(buffer)) != -1) {
+                total += read;
+                if (total > MAX_DOWNLOAD_BYTES) {
+                    ALog.e("下载图片失败，实际大小超出限制: " + total + " bytes");
+                    return null;
+                }
+                outputStream.write(buffer, 0, read);
+            }
+            return outputStream.toByteArray();
+        }
+    }
+
+    private static Bitmap decodeSampledBitmap(byte[] imageBytes, int maxDimension) {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length, bounds);
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+            ALog.e("下载图片失败，无法解析图片尺寸");
+            return null;
+        }
+
+        BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+        decodeOptions.inSampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, maxDimension);
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length, decodeOptions);
+    }
+
+    private static int calculateInSampleSize(int width, int height, int maxDimension) {
+        int inSampleSize = 1;
+        if (height > maxDimension || width > maxDimension) {
+            int halfHeight = height / 2;
+            int halfWidth = width / 2;
+            while ((halfHeight / inSampleSize) >= maxDimension
+                    || (halfWidth / inSampleSize) >= maxDimension) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
     }
 
     /**
@@ -99,7 +174,7 @@ public class ImageDownloader {
             int originalHeight = originalBitmap.getHeight();
 
             // 设置目标最大尺寸（例如：1024px）
-            int maxSize = 400;
+            int maxSize = MAX_PHOTO_DIMENSION;
             float scale = 1.0f;
 
             if (originalWidth > maxSize || originalHeight > maxSize) {
