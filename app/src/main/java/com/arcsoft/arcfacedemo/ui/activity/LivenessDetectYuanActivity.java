@@ -64,7 +64,7 @@ import com.arcsoft.arcfacedemo.widget.dialog.CustomDrawerPopupView;
 import com.arcsoft.arcfacedemo.widget.dialog.CustomPopDialog;
 import com.arcsoft.arcfacedemo.widget.dialog.LoadingPopDialog;
 import com.arcsoft.arcfacedemo.widget.dialog.RecordsPopDialog;
-import com.arcsoft.arcfacedemo.widget.dialog.UpdatePopDialog;
+import com.arcsoft.arcfacedemo.util.AppUpdateHelper;
 import com.arcsoft.face.FaceFeature;
 import com.blankj.utilcode.constant.TimeConstants;
 import com.blankj.utilcode.util.AppUtils;
@@ -272,8 +272,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
                 if (ArcFaceApplication.getApplication().isValid()) {
                     check();
                 } else {
-                    countdownHandler.removeMessages(7);
-                    countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
+                    AppUpdateHelper.scheduleCheck(countdownHandler);
                 }
                 break;
             case 8:
@@ -2843,66 +2842,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
 
     /** 定时检查应用版本更新（Handler msg=7 触发） */
     void check() {
-        GetRequest<Base<Version>> getRequest =
-                OkGo.<Base<Version>> get(UrlConstants.URL_GET_APP_LAST_VERSION).params("type", 3);
-        getRequest.headers("tenant-id", UrlConstants.TENANT_ID);
-        if (ApiUtils.accessToken != null) {
-            getRequest.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-        }
-        getRequest.execute(new JsonCallback<Base<Version>>() {
-            @Override
-            public void onError(Response<Base<Version>> response) {
-                countdownHandler.removeMessages(7);
-                countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
-            }
-
-            @Override
-            public void onSuccess(Response<Base<Version>> response) {
-                if (ObjectUtils.isEmpty(response.body())) {
-                    showToast("check失败");
-                    ALog.w("check失败");
-                    return;
-                }
-                if (ObjectUtils.isEmpty(response.body().getData())) {
-                    showToast("无更新");
-                    ALog.w("无更新");
-                    return;
-                }
-                Version version = response.body().getData();
-                if (version.getVersion().compareTo(AppUtils.getAppVersionName()) <= 0) {
-                    showToast("版本号小，无更新");
-                    ALog.w("版本号小，无更新");
-                    return;
-                }
-                new XPopup.Builder(getActivity()).asCustom(new UpdatePopDialog(getActivity(), response.body().getData(),
-                        new UpdatePopDialog.DownloadCallback() {
-                            @Override
-                            public void onStart() {
-                                ALog.e("onStart");
-                            }
-
-                            @Override
-                            public void onProgress(float progress, long total) {
-                                ALog.e("progress:" + progress + ",total:" + total);
-                            }
-
-                            @Override
-                            public void onSuccess(File file) {
-                                ALog.e("file:" + file.getAbsolutePath());
-                                countdownHandler.removeMessages(7);
-                                countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
-                            }
-
-                            @Override
-                            public void onError(Throwable throwable) {
-                                throwable.printStackTrace();
-                                ALog.e("throwable:" + throwable.getMessage());
-                                countdownHandler.removeMessages(7);
-                                countdownHandler.sendEmptyMessageDelayed(7, 60 * 1000L);
-                            }
-                        })).show();
-            }
-        });
+        AppUpdateHelper.checkForUpdate(getActivity(), countdownHandler);
     }
 
 

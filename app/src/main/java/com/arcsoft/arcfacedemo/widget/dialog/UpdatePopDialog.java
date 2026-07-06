@@ -31,18 +31,25 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
 /**
  * 应用版本更新弹窗，展示更新说明、倒计时自动下载，并支持进度展示与安装。
  */
 public class UpdatePopDialog extends CenterPopupView {
+
+    private static volatile boolean sDialogShowing;
+    private static volatile boolean sDownloading;
+
     NumberProgressBar npb_progress;
     Button btn_update;
     Button btn_cancle;
     TextView tv_update_info;
     Version version;
     DownloadCallback callback;
+    @Nullable
+    Runnable onCancelListener;
     int count = 10;
     WeakHandler handler = new WeakHandler(new Handler.Callback() {
         @Override
@@ -63,15 +70,24 @@ public class UpdatePopDialog extends CenterPopupView {
         }
     });
 
+    public static boolean isActive() {
+        return sDialogShowing || sDownloading;
+    }
+
     public UpdatePopDialog(@NonNull Context context) {
         super(context);
     }
 
     public UpdatePopDialog(@NonNull Context context, Version version, DownloadCallback callback) {
+        this(context, version, callback, null);
+    }
+
+    public UpdatePopDialog(@NonNull Context context, Version version, DownloadCallback callback,
+            @Nullable Runnable onCancelListener) {
         super(context);
         this.version = version;
         this.callback = callback;
-
+        this.onCancelListener = onCancelListener;
     }
 
     @Override
@@ -83,6 +99,7 @@ public class UpdatePopDialog extends CenterPopupView {
     @Override
     protected void onCreate() {
         super.onCreate();
+        sDialogShowing = true;
         npb_progress = findViewById(R.id.npb_progress);
         btn_update = findViewById(R.id.btn_update);
         btn_cancle = findViewById(R.id.btn_cancle);
@@ -97,6 +114,9 @@ public class UpdatePopDialog extends CenterPopupView {
         btn_cancle.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (onCancelListener != null) {
+                    onCancelListener.run();
+                }
                 dismiss();
             }
         });
@@ -113,10 +133,14 @@ public class UpdatePopDialog extends CenterPopupView {
     public void dismiss() {
         handler.removeCallbacksAndMessages(null);
         super.dismiss();
-
     }
 
-    // 自适应， 最大高度为Window的0.85
+    @Override
+    protected void onDismiss() {
+        sDialogShowing = false;
+        super.onDismiss();
+    }
+
     @Override
     protected int getMaxHeight() {
         return 0;
@@ -129,6 +153,10 @@ public class UpdatePopDialog extends CenterPopupView {
 
     /** 根据版本信息开始下载 APK 到本地缓存目录。 */
     public void download() {
+        if (sDownloading) {
+            ALog.w("已有下载任务进行中，跳过重复下载");
+            return;
+        }
         try {
             String apkName = UpdateUtils.getApkNameByDownloadUrl(version.getUrl());
             File apkCacheDir = UpdateUtils.getDefaultDiskCacheDir();
@@ -136,66 +164,34 @@ public class UpdatePopDialog extends CenterPopupView {
                 apkCacheDir.mkdirs();
             }
             String target = apkCacheDir + File.separator + version.getVersion();
+            File cachedApk = new File(target, apkName);
+            if (cachedApk.exists() && cachedApk.length() > 1024) {
+                ALog.d("APK 已缓存，跳过下载直接安装: " + cachedApk.getAbsolutePath());
+                onDownloadCompleted(cachedApk);
+                return;
+            }
             download(version.getUrl(), target, apkName, callback);
         } catch (Exception e) {
+            ALog.e("启动下载失败: " + e.getMessage());
+            sDownloading = false;
             e.printStackTrace();
         }
     }
 
     public void download(@NonNull String url, @NonNull String path, @NonNull String fileName,
             final @NonNull DownloadCallback callback) {
-        // ThreadUtils.executeByCached(new SmallTask() {
-        // @Override
-        // public String doInBackground() throws Throwable {
-        // ALog.e("url:" + url);
-        // ALog.e("path:" + path);
-        // ALog.e("fileName:" + fileName);
-        // // 创建 UnsafeOkHttpClient 实例
-        // ImageDownloader.UnsafeOkHttpClient unsafeClient = ImageDownloader.unsafeOkHttpClient();
-        //
-        // OkHttpClient client = new OkHttpClient.Builder()
-        // .sslSocketFactory(unsafeClient.getSocketFactory(), unsafeClient.getTrustManager()).build();
-        //
-        //
-        // okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
-        //
-        // try {
-        // okhttp3.Response response = client.newCall(request).execute();
-        // if (!response.isSuccessful()) {
-        // throw new IOException("Failed to connect to the server for URL: " + path);
-        // }
-        //
-        // InputStream inputStream = response.body().byteStream();
-        // // File directory = new File(Constants.DEFAULT_REGISTER_FACES_DIR);
-        // File directory = new File(path);// 应用的私有目录
-        // if (!directory.exists()) {
-        // directory.mkdirs();
-        // }
-        // File file = new File(directory, fileName);
-        //
-        // try {
-        // FileOutputStream fileOutputStream = new FileOutputStream(file);
-        // byte[] buffer = new byte[4096];
-        // int bytesRead;
-        // while ((bytesRead = inputStream.read(buffer)) != -1) {
-        // fileOutputStream.write(buffer, 0, bytesRead);
-        // }
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // }
-        // ALog.e("Image downloaded successfully: " + file.getAbsolutePath());
-        // } catch (IOException e) {
-        // e.printStackTrace();
-        // }
-        // return null;
-        // }
-        // });
-        OkGo.<File> get(url).tag(url).execute(new FileCallback(path, fileName) {
+        OkGo.getInstance().cancelTag(url);
+        sDownloading = true;
+        OkGo.<File>get(url).tag(url).execute(new FileCallback(path, fileName) {
             @Override
             public void onError(Response<File> response) {
-                response.getException().printStackTrace();
-                ALog.e(response.getException().getMessage());
-                callback.onError(response.getException());
+                sDownloading = false;
+                Throwable error = response != null ? response.getException() : null;
+                if (error != null) {
+                    error.printStackTrace();
+                    ALog.e("下载失败: " + error.getMessage());
+                }
+                callback.onError(error);
                 ToastUtils.showLong("更新失敗");
                 npb_progress.setVisibility(View.GONE);
                 npb_progress.setProgress(0);
@@ -203,43 +199,15 @@ public class UpdatePopDialog extends CenterPopupView {
 
             @Override
             public void onSuccess(Response<File> response) {
-                ALog.e(response.code());
-                if (response.code() == 200) {
-                    callback.onSuccess(response.body());
-                    // AppUtils.installApp(response.body());
-
-                    int screenSize = ScreenUtils.getScreenWidth();
-                    int typeDevice = screenSize > 800 ? 1 : 2;
-                    ALog.d("获取屏幕尺寸宽度:" + screenSize);
-
-                    if (typeDevice == 1) {
-                        Uri uri = Uri.fromFile(response.body());
-                        if (uri != null) {
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                String authority = getContext().getPackageName();
-                                Uri contentUri = FileProvider.getUriForFile(getContext(), authority + ".fileprovider",
-                                        response.body());
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
-                            } else {
-                                intent.setDataAndType(uri, "application/vnd.android.package-archive");
-                            }
-                            getContext().startActivity(intent);
-                        }
-                    } else {
-                        // 安装 test.apk
-                        MyManager manager = MyManager.getInstance(getContext());
-                        boolean success = manager.silentInstallApk(response.body().getAbsolutePath(), true);
-                        // 静默安装 YiShentTest.apk,安装成功后打开 apk
-                    }
-
-                } else {
+                if (response == null || response.body() == null || response.code() != 200) {
+                    sDownloading = false;
                     ToastUtils.showLong("下载失败");
                     npb_progress.setVisibility(View.GONE);
                     npb_progress.setProgress(0);
+                    callback.onError(new IllegalStateException("下载响应异常"));
+                    return;
                 }
+                onDownloadCompleted(response.body());
             }
 
             @Override
@@ -258,36 +226,57 @@ public class UpdatePopDialog extends CenterPopupView {
         });
     }
 
+    private void onDownloadCompleted(File apkFile) {
+        callback.onSuccess(apkFile);
+        installApk(apkFile);
+        sDownloading = false;
+        dismiss();
+    }
+
+    private void installApk(File apkFile) {
+        int screenSize = ScreenUtils.getScreenWidth();
+        boolean useIntentInstall = screenSize > 800;
+        ALog.d("获取屏幕尺寸宽度:" + screenSize + ", 安装方式:" + (useIntentInstall ? "Intent" : "静默"));
+
+        if (useIntentInstall) {
+            installByIntent(apkFile);
+            return;
+        }
+
+        MyManager manager = MyManager.getInstance(getContext());
+        boolean success = manager.silentInstallApk(apkFile.getAbsolutePath(), true);
+        ALog.d("silentInstallApk result:" + success + ", path:" + apkFile.getAbsolutePath());
+        if (!success) {
+            ALog.w("静默安装失败，降级为 Intent 安装");
+            installByIntent(apkFile);
+        }
+    }
+
+    private void installByIntent(File apkFile) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            String authority = getContext().getPackageName();
+            Uri contentUri = FileProvider.getUriForFile(getContext(), authority + ".fileprovider", apkFile);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
+        } else {
+            intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
+        }
+        getContext().startActivity(intent);
+        ALog.d("已拉起系统安装界面: " + apkFile.getAbsolutePath());
+    }
+
     /**
      * 下载回调
      */
     public interface DownloadCallback {
-        /**
-         * 下载之前
-         */
         void onStart();
 
-        /**
-         * 更新进度
-         *
-         * @param progress 进度0.00 - 0.50  - 1.00
-         * @param total    文件总大小 单位字节
-         */
         void onProgress(float progress, long total);
 
-        /**
-         * 结果回调
-         *
-         * @param file 下载好的文件
-         */
         void onSuccess(File file);
 
-        /**
-         * 错误回调
-         *
-         * @param throwable 错误提示
-         */
         void onError(Throwable throwable);
-
     }
 }
