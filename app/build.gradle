@@ -9,8 +9,8 @@ android {
         applicationId "com.arcsoft.arcfacedemo"
         minSdk 26
         targetSdk 33
-        versionCode 45092623
-        versionName "1.0.74"
+        versionCode 45092624
+        versionName "1.0.75"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
