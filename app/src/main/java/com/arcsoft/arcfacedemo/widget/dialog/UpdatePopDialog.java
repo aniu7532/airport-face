@@ -4,6 +4,8 @@ import java.io.File;
 
 import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.entity.Version;
+import com.arcsoft.arcfacedemo.network.ApiUtils;
+import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ObjectUtils;
@@ -39,6 +41,10 @@ import androidx.core.content.FileProvider;
  */
 public class UpdatePopDialog extends CenterPopupView {
 
+    private static final long DOWNLOAD_RETRY_COOLDOWN_MS = 30_000L;
+    private static final int MSG_COUNTDOWN = 1;
+    private static final int MSG_RETRY_COUNTDOWN = 2;
+
     private static volatile boolean sDialogShowing;
     private static volatile boolean sDownloading;
 
@@ -50,21 +56,38 @@ public class UpdatePopDialog extends CenterPopupView {
     DownloadCallback callback;
     @Nullable
     Runnable onCancelListener;
+    @Nullable
+    private String currentDownloadTag;
+    private boolean allowDismiss;
+    private int retrySeconds = 30;
     int count = 10;
     WeakHandler handler = new WeakHandler(new Handler.Callback() {
         @Override
         public boolean handleMessage(@NonNull Message message) {
-            if (message.what == 1) {
+            if (message.what == MSG_COUNTDOWN) {
                 if (count == 0) {
                     btn_update.setText("立即更新(" + count + "秒)");
                     handler.removeCallbacksAndMessages(null);
-                    download();
+                    startDownload();
                     return true;
                 }
                 btn_update.setText("立即更新(" + count + "秒)");
                 count--;
-                handler.removeMessages(1);
-                handler.sendEmptyMessageDelayed(1, 1000L);
+                handler.removeMessages(MSG_COUNTDOWN);
+                handler.sendEmptyMessageDelayed(MSG_COUNTDOWN, 1000L);
+            } else if (message.what == MSG_RETRY_COUNTDOWN) {
+                if (retrySeconds <= 0) {
+                    btn_update.setEnabled(true);
+                    btn_update.setText("立即更新");
+                    if (isForceUpdate()) {
+                        startDownload();
+                    }
+                    return true;
+                }
+                btn_update.setText("重试下载(" + retrySeconds + "秒)");
+                retrySeconds--;
+                handler.removeMessages(MSG_RETRY_COUNTDOWN);
+                handler.sendEmptyMessageDelayed(MSG_RETRY_COUNTDOWN, 1000L);
             }
             return false;
         }
@@ -108,36 +131,52 @@ public class UpdatePopDialog extends CenterPopupView {
             tv_update_info.setText(version.getRemark());
         }
 
+        if (isForceUpdate()) {
+            btn_cancle.setVisibility(View.GONE);
+        }
+
         count = 10;
-        handler.removeMessages(1);
-        handler.sendEmptyMessageDelayed(1, 100L);
+        handler.removeMessages(MSG_COUNTDOWN);
+        handler.sendEmptyMessageDelayed(MSG_COUNTDOWN, 100L);
         btn_cancle.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (onCancelListener != null) {
                     onCancelListener.run();
                 }
+                allowDismiss = true;
                 dismiss();
             }
         });
         btn_update.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (!btn_update.isEnabled()) {
+                    return;
+                }
                 handler.removeCallbacksAndMessages(null);
-                download();
+                startDownload();
             }
         });
     }
 
     @Override
     public void dismiss() {
+        if (isForceUpdate() && !allowDismiss) {
+            return;
+        }
         handler.removeCallbacksAndMessages(null);
+        if (currentDownloadTag != null) {
+            OkGo.getInstance().cancelTag(currentDownloadTag);
+            currentDownloadTag = null;
+        }
         super.dismiss();
     }
 
     @Override
     protected void onDismiss() {
         sDialogShowing = false;
+        sDownloading = false;
         super.onDismiss();
     }
 
@@ -151,10 +190,22 @@ public class UpdatePopDialog extends CenterPopupView {
         return 0;
     }
 
+    private boolean isForceUpdate() {
+        return version != null && version.getIsForceUpdate() == 1;
+    }
+
     /** 根据版本信息开始下载 APK 到本地缓存目录。 */
     public void download() {
+        startDownload();
+    }
+
+    private void startDownload() {
         if (sDownloading) {
             ALog.w("已有下载任务进行中，跳过重复下载");
+            return;
+        }
+        if (handler.hasMessages(MSG_RETRY_COUNTDOWN)) {
+            ALog.w("下载失败冷却中，跳过重复下载");
             return;
         }
         try {
@@ -175,16 +226,31 @@ public class UpdatePopDialog extends CenterPopupView {
             ALog.e("启动下载失败: " + e.getMessage());
             sDownloading = false;
             e.printStackTrace();
+            onDownloadFailed(e);
         }
     }
 
     public void download(@NonNull String url, @NonNull String path, @NonNull String fileName,
             final @NonNull DownloadCallback callback) {
-        OkGo.getInstance().cancelTag(url);
+        final String downloadUrl = resolveDownloadUrl(url);
+        final String downloadTag = downloadUrl + "_" + System.currentTimeMillis();
+        if (currentDownloadTag != null) {
+            OkGo.getInstance().cancelTag(currentDownloadTag);
+        }
+        currentDownloadTag = downloadTag;
         sDownloading = true;
-        OkGo.<File>get(url).tag(url).execute(new FileCallback(path, fileName) {
+        ALog.d("APK 下载地址: " + downloadUrl);
+        OkGo.<File>get(downloadUrl).tag(downloadTag)
+                .headers("tenant-id", UrlConstants.TENANT_ID)
+                .headers("Authorization", ApiUtils.accessToken != null
+                        ? "Bearer " + ApiUtils.accessToken : "")
+                .execute(new FileCallback(path, fileName) {
             @Override
             public void onError(Response<File> response) {
+                if (!downloadTag.equals(currentDownloadTag)) {
+                    ALog.d("忽略已取消下载任务的 onError 回调");
+                    return;
+                }
                 sDownloading = false;
                 Throwable error = response != null ? response.getException() : null;
                 if (error != null) {
@@ -192,19 +258,20 @@ public class UpdatePopDialog extends CenterPopupView {
                     ALog.e("下载失败: " + error.getMessage());
                 }
                 callback.onError(error);
-                ToastUtils.showLong("更新失敗");
-                npb_progress.setVisibility(View.GONE);
-                npb_progress.setProgress(0);
+                onDownloadFailed(error);
             }
 
             @Override
             public void onSuccess(Response<File> response) {
+                if (!downloadTag.equals(currentDownloadTag)) {
+                    ALog.d("忽略已取消下载任务的 onSuccess 回调");
+                    return;
+                }
                 if (response == null || response.body() == null || response.code() != 200) {
                     sDownloading = false;
-                    ToastUtils.showLong("下载失败");
-                    npb_progress.setVisibility(View.GONE);
-                    npb_progress.setProgress(0);
-                    callback.onError(new IllegalStateException("下载响应异常"));
+                    IllegalStateException error = new IllegalStateException("下载响应异常");
+                    callback.onError(error);
+                    onDownloadFailed(error);
                     return;
                 }
                 onDownloadCompleted(response.body());
@@ -212,6 +279,9 @@ public class UpdatePopDialog extends CenterPopupView {
 
             @Override
             public void downloadProgress(Progress progress) {
+                if (!downloadTag.equals(currentDownloadTag)) {
+                    return;
+                }
                 callback.onProgress(progress.fraction, progress.totalSize);
                 npb_progress.setProgress(Math.round(progress.fraction * 100));
                 npb_progress.setMax(100);
@@ -219,6 +289,9 @@ public class UpdatePopDialog extends CenterPopupView {
 
             @Override
             public void onStart(Request<File, ? extends Request> request) {
+                if (!downloadTag.equals(currentDownloadTag)) {
+                    return;
+                }
                 callback.onStart();
                 npb_progress.setVisibility(View.VISIBLE);
                 npb_progress.setProgress(0);
@@ -226,10 +299,38 @@ public class UpdatePopDialog extends CenterPopupView {
         });
     }
 
+    /**
+     * 与 {@link com.arcsoft.arcfacedemo.util.ImageDownloader} 一致，通过业务 API 文件流代理下载，
+     * 避免直连 OBS 域名在零信任隧道未发布该域名时 DNS 解析失败。
+     */
+    private static String resolveDownloadUrl(String originalUrl) {
+        if (originalUrl != null
+                && (originalUrl.startsWith("http://") || originalUrl.startsWith("https://"))) {
+            return UrlConstants.fileStreamUrl(originalUrl);
+        }
+        return originalUrl;
+    }
+
+    private void onDownloadFailed(@Nullable Throwable error) {
+        ToastUtils.showLong("更新失敗");
+        npb_progress.setVisibility(View.GONE);
+        npb_progress.setProgress(0);
+        scheduleRetryCooldown();
+    }
+
+    private void scheduleRetryCooldown() {
+        retrySeconds = (int) (DOWNLOAD_RETRY_COOLDOWN_MS / 1000L);
+        btn_update.setEnabled(false);
+        handler.removeMessages(MSG_RETRY_COUNTDOWN);
+        handler.sendEmptyMessageDelayed(MSG_RETRY_COUNTDOWN, 1000L);
+    }
+
     private void onDownloadCompleted(File apkFile) {
+        handler.removeCallbacksAndMessages(null);
         callback.onSuccess(apkFile);
         installApk(apkFile);
         sDownloading = false;
+        allowDismiss = true;
         dismiss();
     }
 

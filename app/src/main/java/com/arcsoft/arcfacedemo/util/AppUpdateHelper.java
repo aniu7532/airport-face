@@ -83,9 +83,12 @@ public final class AppUpdateHelper {
                     scheduleCheck(handler);
                     return;
                 }
-                ALog.d("发现新版本: " + version.getVersion());
+                ALog.d("发现新版本: " + version.getVersion()
+                        + ", force=" + (version.getIsForceUpdate() == 1));
+                boolean forceUpdate = version.getIsForceUpdate() == 1;
                 new XPopup.Builder(context)
                         .dismissOnTouchOutside(false)
+                        .dismissOnBackPressed(!forceUpdate)
                         .asCustom(new UpdatePopDialog(context, version, createDownloadCallback(handler),
                                 () -> scheduleCheck(handler)))
                         .show();
@@ -122,7 +125,10 @@ public final class AppUpdateHelper {
             @Override
             public void onError(Throwable throwable) {
                 ALog.e("update download error:" + (throwable != null ? throwable.getMessage() : "unknown"));
-                scheduleCheck(handler);
+                // 弹窗仍在时由弹窗自行冷却重试，避免 60 秒轮询叠加下载
+                if (!UpdatePopDialog.isActive()) {
+                    scheduleCheck(handler);
+                }
             }
         };
     }
