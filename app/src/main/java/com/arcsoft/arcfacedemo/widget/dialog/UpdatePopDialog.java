@@ -6,6 +6,7 @@ import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.entity.Version;
 import com.arcsoft.arcfacedemo.network.ApiUtils;
 import com.arcsoft.arcfacedemo.network.UrlConstants;
+import com.arcsoft.arcfacedemo.util.AppUpdateHelper;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.blankj.utilcode.util.ObjectUtils;
@@ -24,6 +25,7 @@ import com.ys.rkapi.MyManager;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -60,6 +62,7 @@ public class UpdatePopDialog extends CenterPopupView {
     @Nullable
     private String currentDownloadTag;
     private boolean allowDismiss;
+    private boolean downloadSucceeded;
     private int retrySeconds = 30;
     int count = 10;
     WeakHandler handler = new WeakHandler(new Handler.Callback() {
@@ -143,9 +146,6 @@ public class UpdatePopDialog extends CenterPopupView {
         btn_cancle.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (onCancelListener != null) {
-                    onCancelListener.run();
-                }
                 allowDismiss = true;
                 dismiss();
             }
@@ -172,11 +172,17 @@ public class UpdatePopDialog extends CenterPopupView {
             OkGo.getInstance().cancelTag(currentDownloadTag);
             currentDownloadTag = null;
         }
+        if (!downloadSucceeded) {
+            cleanupInvalidCache();
+        }
         super.dismiss();
     }
 
     @Override
     protected void onDismiss() {
+        if (onCancelListener != null && !downloadSucceeded && !isForceUpdate()) {
+            onCancelListener.run();
+        }
         sDialogShowing = false;
         sDownloading = false;
         super.onDismiss();
@@ -210,25 +216,56 @@ public class UpdatePopDialog extends CenterPopupView {
             ALog.w("下载失败冷却中，跳过重复下载");
             return;
         }
+        AppUpdateHelper.clearSnooze(getContext());
         try {
+            File cachedApk = getCachedApkFile();
+            if (isValidApkFile(cachedApk)) {
+                ALog.d("APK 已缓存，跳过下载直接安装: " + cachedApk.getAbsolutePath());
+                onDownloadCompleted(cachedApk);
+                return;
+            }
+            if (cachedApk.exists()) {
+                ALog.w("发现无效或不完整的 APK 缓存，删除后重新下载: " + cachedApk.getAbsolutePath());
+                cachedApk.delete();
+            }
             String apkName = UpdateUtils.getApkNameByDownloadUrl(version.getUrl());
             File apkCacheDir = UpdateUtils.getDefaultDiskCacheDir();
             if (!FileUtils.isFileExists(apkCacheDir)) {
                 apkCacheDir.mkdirs();
             }
             String target = apkCacheDir + File.separator + version.getVersion();
-            File cachedApk = new File(target, apkName);
-            if (cachedApk.exists() && cachedApk.length() > 1024) {
-                ALog.d("APK 已缓存，跳过下载直接安装: " + cachedApk.getAbsolutePath());
-                onDownloadCompleted(cachedApk);
-                return;
-            }
             download(version.getUrl(), target, apkName, callback);
         } catch (Exception e) {
             ALog.e("启动下载失败: " + e.getMessage());
             sDownloading = false;
             e.printStackTrace();
             onDownloadFailed(e);
+        }
+    }
+
+    @NonNull
+    private File getCachedApkFile() {
+        String apkName = UpdateUtils.getApkNameByDownloadUrl(version.getUrl());
+        File apkCacheDir = UpdateUtils.getDefaultDiskCacheDir();
+        String target = apkCacheDir + File.separator + version.getVersion();
+        return new File(target, apkName);
+    }
+
+    private boolean isValidApkFile(@Nullable File apkFile) {
+        if (apkFile == null || !apkFile.exists() || apkFile.length() < 1024) {
+            return false;
+        }
+        PackageInfo packageInfo = getContext().getPackageManager()
+                .getPackageArchiveInfo(apkFile.getAbsolutePath(), 0);
+        return packageInfo != null;
+    }
+
+    private void cleanupInvalidCache() {
+        File cachedApk = getCachedApkFile();
+        if (cachedApk.exists() && !isValidApkFile(cachedApk)) {
+            if (cachedApk.delete()) {
+                ALog.d("已删除不完整 APK 缓存: " + cachedApk.getAbsolutePath());
+            }
         }
     }
 
@@ -328,10 +365,17 @@ public class UpdatePopDialog extends CenterPopupView {
     }
 
     private void onDownloadCompleted(File apkFile) {
+        if (!isValidApkFile(apkFile)) {
+            ALog.w("下载产物不是有效 APK，删除后重试: " + apkFile.getAbsolutePath());
+            apkFile.delete();
+            onDownloadFailed(new IllegalStateException("APK 文件无效"));
+            return;
+        }
         handler.removeCallbacksAndMessages(null);
         callback.onSuccess(apkFile);
         installApk(apkFile);
         sDownloading = false;
+        downloadSucceeded = true;
         allowDismiss = true;
         dismiss();
     }

@@ -25,7 +25,11 @@ public final class AppUpdateHelper {
 
     public static final int MSG_CHECK_UPDATE = 7;
 
+    private static final String KEY_UPDATE_SNOOZE_UNTIL = "update_snooze_until";
+
     private static final long CHECK_INTERVAL_MS = 60_000L;
+    /** 用户点击「30分钟后更新」后的静默间隔 */
+    private static final long SNOOZE_DELAY_MS = 30 * 60 * 1000L;
     /** 下载并尝试安装后延长检查间隔，避免安装完成前重复弹窗 */
     private static final long CHECK_INTERVAL_AFTER_DOWNLOAD_MS = 600_000L;
 
@@ -48,6 +52,15 @@ public final class AppUpdateHelper {
         if (UpdatePopDialog.isActive()) {
             ALog.d("更新弹窗或下载进行中，跳过版本检查");
             scheduleCheck(handler);
+            return;
+        }
+
+        long snoozeUntil = getSnoozeUntil(context);
+        long now = System.currentTimeMillis();
+        if (snoozeUntil > now) {
+            long remainMs = snoozeUntil - now;
+            ALog.d("更新提醒已静默，剩余 " + (remainMs / 1000) + " 秒");
+            scheduleCheck(handler, remainMs);
             return;
         }
 
@@ -75,6 +88,7 @@ public final class AppUpdateHelper {
                 if (!hasNewVersion(version)) {
                     ALog.d("当前已是最新版本: local=" + AppUtils.getAppVersionName()
                             + ", remote=" + version.getVersion());
+                    clearSnooze(context);
                     scheduleCheck(handler);
                     return;
                 }
@@ -90,10 +104,30 @@ public final class AppUpdateHelper {
                         .dismissOnTouchOutside(false)
                         .dismissOnBackPressed(!forceUpdate)
                         .asCustom(new UpdatePopDialog(context, version, createDownloadCallback(handler),
-                                () -> scheduleCheck(handler)))
+                                () -> snoozeUpdate(context, handler)))
                         .show();
             }
         });
+    }
+
+    public static void clearSnooze(Context context) {
+        new InfoStorage(context).remove(KEY_UPDATE_SNOOZE_UNTIL);
+    }
+
+    private static void snoozeUpdate(Context context, WeakHandler handler) {
+        long until = System.currentTimeMillis() + SNOOZE_DELAY_MS;
+        new InfoStorage(context).saveString(KEY_UPDATE_SNOOZE_UNTIL, String.valueOf(until));
+        ALog.d("更新提醒静默 30 分钟");
+        scheduleCheck(handler, SNOOZE_DELAY_MS);
+    }
+
+    private static long getSnoozeUntil(Context context) {
+        String value = new InfoStorage(context).getString(KEY_UPDATE_SNOOZE_UNTIL, "0");
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 
     static boolean hasNewVersion(Version remote) {
