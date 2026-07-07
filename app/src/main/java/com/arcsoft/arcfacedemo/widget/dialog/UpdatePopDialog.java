@@ -37,7 +37,8 @@ import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
 /**
- * 应用版本更新弹窗，展示更新说明、倒计时自动下载，并支持进度展示与安装。
+ * 应用版本更新弹窗，展示更新说明与下载进度。
+ * 强制更新时倒计时自动下载；非强制更新由用户自行选择。
  */
 public class UpdatePopDialog extends CenterPopupView {
 
@@ -118,7 +119,7 @@ public class UpdatePopDialog extends CenterPopupView {
         return R.layout.xupdate_dialog_update_port2;
     }
 
-    /** 初始化更新说明、倒计时与下载按钮。 */
+    /** 初始化更新说明与下载按钮；强制更新时启动倒计时自动下载。 */
     @Override
     protected void onCreate() {
         super.onCreate();
@@ -133,11 +134,12 @@ public class UpdatePopDialog extends CenterPopupView {
 
         if (isForceUpdate()) {
             btn_cancle.setVisibility(View.GONE);
+            count = 10;
+            handler.removeMessages(MSG_COUNTDOWN);
+            handler.sendEmptyMessageDelayed(MSG_COUNTDOWN, 100L);
+        } else {
+            btn_update.setText("立即更新");
         }
-
-        count = 10;
-        handler.removeMessages(MSG_COUNTDOWN);
-        handler.sendEmptyMessageDelayed(MSG_COUNTDOWN, 100L);
         btn_cancle.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {

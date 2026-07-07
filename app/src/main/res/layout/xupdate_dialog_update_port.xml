@@ -139,7 +139,7 @@
                         android:background="@drawable/btn_bg"
                         android:gravity="center"
                         android:minHeight="36dp"
-                        android:text="立即更新(10秒)"
+                        android:text="立即更新"
                         android:textColor="@color/white"
                         android:textSize="15sp" />
                 </LinearLayout>
