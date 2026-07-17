@@ -201,7 +201,7 @@ flowchart TD
 |------|---------------|-----------|--------|
 | yinchuan | `{BASE}/app-api` | 1 | 支持 |
 | chongqing | `{BASE}/app-api` | 3 | 支持 |
-| luoyang | `{BASE}/fy/app-api` | 2054084946120802305 | **不支持** |
+| luoyang | `{BASE}/fy/app-api` | 2054084946120802305 | 支持 |
 | shihezi | `{BASE}/shf/app-api` | 1 | 支持 |
 
 `detail-mac`、`configInfo/get`、`user/get`、`page-pass` 均走 `businessAppApiBase()`。

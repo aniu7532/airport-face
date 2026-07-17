@@ -82,7 +82,7 @@ DocumentCardUiHelper.bindAreaBadgeGrid(accessAreaBadges, areaDisplayCode,
 各 flavor 继承 `AbstractDocument3`，差异主要在：
 
 - layout 中单位、引领人、有效次数等字段是否显示
-- 洛阳 `SUPPORTS_TEMPORARY_PASS=false`，**实际不会进入 Document3**
+- 洛阳使用独立的横版 380×295 `Document3`，隐藏二维码并展示定制字段
 
 ---
 
@@ -124,7 +124,7 @@ DocumentCardUiHelper.bindAreaBadgeGrid(accessAreaBadges, areaDisplayCode,
 | 空白证件照 | `register/` 或 `photo/` 下 passid 文件；网络 URL |
 | 解密失败 | AES 密钥是否与下载一致 |
 | 远程 401 | `ApiUtils.accessToken` 是否有效 |
-| 洛阳无临时证 UI | `SUPPORTS_TEMPORARY_PASS` |
+| 洛阳临时证 UI 异常 | 确认编译的是 luoyang flavor，并检查横版 `Document3` 资源 |
 
 ---
 

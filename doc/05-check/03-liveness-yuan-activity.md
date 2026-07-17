@@ -35,6 +35,10 @@
 
 `getLongPassCardInfo` 在 Yuan 中长距分支调用 `getLongPassCardInfo(uid, true)`（第二参数区分长距卡 ID 查询路径，与 Jin 单参数版本不同）。
 
+### 当前短距初始化缺口
+
+`initReadCard()` 只调用 `initLongReader()`，没有调用 `BasicOper.dc_open()`，但 `startReadLongPassCardID()` 仍会先执行 `getLongPassCardID()`。因此短距能力是否可用可能依赖德卡 SDK 的既有静态连接状态；冷启动直接进入 Yuan 必须单独验证。新版 AAR 的替换与验收见 [Android_sdk_release2.56 接入文档](../sdk/Android_sdk_release2.56/README.md)。
+
 ---
 
 ## public / 关键方法
@@ -80,6 +84,8 @@ flowchart TD
 | 长距读卡器初始化失败 | `initLongReader` 内连接失败，长距 UID 始终空 |
 | 短距成功 | 不进入长距分支（`result=true` 时不读长距） |
 | `onDestroy` 未 `unInitLongReader` | 资源泄漏风险（Yuan 已调用） |
+| 长距正常、短距失败 | 优先检查本页面没有 `BasicOper.dc_open()` |
+| 页面销毁 | 已关闭 `EC_API`，但未调用 `BasicOper.dc_exit()` |
 
 ---
 
@@ -92,13 +98,14 @@ flowchart TD
 ## 渠道差异
 
 - 卡面 Fragment 随 flavor 变化
-- 洛阳不支持临时证：`getShortPassCardID` 入口 `if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) return`
+- 当前四个 flavor 均支持临时证；`getShortPassCardID` 仍保留开关关闭时的提前返回保护
 
 ---
 
 ## 联调清单
 
 - [ ] `EC_API` 串口枚举与天线读卡正常
+- [ ] 应用冷启动后直接进入 Yuan，确认短距 `BasicOper` 是否可用
 - [ ] 短距失败 100ms 后长距补读
 - [ ] 长距 UID 与本地 `cardId` 映射正确（`getLongPassCardInfo(uid, true)`）
 - [ ] `initScanCard` 扫码与临时证 `applyId` 联动（若启用）

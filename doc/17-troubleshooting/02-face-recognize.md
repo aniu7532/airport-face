@@ -10,8 +10,8 @@
 | `ArcFaceApplication.updateFace` | 增量同步后批量注册 |
 | `RegisterAndRecognizeActivity` | 注册+识别合一模式 |
 | `LivenessDetect*Activity` | 活体检测+识别查验 |
-| `RecognizeSettingsActivity` | 阈值等参数 |
-| `RecognizeDebugActivity` | 现场调优（运维抽屉） |
+| `RecognizeSettingsActivity` | 阈值等参数；从纯人脸页“参数设置”进入 |
+| `RecognizeDebugActivity` | 异常分析；从纯人脸页“异常分析”进入 |
 
 ## 常见现象与处理
 
@@ -134,7 +134,12 @@ if (FaceServer.getInstance().getFaceEngine() == null) {
 | 数据重新初始化 | 通行证与脸库严重不一致 |
 | 补救措施 | 补注册失败 |
 | 重复人脸清理 | 同一人多次注册 |
-| RecognizeDebugActivity | 阈值现场调优 |
+
+识别设置与异常分析**不在运维抽屉中**。它们是 `RegisterAndRecognizeActivity` 页面上的按钮；点击后先结束当前页，再由 `onDestroy()` 根据 `actionAfterFinish` 跳转。
+
+## 激活错误码
+
+ArcFace 激活失败时，`HomeActivity` 使用 `ErrorCodeUtil.arcFaceErrorCodeToFieldName()` 将错误码映射为 SDK 常量名。排查时应同时记录数字错误码和映射后的字段名，区分 AppId/SdkKey、网络、设备绑定与授权文件问题。
 
 ## 日志关键字
 

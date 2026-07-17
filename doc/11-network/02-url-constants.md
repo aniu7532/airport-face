@@ -111,7 +111,7 @@ private static String businessAppApiBase() {
 | 常量 | 路径后缀 | 用途 | 主要调用方 |
 |------|----------|------|-----------|
 | `URL_LOGIN` | `/auth/vertical-client-login` | 竖屏客户端登录 | `LoginActivity` |
-| `URL_refresh_token` | `/auth/refresh-token` | 刷新 Token | `TokenRefreshJobService` |
+| `URL_refresh_token` | `/auth/refresh-token` | 刷新 Token | `TokenRefreshJobService`（已实现，当前未注册/调度） |
 | `URL_GET_APP_LAST_VERSION` | `/appVersion/get-lastVersion` | 获取最新 App 版本 | `UpdateUtils`、各 Activity |
 
 ### 业务域（`businessAppApiBase()` 前缀）

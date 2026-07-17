@@ -15,7 +15,7 @@
 | **BASE_URL_Test1** | `https://txzcloudservice.caacsri.com` | —（未定义） | `http://test.sczhbf.com:58088`（慧能测试） | `https://txzcloudservice.caacsri.com` |
 | **TENANT_PREFIX** | `"fy"` | `""`（空） | `""`（空） | `"shf"` |
 | **TENANT_ID** | `"2054084946120802305"` | `"1"` | `"3"` | `"1"` |
-| **SUPPORTS_TEMPORARY_PASS** | **`false`** | `true` | `true` | `true` |
+| **SUPPORTS_TEMPORARY_PASS** | `true` | `true` | `true` | `true` |
 
 ---
 
@@ -41,8 +41,8 @@
 
 | 值 | 影响 |
 |----|------|
-| `false`（洛阳） | 无临时证业务；`Document3` 占位「不支持临时通行证」 |
 | `true` | 支持临时证 `Document3` 完整 UI 与数据流 |
+| `false` | 代码保留禁用分支，但当前四个 flavor 均未使用 |
 
 ---
 
@@ -76,6 +76,6 @@ System（四渠道相同规则）:
 
 | ChannelConfig | UI |
 |---------------|-----|
-| `SUPPORTS_TEMPORARY_PASS=false` | 洛阳 `Document3` 占位布局 |
+| `SUPPORTS_TEMPORARY_PASS=true` | 四渠道均可进入临时证 `Document3`；洛阳使用独立横版定制布局 |
 | `TENANT_PREFIX` | 不影响证件 UI，仅 API 路径 |
 | 机场名称等 | 各 flavor `res/values` 中 `channel_airport_name` 等（非 ChannelConfig 字段） |

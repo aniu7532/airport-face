@@ -55,6 +55,8 @@
 | `onFaceFeatureAvailable(...)` | 1:1 成功/失败 → `chechSuccesse` / `chechFailed` |
 | `chechSuccesse` / `chechFailed` | 写记录、UI、音效 |
 
+德卡 `BasicOper` 当前来自 `app/libs/dc_reader_release_V1.0.0_20230516162946.aar`；新版本资源、替换步骤和兼容风险见 [Android_sdk_release2.56 接入文档](../sdk/Android_sdk_release2.56/README.md)。
+
 ---
 
 ## 主流程
@@ -94,6 +96,7 @@ flowchart TD
 | 证件未生效/过期/注销等 | `checkCard()` |
 | 人脸图片无效 | `getFeature(bitmap)==null` |
 | 人证不匹配 | 1:1 失败 → `reason=人证不匹配` |
+| 页面重进后串口占用 | `onDestroy` 停止轮询，但当前未调用 `BasicOper.dc_exit()` |
 
 ---
 
@@ -114,8 +117,8 @@ flowchart TD
 
 ## 渠道差异
 
-- `Document2`/`Document3` 为 flavor 源码（洛阳竖版、重庆临时证等）
-- `ChannelConfig.SUPPORTS_TEMPORARY_PASS`：洛阳 `false`，其余多为 `true`
+- `Document2`/`Document3` 为 flavor 源码（洛阳长期证竖版、临时证横版等）
+- `ChannelConfig.SUPPORTS_TEMPORARY_PASS`：当前四个 flavor 均为 `true`
 
 ---
 
@@ -123,6 +126,7 @@ flowchart TD
 
 - [ ] 短距读卡串口 `CardSerialConfigUtil` 路径/波特率正确
 - [ ] 大屏 `BasicOper`、小屏 `AndroidSerialPort` 分支
+- [ ] 反复进出页面时德卡串口可重新打开；当前代码未显式 `dc_exit`
 - [ ] 仅短距：远距离卡**不应**被本 Activity 读取
 - [ ] C 类引领流程：先刷引领人长期卡 → 再刷 C 卡
 - [ ] 临时证：先长期卡设 `linshiID` → 刷临时 applyId

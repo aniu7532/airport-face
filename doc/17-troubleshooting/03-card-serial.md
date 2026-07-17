@@ -1,15 +1,16 @@
 # 刷卡 / 串口排查
 
-## 两套串口体系
+## 三类硬件通道
 
-| 用途 | 配置类 | 默认路径 | 管理 |
+| 用途 | 配置方式 | 默认参数 | 管理 |
 |---|---|---|---|
-| RFID 长期证读卡 | `CardSerialConfigUtil` | `/dev/ttyS3` | Activity 内 SDK |
+| 短距长期证读卡 | `CardSerialConfigUtil` | `/dev/ttyS3`、115200 | Activity 内德卡/华大 SDK |
+| 长距长期证读卡 | `EC_API` 枚举串口 | 38400、8E1 | Activity 内 `EC_API` |
 | 临时证二维码 | `QrSerialConfigUtil` | `/dev/ttyS4` | `SerialManage` 单例 |
 
-**不可混用配置**：改 QR 串口不影响读卡，反之亦然。
+**不可混用配置**：改 QR 串口不影响短距读卡，`CardSerialConfigUtil` 也不控制长距 `EC_API`。
 
-## RFID 读卡无反应
+## 短距读卡无反应
 
 ### 配置检查
 
@@ -31,6 +32,8 @@ typeDevice = screenWidth > 800 ? 1 : 2;
 | 1 大屏 | `BasicOper.dc_open` | `portSate >= 0`，beep |
 | 2 小屏 | `Card.OpenReader` | `OpenReader success` |
 
+注意：`LivenessDetectYuanActivity` 当前只初始化 `EC_API` 长距设备，没有在本页面调用 `BasicOper.dc_open()`，但轮询仍会先执行短距 `BasicOper` 方法。因此 Yuan 模式出现“长距正常、短距无反应”时，优先检查这一初始化缺口，不要只改串口 SP。
+
 ### 排查步骤
 
 1. 日志搜 `读卡串口[` 或 `OpenReader`
@@ -43,6 +46,31 @@ typeDevice = screenWidth > 800 ? 1 : 2;
 
 - 查 `startReadLongPassCardID` / `startReadCarIDMini` 循环是否启动
 - 卡号解析后是否匹配 `longTermPassDao` 本地记录
+
+### 德卡 SDK 分步定位
+
+大屏短距链路应按阶段看返回值：
+
+1. `dc_open`：串口与权限。
+2. `dc_cpureset_hex`：PSAM 卡座与复位。
+3. `dc_cpuapduInt_hex`：终端编号、PSAM 应用与加密。
+4. `dc_reset` / `dc_card_n_hex`：寻卡和 RFID。
+5. `dc_pro_resetInt_hex` / `dc_procommandInt_hex`：通行证随机数与外部认证。
+6. 最终响应是否包含 `9000`。
+
+SDK 字符串接口通常返回 `错误码|数据`。若返回值为空、缺少分隔符或数据段，不应只按“卡不存在”排查；这属于 SDK/设备通信异常。
+
+### 替换 AAR 后异常
+
+| 现象 | 检查 |
+|---|---|
+| `Duplicate class` | `app/libs/` 同时保留新旧德卡 AAR；只留一个版本 |
+| `UnsatisfiedLinkError` | APK 的 `lib/arm64-v8a/` 是否包含新版 so；设备 ABI 是否匹配 |
+| 编译正常、真机认证失败 | 新版移除了部分旧 native so；回归 PSAM 外部认证全链 |
+| 页面重进后串口占用 | 当前 Activity 停止轮询但未调用 `BasicOper.dc_exit()` |
+| Demo 正常、项目异常 | Demo 内置 AAR 与交付 AAR 文件名/构建时间不同，需以实际替换文件为准 |
+
+当前 App 使用 `dc_reader_release_V1.0.0_20230516162946.aar`；待升级包及 SHA-256 见 [德卡 SDK 接入文档](../sdk/Android_sdk_release2.56/README.md)。
 
 ## 二维码无数据
 
@@ -121,6 +149,7 @@ initScanCard();
 |---|---|
 | `doc/09-serial/01-rfid-card-reader.md` | CardSerialConfigUtil 与 Activity |
 | `doc/09-serial/02-qr-scanner.md` | SerialManage/Handle 细节 |
+| `doc/sdk/Android_sdk_release2.56/README.md` | 德卡 SDK 版本、升级风险与验收 |
 
 ## 快速 ADB
 

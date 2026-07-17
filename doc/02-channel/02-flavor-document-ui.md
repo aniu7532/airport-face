@@ -13,7 +13,7 @@
 
 | 渠道 | 长期证 Document2 | 临时证 Document3 | 临时证支持 |
 |------|------------------|------------------|------------|
-| 洛阳 luoyang | 竖版 220×380，区域徽章网格 | 占位「不支持」 | ❌ |
+| 洛阳 luoyang | 竖版 220×380，区域徽章网格 | 横版 380×295 定制临时证 | ✅ |
 | 银川 yinchuan | 竖版 220×380，经典机场头图 | 竖版完整临时证 | ✅ |
 | 重庆 chongqing | 同银川代码结构 | 同银川代码结构 | ✅ |
 | 石河子 shihezi | 横版 380×240，ConstraintLayout | 横版 380×240 临时证 | ✅ |
@@ -80,12 +80,17 @@
 
 ### 洛阳 luoyang
 
-**Java**：`bindCardContent()` 空实现。
+**Java**
+
+- 完整实现 `bindCardContent()`，展示编号、姓名、区域、单位、引领人及有效期。
+- `updatePage()` 应用状态盖章并调用 `loadTemporaryCardPhoto` 加载照片。
+- 二维码 `or_code` 隐藏，右侧仅展示人像。
 
 **layout `document3.xml`**
 
-- 220×220 白底居中文案：**「不支持临时通行证」**
-- 其余 id（card_img、or_code、passers_by 等）**gone 占位**（满足 `AbstractDocument3` 编译）
+- **380×295** 横版，背景 `luoyang_pass_temp_bg`。
+- 左侧分行展示证件字段，右侧为照片框。
+- `or_code`、`img_color`、`lead_people2`、`faceSimilarLayout` 隐藏。
 
 ### 银川 yinchuan & 重庆 chongqing
 
@@ -135,7 +140,7 @@
 ## UI 风格分类
 
 ```text
-A 类（洛阳）     : 竖版定制背景 + 区域徽章网格 + 无临时证
+A 类（洛阳）     : 长期证竖版徽章网格 + 临时证横版定制卡面
 B 类（银川/重庆）: 竖版经典卡片 + 竖排 access_area + 相似度 + 黄蓝条
 C 类（石河子）   : 横版新证 + ConstraintLayout + 横向徽章 + 完整临时证
 ```
@@ -148,7 +153,7 @@ C 类（石河子）   : 横版新证 + ConstraintLayout + 横向徽章 + 完整
 |------|------|
 | 银川 Document2 ≡ 重庆 Document2 | Java 源码逻辑一致 |
 | 银川 Document3 ≡ 重庆 Document3 | Java 源码逻辑一致 |
-| 洛阳 Document3 | 刻意空实现，与 `SUPPORTS_TEMPORARY_PASS=false` 一致 |
+| 洛阳 Document3 | 独立横版实现，隐藏二维码与第二引领人，展示定制字段 |
 | 石河子 | Document2/3 均横版，徽章 API 与洛阳不同（`bindAreaBadges` vs `bindAreaBadgeGrid`） |
 
 ---
@@ -158,4 +163,4 @@ C 类（石河子）   : 横版新证 + ConstraintLayout + 横向徽章 + 完整
 | layout | 洛阳 | 银川/重庆 | 石河子 |
 |--------|------|-----------|--------|
 | document2 | 220×380 竖 | 220×380 竖 | 380×240 横 |
-| document3 | 220×220 占位 | 220×380 竖 | 380×240 横 |
+| document3 | 380×295 横 | 220×380 竖 | 380×240 横 |

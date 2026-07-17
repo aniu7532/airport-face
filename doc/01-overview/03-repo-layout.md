@@ -9,12 +9,16 @@ airport-face/
 │   │   ├── main/res/
 │   │   ├── yinchuan|chongqing|shihezi|luoyang/  # 渠道覆盖
 │   │   └── schemas/                             # Room schema 导出
-│   └── libs/                                    # ArcSoft 等本地库
+│   └── libs/                                    # 实际参与编译的 ArcSoft/德卡/串口等本地库
 ├── xupdate-lib/                                 # 应用内更新
 ├── update/                                      # 独立更新测试包
 ├── doc/                                         # 本文档体系
+│   └── sdk/                                     # 厂商原始交付物与接入说明（不直接参与编译）
+├── refactor/                                    # 架构分析、技术债与重构优先级（独立版本基准）
 └── settings.gradle
 ```
+
+`doc/sdk/` 与 `app/libs/` 的职责不同：前者用于归档厂商 AAR、Demo、手册和校验值，后者才是 Gradle 的实际依赖目录。升级本地 SDK 时应从归档目录取目标版本替换 `app/libs/` 中的旧文件，不能把两个版本同时放入 `app/libs/`。
 
 ## 主包 `com.arcsoft.arcfacedemo`
 

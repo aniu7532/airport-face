@@ -21,8 +21,8 @@
 | `reboot` | boolean | `true` | ArcFaceApplication 日任务 | 凌晨2点重启 | 当日是否可重启 |
 | `upload_log` | boolean | `true` | ArcFaceApplication | 上午10点 | 当日是否可上传日志 |
 | `reinit_check` | boolean | `true` | ArcFaceApplication | 凌晨1点 | 当日是否可数据检查 |
-| `card_serial_path` | String | `/dev/ttyS3` | CardSerialConfigPopDialog | CardSerialConfigUtil | RFID 串口路径 |
-| `card_serial_baud` | int | `115200` | CardSerialConfigPopDialog | CardSerialConfigUtil | RFID 波特率 |
+| `card_serial_path` | String | `/dev/ttyS3` | CardSerialConfigPopDialog | CardSerialConfigUtil | 短距读卡器串口路径（德卡/华大） |
+| `card_serial_baud` | int | `115200` | CardSerialConfigPopDialog | CardSerialConfigUtil | 短距读卡器波特率 |
 | `qr_serial_path` | String | `/dev/ttyS4` | QrSerialConfigPopDialog | QrSerialConfigUtil | 二维码串口路径 |
 | `qr_serial_baud` | int | `115200` | QrSerialConfigPopDialog | QrSerialConfigUtil | 二维码波特率 |
 | `qr_serial_data_bits` | int | `7` | QrSerialConfigPopDialog | QrSerialConfigUtil | 数据位 |
@@ -124,5 +124,6 @@
 | `{externalFilesDir}/db/airportDb.db` | 业务 Room |
 | `{externalFilesDir}/database/faceDB.db` | 人脸 Room |
 | `{externalFilesDir}/log/` | ALog 日志 |
-| `{externalFilesDir}/faceDB/` | 加密证件照 |
+| `{externalFilesDir}/register/` | 加密注册照（人脸注册输入） |
+| `{externalFilesDir}/photo/` | 加密证件照（卡面/比对使用） |
 | `{externalFilesDir}/records/` | 通行抓拍（3天清理） |

@@ -76,7 +76,7 @@ adb logcat -s YCJC ALog | grep -iE "login|token|401"
 | 渠道 | 注意 |
 |---|---|
 | 石河子 | API 必须带 `/shf/` |
-| 洛阳 | TENANT_ID 长整型；可能无临时证 |
+| 洛阳 | TENANT_ID 为长整型；当前同样支持临时证 |
 | 重庆 | `tenant-id` 必须为 `3` |
 | 银川 | 生产域 `inckzqtxz` |
 

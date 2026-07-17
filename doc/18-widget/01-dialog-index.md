@@ -11,8 +11,8 @@
 | 类 | 布局 | 触发入口 | 职责 |
 |----|------|----------|------|
 | `CustomDrawerPopupView` | `dialog_draw` | 查验页隐藏入口 | 运维抽屉：同步、重初始化、串口配置、退出等 |
-| `VerifyFeatureSettingsDialog` | `dialog_verify_feature_settings` | 抽屉菜单 | 识别阈值、活体开关 |
-| `CardSerialConfigPopDialog` | `dialog_card_serial` | 抽屉 | RFID 串口参数 |
+| `VerifyFeatureSettingsDialog` | `dialog_verify_feature_settings` | 抽屉菜单 | 施工人员核销总开关与必填项设置 |
+| `CardSerialConfigPopDialog` | `dialog_card_serial` | 抽屉 | 短距读卡器串口参数 |
 | `QrSerialConfigPopDialog` | `dialog_qr_serial` | 抽屉 | 二维码串口参数 |
 | `RecordsPopDialog` | `dialog_records` | 抽屉 | 本地未上传记录查看 |
 | `AppKeyPopDialog` | `dialog_key` | 登录/设置 | AppKey 输入 |
@@ -104,6 +104,6 @@ new XPopup.Builder(context)
 ## 联调检查清单
 
 - [ ] 抽屉能否弹出（隐藏手势是否触发）
-- [ ] 串口配置保存后是否写入 `InfoStorage`
+- [ ] 串口配置保存后是否写入 `SPUtils`
 - [ ] 阈值修改是否同步 `ConfigUtil` + SP
 - [ ] 多弹窗叠加时返回键行为（XPopup `dismissOnBackPressed`）

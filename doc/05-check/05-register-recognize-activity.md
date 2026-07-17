@@ -96,7 +96,7 @@ flowchart TD
 ## 渠道差异
 
 - `Document11` + flavor `Document2`/`Document3`
-- 洛阳 `SUPPORTS_TEMPORARY_PASS=false` 拒绝临时证
+- 当前四个 flavor 的 `SUPPORTS_TEMPORARY_PASS` 均为 `true`；代码仍保留关闭时拒绝临时证的分支
 
 ---
 

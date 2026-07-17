@@ -136,7 +136,7 @@ flowchart TD
 
 ## 渠道差异
 
-查验模式三档读卡能力因 Activity 不同而异（见各专篇），但 **SP 键与枚举全渠道一致**。洛阳渠道 `SUPPORTS_TEMPORARY_PASS=false` 时，临时证在任意模式下均会被 `checkCard()` 拒绝。
+查验模式三档读卡能力因 Activity 不同而异（见各专篇），但 **SP 键与枚举全渠道一致**。当前四个 flavor 的 `SUPPORTS_TEMPORARY_PASS` 均为 `true`，临时证可进入对应校验流程。
 
 ---
 

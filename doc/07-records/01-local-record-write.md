@@ -31,9 +31,9 @@
 
 | Activity | 入口方法 | 前置条件 |
 |----------|----------|----------|
-| 上述四个 Activity | `saveTemporaryRecords` / `saveShortRecord` | `ChannelConfig.SUPPORTS_TEMPORARY_PASS == true`（洛阳为 false，直接 return） |
+| 上述四个 Activity | `saveTemporaryRecords` / `saveShortRecord` | `ChannelConfig.SUPPORTS_TEMPORARY_PASS == true`（当前四个 flavor 均为 true） |
 
-**洛阳渠道**：不支持临时证，`saveShortRecord` / `saveTemporaryRecords` 开头判断后直接返回。
+`saveShortRecord` / `saveTemporaryRecords` 仍保留开关关闭时的提前返回逻辑，供未来禁用临时证的渠道使用。
 
 ---
 

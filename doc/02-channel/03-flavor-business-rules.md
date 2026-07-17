@@ -14,7 +14,7 @@
 | yinchuan 银川 | `https://inckzqtxz.caacsri.com` | `""` | `"1"` | `true` |
 | chongqing 重庆 | `https://cqakzqtxz.caacsri.com` | `""` | `"3"` | `true` |
 | shihezi 石河子 | `https://txzcloudservice.caacsri.com` | `"shf"` | `"1"` | `true` |
-| luoyang 洛阳 | `https://txzcloudservice.caacsri.com` | `"fy"` | `"2054084946120802305"` | **`false`** |
+| luoyang 洛阳 | `https://txzcloudservice.caacsri.com` | `"fy"` | `"2054084946120802305"` | `true` |
 
 `UrlConstants.TENANT_ID` = `ChannelConfig.TENANT_ID`，所有 HTTP 请求头 `tenant-id` 均取此值。
 
@@ -43,10 +43,7 @@
 ### 定义
 
 ```java
-// luoyang
-public static final boolean SUPPORTS_TEMPORARY_PASS = false;
-
-// 其余三渠道
+// 当前四个渠道
 public static final boolean SUPPORTS_TEMPORARY_PASS = true;
 ```
 
@@ -59,22 +56,18 @@ public static final boolean SUPPORTS_TEMPORARY_PASS = true;
 | `LivenessDetectYuanAndJinActivity` | 同上 |
 | `RegisterAndRecognizeActivity` | 3 处 |
 
-### 行为差异
+### 当前行为
 
-当 `SUPPORTS_TEMPORARY_PASS == false`（洛阳）：
+当前四个 flavor 均为 `true`，长期证（`type != 1`）与临时证都支持，含临时证照片加载 `DocumentCardSupport.loadTemporaryCardPhoto`。
 
-1. **刷卡入口**：不处理/不展示临时证相关分支（`type == 1` 的临时通行证）
-2. **卡面 UI**：跳过临时证 Document 展示逻辑
-3. **校验规则**：`longTermPass.type == 1` 时直接拒绝或走长期证以外路径
-
-当 `true` 时：长期证（`type != 1`）与临时证均支持，含临时证照片加载 `DocumentCardSupport.loadTemporaryCardPhoto`。
+业务代码仍保留 `SUPPORTS_TEMPORARY_PASS == false` 的保护分支；如果未来某渠道关闭该开关，刷卡入口、卡面展示、二维码串口和临时记录写入都会被跳过。
 
 ### 排查
 
 | 现象 | 检查 |
 |------|------|
-| 洛阳刷临时证无反应 | 预期行为，`SUPPORTS_TEMPORARY_PASS=false` |
-| 其他渠道临时证不显示 | 查 `LongTermPass.type`、Document3 是否被 inflate |
+| 任一渠道临时证不显示 | 查 flavor 的开关、`LongTermPass.type`、Document3 是否被 inflate |
+| 洛阳卡面样式不符 | 确认使用横版 380×295 的洛阳 `Document3` |
 | 接口 tenant 错误 | 查 `TENANT_ID` 与后台租户配置 |
 
 ---
@@ -109,5 +102,5 @@ app/src/{yinchuan|chongqing|shihezi|luoyang}/java/.../ui/fragment/
 - [ ] 安装包 flavor 与目标机场一致
 - [ ] `tenant-id` 请求头与后台租户 ID 匹配
 - [ ] API 路径是否含 `shf`/`fy` 前缀
-- [ ] 洛阳场景不测临时证；其他渠道需测临时证全流程
+- [ ] 四渠道均测试临时证全流程
 - [ ] 卡面区域展示样式是否符合该渠道设计稿

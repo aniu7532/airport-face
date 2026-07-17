@@ -20,7 +20,7 @@
 | `EC_API` | 远距离 RFID | `initLongReader`、`readLongCard` | 读卡循环 |
 | `CardSerialConfigUtil` | 串口配置 | 路径/波特率 | `initReadCard` |
 | `SerialManage` | 扫码 | `initScanCard` | onCreate |
-| `TokenRefreshJobService` | `service/` | Token 刷新 Job（import 存在，与 Jin 类似） | 可选调度 |
+| `TokenRefreshJobService` | `service/` | Token 刷新 Job（import 存在） | 调度代码已注释，当前未启用 |
 | 其他 | 同 Jin/Yuan | ViewModel、Dao、记录 | — |
 
 ---
@@ -36,6 +36,8 @@
 | `onDestroy` | `stopReadLongPassCardID`、`stopReadCarIDMini`、`unInitLongReader` | 前两个 | 短距 stop + `unInitLongReader` |
 
 业务代码（`checkCard`、`getLongPassCardInfo`、`saveRecord`、`onFaceFeatureAvailable`）与 Jin/Yuan **高度重复**，差异主要在硬件初始化与读卡循环。
+
+德卡 `BasicOper` 当前来自旧版 AAR；新版本资源、替换步骤和全链路验收见 [Android_sdk_release2.56 接入文档](../sdk/Android_sdk_release2.56/README.md)。
 
 ---
 
@@ -76,6 +78,7 @@ flowchart TD
 |------|------|
 | 小屏分支 | **仅** `startReadCarIDMini`，**不**走 `startReadLongPassCardID` 长距循环 |
 | 大屏分支 | 短距+长距双通道 |
+| 页面销毁 | `unInitLongReader()` 释放长距，当前未调用 `BasicOper.dc_exit()` 释放德卡短距 |
 | 其余 | 同 Jin 篇 `checkCard`、引领人、临时证规则 |
 
 ---
@@ -88,7 +91,7 @@ flowchart TD
 
 ## 渠道差异
 
-全渠道可用；临时证受 `ChannelConfig.SUPPORTS_TEMPORARY_PASS` 约束（洛阳 false）。
+全渠道可用；临时证受 `ChannelConfig.SUPPORTS_TEMPORARY_PASS` 约束，当前四个 flavor 均为 `true`。
 
 ---
 
@@ -98,4 +101,4 @@ flowchart TD
 - [ ] 小屏设备：仅 `AndroidSerialPort` 路径，确认是否需长距（当前代码小屏**不**调长距循环）
 - [ ] `typeDevice` 由 `DeviceUtils.getScreenSize` 宽度是否 >800 决定
 - [ ] 与单独 Jin/Yuan 模式行为一致性的回归
-- [ ] `onDestroy` 三路读卡资源均释放
+- [ ] `onDestroy` 三路读卡资源均释放；当前德卡短距缺少显式 `dc_exit`

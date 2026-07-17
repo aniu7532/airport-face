@@ -10,16 +10,21 @@
 |----|------|
 | UI | DataBinding、ViewBinding、XPopup、Paging3 |
 | 人脸 | ArcSoft ArcFace（RGB+IR、活体、1:N，上限 30000） |
-| 存储 | Room 2.4.3 + SQLCipher |
+| 存储 | Room 2.4.3；SQLCipher 依赖已引入但当前未接入 Room |
 | 网络 | OkGo 3.0.4 + OkHttp 4.9.1 |
 | 安全接入 | 深信服 SFUemSDK 零信任 + Bearer Token |
 | 更新 | XUpdate（:xupdate-lib） |
 
 ## 版本与构建
 
-- versionName `1.0.72`，versionCode `45092621`
-- ABI `arm64-v8a`，minSdk 26
+- versionName `1.0.75`，versionCode `45092624`
+- compileSdk 36，targetSdk 33，minSdk 26
+- ABI `arm64-v8a`
 - APK：`YCJC_{flavor}_v{version}_{code}_{date}.apk`
+
+## 测试现状
+
+`app/src/test` 与 `app/src/androidTest` 当前仅保留 Android 模板示例，没有业务单元测试或仪器测试。查验、硬件、渠道和升级验收主要依赖各专题文档中的手工联调清单。
 
 ## 源码规模（main）
 

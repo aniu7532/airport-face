@@ -1,7 +1,7 @@
 # airport-face 技术文档（细粒度版 v2）
 
 > 机场控制区通行证竖屏查验终端 · 基于 ArcSoft ArcFace  
-> 本文档体系按 **模块 → 子模块 → 类/方法** 三级组织，共 **57** 篇（不含 `_archive`）。
+> 本文档体系按 **模块 → 子模块 → 类/方法** 三级组织，共 **60** 篇（不含本索引与 `_archive`）。
 
 ---
 
@@ -14,6 +14,7 @@
 | 改查验逻辑 | [05-check/](./05-check/) |
 | 查 ApiUtils / 接口 | [11-network/01-api-utils.md](./11-network/01-api-utils.md) |
 | 改渠道配置 | [02-channel/01-flavor-config.md](./02-channel/01-flavor-config.md) |
+| 升级德卡读卡器 SDK | [sdk/Android_sdk_release2.56/README.md](./sdk/Android_sdk_release2.56/README.md) |
 | 排查线上问题 | [17-troubleshooting/](./17-troubleshooting/) |
 | 看旧版总览 | [_archive/](./_archive/) |
 
@@ -30,6 +31,7 @@
 - [01-project-overview.md](./01-overview/01-project-overview.md)
 - [02-tech-stack-and-deps.md](./01-overview/02-tech-stack-and-deps.md)
 - [03-repo-layout.md](./01-overview/03-repo-layout.md)
+- [04-build-release.md](./01-overview/04-build-release.md) — 构建变体、签名、ABI、混淆与发布检查
 
 ### 02-channel 产品渠道
 
@@ -83,7 +85,7 @@
 
 ### 09-serial 串口
 
-- [01-rfid-card-reader.md](./09-serial/01-rfid-card-reader.md)
+- [01-rfid-card-reader.md](./09-serial/01-rfid-card-reader.md) — 短距德卡/华大、长距 EC_API、SDK 版本与生命周期
 - [02-qr-scanner.md](./09-serial/02-qr-scanner.md)
 
 ### 10-face-engine 人脸引擎
@@ -123,6 +125,7 @@
 ### 16-device 设备
 
 - [01-boot-kiosk.md](./16-device/01-boot-kiosk.md)
+- [02-runtime-permissions.md](./16-device/02-runtime-permissions.md) — 相机/存储权限、所有文件访问与厂商硬件授权边界
 
 ### 17-troubleshooting 排查
 
@@ -135,9 +138,19 @@
 
 - [01-dialog-index.md](./18-widget/01-dialog-index.md) — 弹窗/抽屉/XPopup 全索引
 
+### sdk 厂商原始资料
+
+- [Android_sdk_release2.56/README.md](./sdk/Android_sdk_release2.56/README.md) — 德卡读卡器 SDK 资源清单、升级兼容性、接入流程与验收
+
+> `sdk/` 下的 AAR、APK、PDF、图片和 Demo ZIP 是厂商原始交付物，仅供归档与联调；App 实际编译依赖仍位于 `app/libs/`。
+
+### 延伸阅读
+
+- [../refactor/README.md](../refactor/README.md) — 架构全景、技术债与重构优先级；该目录有独立版本基准，涉及当前行为时以 v2 文档与源码为准
+
 ### _archive 旧版文档（v1 扁平 22 篇）
 
-保留作参考，新文档以子目录为准。
+仅保留作历史参考，不保证与当前源码一致。迁移关系见 [_archive/README-v1.md](./_archive/README-v1.md)，日常开发以 v2 子目录为准。
 
 ---
 

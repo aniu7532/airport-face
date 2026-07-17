@@ -14,9 +14,11 @@
 │ Room(DAO) / FaceRepository / CheckUnitRepository         │
 ├─────────────────────────────────────────────────────────┤
 │ L4 基础设施                                              │
-│ OkGo / ArcFace SDK / Camera / SQLCipher / Glide / XUpdate│
+│ OkGo / ArcFace SDK / Camera / Glide / XUpdate            │
 └─────────────────────────────────────────────────────────┘
 ```
+
+> SQLCipher 4.5.2 目前仅存在于 Gradle 依赖中，两个 Room 数据库均未配置 `SupportFactory`，因此不属于当前实际运行链路。
 
 ## 核心调用链（查验成功路径）
 

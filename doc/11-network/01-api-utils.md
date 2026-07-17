@@ -28,8 +28,8 @@
 ### `refreshToken`
 
 - **写入**：`LoginActivity.login()` → `ApiUtils.setRefreshToken(refreshToken)`
-- **读取**：`getRefreshToken()`，供 `TokenRefreshJobService` 刷新 Token
-- **用途**：后台 Job 调用 `UrlConstants.URL_refresh_token`
+- **读取**：`getRefreshToken()`；`TokenRefreshJobService` 的实现会读取该值
+- **用途现状**：刷新 Job 的 Manifest 注册和 Activity 调度均被注释，当前运行版本不会自动刷新 Token
 
 ### `userId`
 
@@ -168,7 +168,7 @@ ApiUtils.get/post/getPassCard()
 | `LivenessDetect*Activity` | 写记录 `checkUserId`、OkGo 请求加 Token |
 | `RegisterAndRecognizeActivity` | 同上 |
 | `ImageUploader` / `ImageDownloader` | 上传/下载加密文件加 Token |
-| `TokenRefreshJobService` | `getRefreshToken()` |
+| `TokenRefreshJobService` | `getRefreshToken()`；代码已实现但当前未注册、未调度 |
 | `RecordsListAdapter` 等 | `getAccessToken()` 加载图片 |
 | `VerifyAndConfirmDialog`、`AreaPickerDialog` 等 | OkGo 请求加 Token |
 

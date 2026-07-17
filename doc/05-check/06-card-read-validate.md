@@ -135,7 +135,7 @@ flowchart TD
 | yinchuan | true | 支持 |
 | chongqing | true | 支持 |
 | shihezi | true | 支持 |
-| luoyang | **false** | `checkCard` 与 `getShortPassCardID` 直接拒绝 |
+| luoyang | true | 支持，使用洛阳定制 `Document3` |
 
 ---
 
@@ -145,6 +145,6 @@ flowchart TD
 - [ ] 区域：有/无 `areaIds` 与设备 `areaDetail` 匹配
 - [ ] C 类：先刷引领人长期卡 → `linshiID` 有值 → 刷 C 卡
 - [ ] 临时证：先长期卡 → 再临时 applyId；引领数组包含长期卡 `userId`
-- [ ] 洛阳渠道刷临时证提示「不支持临时通行证」
+- [ ] 四渠道临时证均可进入校验并展示各自 `Document3`
 - [ ] 记录字段 `leadingPeopleId`/`leadingPeopleld` 与 `linshiID` 一致
 - [ ] 1500ms 重复刷卡过滤

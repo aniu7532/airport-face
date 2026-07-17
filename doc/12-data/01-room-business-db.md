@@ -17,6 +17,7 @@
 | JournalMode | `AUTOMATIC` |
 | 迁移策略 | `fallbackToDestructiveMigration()`（版本不匹配则清库重建） |
 | TypeConverters | `Converters.class` |
+| 数据库加密 | **未启用**；Gradle 虽有 SQLCipher 依赖，但建库未配置 `SupportFactory` / passphrase |
 
 ---
 

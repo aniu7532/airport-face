@@ -5,7 +5,7 @@
 | 范围 | 说明 |
 |------|------|
 | **负责** | 零信任成功后调用系统登录接口；解析 `accessToken` / `refreshToken` / `userId`；写入 `ApiUtils` 静态字段与 `InfoStorage`；触发登录后初始化链 |
-| **不负责** | Token 定时刷新实现细节（`TokenRefreshJobService` 在查验页调度）；VPN 认证 |
+| **不负责** | Token 定时刷新；`TokenRefreshJobService` 虽已实现，但当前未注册、未调度；VPN 认证 |
 | **触发方** | `LoginActivity.login()`（零信任 `onAuthSuccess` 或免密成功后） |
 
 ---
@@ -115,6 +115,13 @@ flowchart TD
 | `userId` | InfoStorage | `login()` 成功解析后 |
 
 `accessToken` / `refreshToken` **仅存内存**（`ApiUtils` 静态字段），进程重启需重新登录。
+
+### Token 刷新现状
+
+- `TokenRefreshJobService.java` 已实现刷新请求。
+- `AndroidManifest.xml` 中 service 注册被注释。
+- 三个 `LivenessDetect*Activity` 中 `scheduleTokenRefreshJob()` 调用也被注释。
+- 因此当前运行版本不会自动刷新 Token；Token 过期后依赖重新登录恢复。
 
 ---
 
