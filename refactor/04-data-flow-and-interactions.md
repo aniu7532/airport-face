@@ -32,7 +32,7 @@ sequenceDiagram
 
 | 步骤 | 输入 | 输出 | 存储 |
 |------|------|------|------|
-| 登录 | 账号密码 | Token | ApiUtils 静态 + InfoStorage |
+| 登录 | 账号密码 | Token | `ApiUtils` 静态字段；仅 `userId` 另存 `InfoStorage` |
 | 设备配置 | deviceId | areaName, interval | InfoStorage |
 | 全量同步 | page=1..N | LongTermPass[] | Room |
 | 人脸注册 | Pass.photoPath | FaceEntity | FaceDatabase + FaceServer 引擎 |
@@ -46,28 +46,28 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User as 用户
-    participant Serial as SerialManage
+    participant Reader as BasicOper/AndroidSerialPort
     participant Act as LivenessDetectJinActivity
     participant DAO as LongTermPassDao
     participant Doc as Document2/3
     participant FH as FaceHelper
-    participant FS as FaceServer
+    participant VM as LivenessDetectViewModel
     participant Rec as LongTermRecordsDao
     participant App as ArcFaceApplication
     participant API as 业务 API
 
-    User->>Serial: 刷卡
-    Serial->>Act: onCardRead(cardNo)
-    Act->>DAO: queryByCardNo(cardNo)
+    User->>Reader: 刷短距卡
+    Reader->>Act: 返回 RFID/UID
+    Act->>DAO: getByCardId(cardNo)
     DAO-->>Act: LongTermPass
     Act->>Act: checkCard() 校验有效期/区域/临时证
     Act->>Doc: 展示卡面（Glide 加密图）
+    Act->>Act: 解密注册照并提取目标 FaceFeature
     User->>FH: 人脸进入识别区
-    FH->>FS: searchFace(feature) 1:1
-    FS-->>FH: CompareResult(similarity)
-    FH->>Act: onRecognized(result)
-    Act->>Act: 比对 pass.nickname == face.userName
-    Act->>Rec: insert LongTermRecords
+    FH->>VM: 检测/活体/现场特征
+    VM->>VM: 1:1 compareFaceFeature
+    VM->>Act: onFaceFeatureAvailable(result)
+    Act->>Rec: insert 成功或失败 LongTermRecords
     Note over App: 30s 定时任务
     App->>Rec: query 待上传记录
     App->>API: POST create-long + 图片
@@ -78,6 +78,10 @@ sequenceDiagram
 **临时证分支**：走 TemporaryCardRecords + create-temporary API。
 
 **纯人脸模式**（RegisterAndRecognizeActivity）：跳过刷卡，直接 1:N searchFace → 反查 LongTermPass。
+
+**查询差异**：短距使用 `getByCardId`，Yuan/YuanAndJin 长距卡号使用 `getBycardIdLong`；抽取 PassLookup 时必须保留两条分支。
+
+**上传边界**：Activity 内即时上传 else 分支被 `if (true)` 固定绕过，当前生产链只有“本地入库 → Application 30 秒任务上传”。
 
 ---
 
@@ -100,7 +104,7 @@ flowchart TD
 
 **并发控制**：`updateNext` 标志位防止重叠同步。
 
-**关联键**：Pass.nickname → FaceEntity.userName → 引擎 faceId。
+**关联键**：`LongTermPass.id` → `FaceEntity.userName` → 引擎 faceId。
 
 ---
 
@@ -151,7 +155,7 @@ flowchart LR
 
     subgraph engine["FaceServer"]
         Search1N[1:N Search]
-        Search11[1:1 Compare]
+        Search11[1:1 Compare<br/>LivenessDetectViewModel]
         Register[Register]
     end
 
@@ -164,7 +168,7 @@ flowchart LR
     IR --> Live
     Detect --> Quality --> Live --> Feature --> Filter
     Filter --> Search1N
-    Filter --> Search11
+    Feature --> Search11
     Register --> FaceDB
     Register --> EngineMem
     FaceDB --> EngineMem
@@ -240,7 +244,7 @@ RecognizeSettingsActivity
 |--------|--------|
 | TENANT_PREFIX | URL 路径拼接 |
 | TENANT_ID | HTTP Header |
-| SUPPORTS_TEMPORARY_PASS=false | checkCard() 拒绝临时证；Document3 占位 UI |
+| SUPPORTS_TEMPORARY_PASS | 关闭时拒绝临时证；当前四个 flavor 均为 `true` |
 | Document2/3 layout | 卡面展示字段/样式 |
 
 ---
@@ -254,8 +258,8 @@ RecognizeSettingsActivity
 | 网络不可用 | 记录本地保存，待上传队列累积 | M07 |
 | 人脸引擎 init 失败 | 提示重新激活 | M04 |
 | 读卡超时 | UI 提示重新刷卡 | M08 |
-| 比对失败 | 音效 + 提示，不写记录 | M05 |
-| 临时证渠道不支持 | checkCard() 直接拒绝 | M06,渠道 |
+| 比对失败 | 音效 + 提示，并写入失败记录（原因“人证不匹配”） | M05,M07 |
+| 临时证开关关闭 | `checkCard()` 直接拒绝；当前无 flavor 关闭 | M06,渠道 |
 
 ---
 
@@ -273,9 +277,9 @@ stateDiagram-v2
     WaitingFace --> Recognizing: 人脸入框
     Recognizing --> MatchSuccess: 比对通过
     Recognizing --> MatchFailed: 比对失败
-    MatchSuccess --> SavingRecord: 写 Room
+    MatchSuccess --> SavingRecord: 写成功记录
+    MatchFailed --> SavingRecord: 写失败记录
     SavingRecord --> Idle: 重置
-    MatchFailed --> WaitingFace: 重试
     CardRejected --> WaitingCard: 重新刷卡
 ```
 

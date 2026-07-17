@@ -51,7 +51,7 @@ flowchart LR
 | **核心类** | `BootReceiver`、`DeviceUtils`、`com.ys.rkapi.MyManager`、`ZysjSystemManager` |
 | **依赖** | Android 系统广播、厂商 SDK |
 | **边界** | 不负责业务逻辑，仅拉起 LoginActivity |
-| **doc/** | [16-device/01-boot-kiosk.md](../doc/16-device/01-boot-kiosk.md) |
+| **doc/** | [16-device/01-boot-kiosk.md](../doc/16-device/01-boot-kiosk.md)、[02-runtime-permissions.md](../doc/16-device/02-runtime-permissions.md) |
 
 **重构关注**：Kiosk 逻辑分散在 LoginActivity（HOME category）与 BootReceiver，可抽取 `KioskManager`。
 
@@ -68,7 +68,7 @@ flowchart LR
 | **依赖** | M03 VPN、M06 通行证、M04 人脸、M10 网络 |
 | **doc/** | [04-auth/](../doc/04-auth/) |
 
-**关键方法索引**（LoginActivity，约 1,320 行）：
+**关键方法索引**（LoginActivity，1,413 行）：
 
 | 方法域 | 示例 |
 |--------|------|
@@ -77,6 +77,8 @@ flowchart LR
 | 同步 | `getLongPassCards()`、`registerFaceFromServer()` |
 | 路由 | `gotoActivity()` — 按 checkType 跳转 |
 | 后台任务 | 触发 `ArcFaceApplication.startUpDataToServer()` |
+
+`TokenRefreshJobService` 虽已实现，但 Manifest 注册和查验页调度均被注释；当前 Token 过期后依赖重新登录。
 
 **重构关注**：LoginActivity 承担过多初始化编排，应抽取 `LoginCoordinator` / `InitPipeline`。
 
@@ -112,9 +114,9 @@ flowchart LR
 ```
 DualCameraHelper（预览帧）
   → FaceHelper.onPreviewFrame（检测/活体/质量/口罩/区域过滤）
-  → FaceServer.searchFace / compareFace（1:1 或 1:N）
-  → RecognizeViewModel.onRecognized（LiveData 输出）
-  → Activity UI 更新
+  → 1:N：FaceServer.searchFace
+  → 1:1：LivenessDetectViewModel.compareFaceFeature
+  → Activity 回调与 UI 更新
 ```
 
 **子模块**：
@@ -146,10 +148,10 @@ DualCameraHelper（预览帧）
 
 | SP 值 | Activity | 读卡方式 | 行数 |
 |-------|----------|----------|------|
-| 0 | LivenessDetectJinActivity | 短距 RFID（SerialManage） | ~3,116 |
-| 1 | LivenessDetectYuanActivity | 长距 EC_API + PSAM | ~3,364 |
-| 2 | LivenessDetectYuanAndJinActivity | 双读卡器 | ~3,633 |
-| 3 | RegisterAndRecognizeActivity | 无读卡，1:N | ~2,459 |
+| 0 | LivenessDetectJinActivity | 德卡 `BasicOper` / 华大 `AndroidSerialPort` 短距 | 3,056 |
+| 1 | LivenessDetectYuanActivity | 长距 `EC_API` + 德卡短距轮询（本页未 `dc_open`） | 3,305 |
+| 2 | LivenessDetectYuanAndJinActivity | 大屏德卡+长距；小屏华大短距 | 3,572 |
+| 3 | RegisterAndRecognizeActivity | 无读卡，1:N | 2,399 |
 
 ### 共同流程
 
@@ -171,9 +173,9 @@ DualCameraHelper（预览帧）
 
 | 维度 | Jin | Yuan | YuanAndJin | Register |
 |------|-----|------|------------|----------|
-| 读卡器 | 短距串口 | 长距 EC_API | 两者 | 无 |
+| 读卡器 | 德卡/华大短距 | 长距 EC_API + 德卡短距轮询 | 大屏双读卡/小屏短距 | 无 |
 | 比对模式 | 1:1 | 1:1 | 1:1 | 1:N |
-| PSAM | 无/少 | 有 | 有 | 无 |
+| PSAM | 德卡大屏分支有 | 有，但初始化存在缺口 | 德卡大屏分支有 | 无 |
 | 引领人/临时证 | 有 | 有 | 有 | 部分 |
 
 **建议抽取**：
@@ -196,6 +198,8 @@ DualCameraHelper（预览帧）
 | **渠道** | flavor 覆盖 Document2/3、layout |
 | **doc/** | [06-pass-card/](../doc/06-pass-card/) |
 
+当前四个 flavor 均启用临时证，洛阳使用独立横版 `Document3`。
+
 **同步策略**：
 
 | 类型 | 触发 | 方法 |
@@ -204,7 +208,7 @@ DualCameraHelper（预览帧）
 | 增量 | 周期（interval 分钟） | ArcFaceApplication.startPeriodicTask() |
 | 分页 | PAGE_SIZE=20 | 逐页拉取直到无数据 |
 
-**重构关注**：同步逻辑在 Application 与 LoginActivity 两处；ImageDownloader/Uploader 可合并为 `PassMediaRepository`。
+**重构关注**：同步逻辑在 Application 与 LoginActivity 两处；`ImageDownloader` 可下沉为 `PassMediaRepository`。`ImageUploader` 服务于通行抓拍上传，应归 `RecordRepository`，不能与证件照下载混成同一职责。
 
 ---
 
@@ -219,9 +223,11 @@ DualCameraHelper（预览帧）
 | **API** | POST create-long / create-temporary |
 | **doc/** | [07-records/](../doc/07-records/) |
 
-**写入时机**：查验成功后在 Activity 内直接 insert Room。
+**写入时机**：查验成功或人证不匹配失败后，在 Activity 内直接 insert Room。
 
-**重构关注**：写入分散在 4 个 Activity；应统一到 `RecordRepository.saveCheckResult()`。
+Activity 中虽然保留即时 `uploadLongTermRecords` / `uploadTemporaryRecords` 分支，但被 `if (true)` 固定绕过；当前真实上传入口只有 `ArcFaceApplication` 的 30 秒任务。
+
+**重构关注**：写入分散在 4 个 Activity；应统一到 `RecordRepository.saveCheckResult()`。上传抽取必须从 `ArcFaceApplication.startUpDataToServer()` 入手，不能迁移 Activity 内不可达的旧分支。
 
 ---
 
@@ -230,20 +236,23 @@ DualCameraHelper（预览帧）
 | 项 | 内容 |
 |----|------|
 | **职责** | 串口通信、RFID 读卡、QR 扫码串口、读卡器配置 |
-| **核心类** | `SerialManage`（单例）、`SerialHandle`、`QrSerialConfigUtil`、`CardSerialConfigUtil` |
-| **本地库** | Android-SerialPort-API、EC_RFID.jar、ZY-Interface、hcreader、dc_reader |
+| **核心类** | `BasicOper`、`AndroidSerialPort`、`EC_API`、`SerialManage`、`QrSerialConfigUtil`、`CardSerialConfigUtil` |
+| **本地库** | Android-SerialPort-API、EC_RFID.jar、hcreader、dc_reader |
 | **配置** | SPUtils 串口路径/波特率；运维抽屉配置入口 |
-| **doc/** | [09-serial/](../doc/09-serial/) |
+| **doc/** | [09-serial/](../doc/09-serial/)、[德卡 SDK 归档与升级](../doc/sdk/Android_sdk_release2.56/README.md) |
 
 **读卡器类型**：
 
 | 类型 | 用于 | 接口 |
 |------|------|------|
-| 短距 RFID | Jin | SerialManage 串口 |
-| 长距 RFID | Yuan | EC_API + BasicOper PSAM |
-| QR 扫码 | 辅助 | 独立串口配置 |
+| 大屏短距 | Jin、YuanAndJin；Yuan 也会轮询 | 德卡 `BasicOper` + PSAM/ACPU |
+| 小屏短距 | Jin、YuanAndJin 小屏分支 | `AndroidSerialPort` + `Card` |
+| 长距 RFID | Yuan、YuanAndJin 大屏分支 | `EC_API` |
+| QR 扫码 | 临时证 | `SerialManage`，独立串口配置 |
 
-**重构关注**：硬件回调与 Activity 生命周期绑定，需 `CardReaderManager` 统一生命周期管理。
+**现存缺口**：Yuan 轮询 `BasicOper` 却未在本页面 `dc_open`；三个查验页均未调用 `BasicOper.dc_exit()`。
+
+**重构关注**：硬件回调与 Activity 生命周期绑定，需生命周期感知的 `CardReaderManager` 统一打开、停止与释放。
 
 ---
 

@@ -1,7 +1,8 @@
 # airport-face 重构架构文档
 
-> 本文档体系用于支撑后续重构计划制定，基于源码与 `doc/` 技术文档（v2，57 篇）整理。  
-> 生成日期：2026-06-26 · 版本基准：`1.0.72`（versionCode `45092621`）
+> 本文档体系用于支撑后续重构计划制定，基于源码与 `doc/` 技术文档（v2，60 篇）整理。
+> 最近复核：2026-07-17 · 版本基准：`1.0.75`（versionCode `45092624`）
+> 涉及当前运行时行为时，以源码和 `doc/` v2 为准；本目录用于架构分析、风险约束与重构排期。
 
 ---
 
@@ -26,6 +27,7 @@
 | 04 | [04-data-flow-and-interactions.md](./04-data-flow-and-interactions.md) | 登录、查验、同步、上传等核心数据流 |
 | 05 | [05-technical-debt-assessment.md](./05-technical-debt-assessment.md) | 技术债清单、风险等级、重构候选区 |
 | 06 | [06-refactor-priority-matrix.md](./06-refactor-priority-matrix.md) | 重构优先级矩阵与建议阶段划分 |
+| 07 | [07-refactor-safety-baseline.md](./07-refactor-safety-baseline.md) | 重构前行为基线、构建矩阵、硬件与离线验收清单 |
 
 ---
 
@@ -50,7 +52,7 @@
 ```
 BootReceiver → LoginActivity
   → LivenessDetectJinActivity      （短距刷卡+人脸）
-  | LivenessDetectYuanActivity     （长距刷卡+人脸）
+  | LivenessDetectYuanActivity     （长距+短距轮询+人脸）
   | LivenessDetectYuanAndJinActivity（双读卡器）
   | RegisterAndRecognizeActivity   （纯人脸出区）
   → ConstructionWorkersActivity    （施工人员支线）
@@ -60,8 +62,8 @@ BootReceiver → LoginActivity
 
 | 包/目录 | 文件数 | 重构关注度 |
 |---------|--------|------------|
-| `ui/activity` | 14 | ★★★★★ 巨型 Activity |
-| `util` | 69 | ★★★ 工具分散 |
+| `ui/activity` | 15 | ★★★★★ 巨型 Activity |
+| `util` | 70 | ★★★ 工具分散 |
 | `widget` | 30 | ★★ 弹窗/自定义 View |
 | `util/face` | 15+ | ★★★★ 核心引擎管线 |
 | `network` + `data/http` | 12 | ★★★ 双通道网络 |
@@ -73,6 +75,10 @@ BootReceiver → LoginActivity
 - 分层架构：[doc/03-architecture/01-layered-architecture.md](../doc/03-architecture/01-layered-architecture.md)
 - 查验核心：[doc/05-check/](../doc/05-check/)
 - 网络层：[doc/11-network/01-api-utils.md](../doc/11-network/01-api-utils.md)
+- 构建发布：[doc/01-overview/04-build-release.md](../doc/01-overview/04-build-release.md)
+- 运行时权限：[doc/16-device/02-runtime-permissions.md](../doc/16-device/02-runtime-permissions.md)
+- 读卡与 SDK：[doc/09-serial/01-rfid-card-reader.md](../doc/09-serial/01-rfid-card-reader.md)、[doc/sdk/Android_sdk_release2.56/README.md](../doc/sdk/Android_sdk_release2.56/README.md)
+- 重构安全基线：[07-refactor-safety-baseline.md](./07-refactor-safety-baseline.md)
 
 ---
 
@@ -83,8 +89,4 @@ BootReceiver → LoginActivity
 3. 用 **05** 识别风险与约束（硬件/SDK/渠道）
 4. 用 **06** 排期与拆分 PR
 
-后续可在本目录追加：
-
-- `07-target-architecture.md` — 目标架构草案
-- `08-migration-plan.md` — 分阶段迁移计划
-- `09-module-extraction/` — 各模块抽取方案
+后续可在本目录追加各阶段 ADR、接口草案与模块抽取记录；目标架构和迁移顺序以 06 篇为主，实际行为护栏以 07 篇为准。

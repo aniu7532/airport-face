@@ -85,7 +85,7 @@ flowchart TB
 | 网络 | OkGo 3.0.4 + OkHttp 4.9.1 + Gson | — |
 | 本地存储 | Room + SharedPreferences（SPUtils/InfoStorage） | SQLCipher 依赖已加但未接入 |
 | 图片 | Glide 4.16 + 自定义 AES 解密 Loader | — |
-| 串口/读卡 | Android-SerialPort、EC_RFID、ZY-Interface 等 | libs/ 本地 AAR/JAR |
+| 串口/读卡 | 德卡 BasicOper、华大 AndroidSerialPort、EC_RFID、SerialManage(QR) | libs/ 本地 AAR/JAR |
 | 安全 | SangforSDK（零信任 VPN） | — |
 | 监控 | Bugly、ALog 文件日志 | — |
 | 更新 | XUpdate（:xupdate-lib） | — |
@@ -100,7 +100,7 @@ flavorDimensions "channel"
 ├── yinchuan   TENANT_ID="1"      临时证=是
 ├── chongqing  TENANT_ID="3"      临时证=是
 ├── shihezi    TENANT_ID="1"      TENANT_PREFIX="shf"  临时证=是
-└── luoyang    TENANT_ID="2054…"  TENANT_PREFIX="fy"   临时证=否
+└── luoyang    TENANT_ID="2054…"  TENANT_PREFIX="fy"   临时证=是
 ```
 
 **编译期注入链**：
@@ -154,20 +154,20 @@ flowchart TB
 
 ## 7. Activity 分类
 
-### 生产路径（8 个）
+### 生产路径（6 个 Activity）
 
 | Activity | 行数（约） | 职责 |
 |----------|------------|------|
-| `LoginActivity` | 1,320 | Launcher、零信任、登录、全量同步、人脸注册 |
-| `LivenessDetectJinActivity` | 3,116 | 短距 RFID + 人脸查验 |
-| `LivenessDetectYuanActivity` | 3,364 | 长距 EC_API + 人脸查验 |
-| `LivenessDetectYuanAndJinActivity` | 3,633 | 双读卡器 + 人脸查验 |
-| `RegisterAndRecognizeActivity` | 2,459 | 纯人脸 1:N 出区 |
+| `LoginActivity` | 1,413 | Launcher、零信任、登录、全量同步、人脸注册 |
+| `LivenessDetectJinActivity` | 3,056 | 短距德卡/华大 + 人脸查验 |
+| `LivenessDetectYuanActivity` | 3,305 | 长距 EC_API + 短距轮询 + 人脸查验 |
+| `LivenessDetectYuanAndJinActivity` | 3,572 | 长短距读卡器 + 人脸查验 |
+| `RegisterAndRecognizeActivity` | 2,399 | 纯人脸 1:N 出区 |
 | `ConstructionWorkersActivity` | 77 | 施工人员入口（Kotlin） |
-| `PermissionDegreeDialog` | 75 | 权限/角度提示 DialogFragment |
-| — | — | 各查验页内嵌 Fragment（Document1/2/3） |
 
-### 调试/运维路径（6 个）
+`PermissionDegreeDialog` 位于 activity 包但实际继承 `DialogFragment`，不计入 Activity。
+
+### 调试/运维路径（7 个 Activity）
 
 | Activity | 职责 |
 |----------|------|
@@ -183,7 +183,7 @@ flowchart TB
 
 ## 8. 全局入口：ArcFaceApplication
 
-**职责过重**（约 980 行），集中了：
+**职责过重**（约 1,003 行），集中了：
 
 | 职责域 | 关键方法 |
 |--------|----------|
@@ -205,9 +205,9 @@ flowchart TB
 | `YinchuanAirportDB` | `externalFilesDir/db/airportDb.db` | v19 | LongTermPass、LongTermRecords、TemporaryCardRecords | 通行证档案、待上传记录 |
 | `FaceDatabase` | `externalFilesDir/database/faceDB.db` | v1 | FaceEntity | 人脸特征向量、注册图路径 |
 
-**关联键**：`FaceEntity.userName` ≈ `LongTermPass.nickname`
+**关联键**：`FaceEntity.userName` 保存的是通行证 `id`，纯人脸识别后据此反查 `LongTermPass`；不是人员昵称。
 
-**迁移策略**：`fallbackToDestructiveMigration()` — 破坏性迁移，重构时需评估数据安全。
+**迁移策略**：业务库已声明 v10→v19 AutoMigration，但 Application 建库仍启用 `fallbackToDestructiveMigration()`；未覆盖升级路径仍可能清库。
 
 ---
 
@@ -227,17 +227,17 @@ flowchart TB
 
 | 文件 | 行数 | 问题 |
 |------|------|------|
-| `LivenessDetectYuanAndJinActivity` | ~3,633 | 业务/UI/硬件/网络高度耦合 |
-| `LivenessDetectYuanActivity` | ~3,364 | 同上，与 Jin 大量重复 |
-| `LivenessDetectJinActivity` | ~3,116 | 同上 |
-| `RegisterAndRecognizeActivity` | ~2,459 | 纯人脸模式，仍有大量重复 |
-| `util/log/ALog.java` | ~1,355 | 日志框架 |
-| `util/face/FaceHelper.java` | ~1,291 | 核心管线，相对内聚 |
-| `LoginActivity` | ~1,320 | 登录链 + 初始化链 |
-| `ArcFaceApplication` | ~980 | God Object 倾向 |
-| `RecognizeViewModel` | ~713 | 识别状态，相对合理 |
+| `LivenessDetectYuanAndJinActivity` | 3,572 | 业务/UI/硬件/网络高度耦合 |
+| `LivenessDetectYuanActivity` | 3,305 | 同上，与 Jin 大量重复 |
+| `LivenessDetectJinActivity` | 3,056 | 同上 |
+| `RegisterAndRecognizeActivity` | 2,399 | 纯人脸模式，仍有大量重复 |
+| `util/log/ALog.java` | 1,356 | 日志框架 |
+| `util/face/FaceHelper.java` | 1,292 | 核心管线，相对内聚 |
+| `LoginActivity` | 1,413 | 登录链 + 初始化链 |
+| `ArcFaceApplication` | 1,003 | God Object 倾向 |
+| `RecognizeViewModel` | 714 | 识别状态，相对合理 |
 
-四个 Liveness Activity 合计 **~12,600 行**，存在显著 **复制-粘贴式重复**，是重构最高优先级区域。
+三个 Liveness Activity 加纯人脸 Activity 合计 **12,332 行**，存在显著 **复制-粘贴式重复**，是重构最高优先级区域。
 
 ---
 

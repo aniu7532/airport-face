@@ -6,8 +6,8 @@
 flowchart TB
     subgraph L1["L1 表现层 Presentation"]
         direction TB
-        Act[Activity ×14]
-        Frag[Fragment ×8]
+        Act[activity 包 ×15]
+        Frag[Fragment ×9]
         VM[ViewModel ×11]
         Adp[Adapter ×7]
         Dlg[Dialog/Widget ×30]
@@ -70,8 +70,8 @@ com.arcsoft.arcfacedemo/
 ├── ArcFaceApplication.java          # 全局 Application（L2+L3 混合）
 │
 ├── ui/                              # L1 表现层
-│   ├── activity/        (14)        # 页面入口
-│   ├── fragment/        (8)         # 卡面 + 施工子页
+│   ├── activity/        (15)        # 14 个 Activity + 1 个 DialogFragment
+│   ├── fragment/        (9)         # 卡面 + 施工子页
 │   ├── viewmodel/       (11)        # MVVM 状态
 │   ├── adapter/         (7)         # 列表适配
 │   ├── pagingsource/    (2)         # Paging3 数据源
@@ -118,7 +118,7 @@ com.arcsoft.arcfacedemo/
 │   └── entity/FaceEntity.java
 │
 ├── entity/                          # L3 API 模型
-│   └── (17 Java + 3 Kotlin)
+│   └── (17：14 Java + 3 Kotlin)
 │
 ├── preference/                      # L1/L3 识别参数 UI
 │   └── (8)
@@ -149,9 +149,9 @@ com.arcsoft.arcfacedemo/
 | Activity | ViewModel | L2 业务 | L3 数据 | L4 基础设施 | 直接 OkGo |
 |----------|-----------|---------|---------|-------------|-----------|
 | LoginActivity | FacePhotoViewModel | FaceServer, ImageDownloader | Room, InfoStorage | OkGo, SangforSDK | ✓ |
-| LivenessDetectJin | Recognize, Liveness | FaceHelper, SerialManage | Room DAO | Camera, ArcFace | ✓ |
-| LivenessDetectYuan | 同上 | 同上 + EC_API | 同上 | 同上 + PSAM | ✓ |
-| LivenessDetectYuanAndJin | 同上 | 同上（双读卡） | 同上 | 同上 | ✓ |
+| LivenessDetectJin | Recognize, Liveness | FaceHelper、BasicOper/AndroidSerialPort、SerialManage(QR) | Room DAO | Camera, ArcFace | ✓ |
+| LivenessDetectYuan | 同上 | FaceHelper、EC_API、BasicOper、SerialManage(QR) | 同上 | Camera、ArcFace、PSAM | ✓ |
+| LivenessDetectYuanAndJin | 同上 | 上述长短距组合 | 同上 | 同上 | ✓ |
 | RegisterAndRecognize | Recognize | FaceHelper | Room DAO | Camera, ArcFace | ✓ |
 | ConstructionWorkers | 3× Kotlin VM | — | — | OkGo (via Paging) | ✓ |
 | FaceManageActivity | FacePhotoViewModel | FaceServer | FaceRepository | — | — |
@@ -210,7 +210,8 @@ com.arcsoft.arcfacedemo/
 | PassRepository | LongTermPass 同步、查询 |
 | RecordRepository | 记录写入、待上传队列 |
 | AuthRepository | 登录、Token、用户信息 |
-| CheckRepository | 查验流程编排 |
+
+查验流程没有独立数据源，使用领域层 `CheckFlowCoordinator` 编排即可，暂不为对称性创建 `CheckRepository`。
 
 ---
 
@@ -248,7 +249,8 @@ flowchart LR
 
 - Token 存储在 `ApiUtils` 静态字段，OkGo 直接调用需手动拼接
 - Header 字段（tenant-id、Authorization）可能不一致
-- 无统一错误处理、重试、Token 刷新（TokenRefreshJobService 未启用）
+- 无统一错误处理、重试、Token 刷新（TokenRefreshJobService 未启用，现有实现刷新成功后也未写回 `ApiUtils.accessToken`）
+- 除 `ApiUtils` / 直接 OkGo 外，`ImageUploader` 和 Token Job 还直接使用 OkHttp，实际是多入口网络栈
 
 ---
 
@@ -261,7 +263,7 @@ flowchart LR
 | OkGo 网络回调 | OkGo 线程池 → UI | JsonCallback |
 | 记录上传 | ThreadUtils 固定速率池（15） | ArcFaceApplication |
 | 通行证同步 | 同上 + interval | ArcFaceApplication |
-| Room 读写 | 调用方线程 | 各 Activity（⚠️ 主线程风险） |
+| Room 读写 | 调用方自行切线程 | 各 Activity（缺少统一 IO 调度边界） |
 | Paging 加载 | IO Dispatcher | PagingSource |
 | RxJava | IO / Computation | FaceServer |
 
@@ -276,7 +278,7 @@ app/src/main/          ← 公共代码（所有 flavor 共享）
 app/src/yinchuan/      ← 覆盖 ChannelConfig + Document2/3 + layout
 app/src/chongqing/     ← 同上
 app/src/shihezi/       ← 同上
-app/src/luoyang/       ← 同上（SUPPORTS_TEMPORARY_PASS=false）
+app/src/luoyang/       ← 同上（当前 SUPPORTS_TEMPORARY_PASS=true）
 ```
 
 **覆盖规则**：同包名 + 同类名 → flavor 源码优先。
@@ -293,7 +295,8 @@ app/src/luoyang/       ← 同上（SUPPORTS_TEMPORARY_PASS=false）
 | SangforSDK.aar | L4 | 🔴 厂商绑定 |
 | Android-SerialPort-API | L4 | 🟡 可封装 |
 | EC_RFID.jar | L4 | 🔴 硬件绑定 |
-| ZY-Interface / hcreader / dc_reader | L4 | 🔴 硬件绑定 |
+| `dc_reader_release_V1.0.0_20230516162946.aar` | L4 | 🔴 德卡硬件绑定；20231121 新版仅归档、尚未接入 |
+| ZY-Interface / hcreader | L4 | 🔴 硬件绑定 |
 | yface_api.jar | L4 | 🟡 设备 API |
 
 ---
