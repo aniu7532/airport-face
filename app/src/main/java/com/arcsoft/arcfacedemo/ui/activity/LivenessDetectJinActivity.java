@@ -46,6 +46,7 @@ import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.config.ChannelConfig;
 import com.arcsoft.arcfacedemo.util.CardSerialConfigUtil;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
+import com.arcsoft.arcfacedemo.util.PassAbnormalReasonUtil;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
@@ -1416,23 +1417,23 @@ public class LivenessDetectJinActivity extends BaseActivity
      * @return 状态中文文案
      */
     public String theCardIsExpired(int status) {
-        String sta = "正常";
-        if (status == 1) {
-            sta = "正常";
+        return PassAbnormalReasonUtil.cardStatusText(status);
+    }
+
+    /** 按证件类型写入通行失败记录（可无现场图）。 */
+    private void savePassFailRecord(LongTermPass pass, Bitmap bitmap, float faceSimilar, float quality,
+            String reason) {
+        if (pass == null) {
+            return;
         }
-        if (status == 2) {
-            sta = "注销";
+        if (pass.type == 0) {
+            saveLongTermRecords(pass, bitmap, faceSimilar, quality, false, reason);
+        } else if (pass.type == 1) {
+            if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+                return;
+            }
+            saveTemporaryRecords(pass, bitmap, faceSimilar, quality, false, reason);
         }
-        if (status == 3) {
-            sta = "过期";
-        }
-        if (status == 4) {
-            sta = "挂失";
-        }
-        if (status == 5) {
-            sta = "停用";
-        }
-        return sta;
     }
 
     /** 清空当前 RFID，允许再次刷同一张卡 */
@@ -1626,6 +1627,7 @@ public class LivenessDetectJinActivity extends BaseActivity
                         // }
                         ALog.i("没有有当前区域权限" + longTermPass.cardId);
                         showCustomDialog(2, "无当前区域权限");
+                        savePassFailRecord(longTermPass, null, 0, 0, "无当前区域权限");
                         setRfidNull();
                         stopChecking();
                         // startReadLongPassCardID();
@@ -1724,6 +1726,11 @@ public class LivenessDetectJinActivity extends BaseActivity
      */
     public void saveLongTermRecords(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             boolean status) {
+        saveLongTermRecords(longTermPass, bitmap, faceSimilar, quality, status, null);
+    }
+
+    public void saveLongTermRecords(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
+            boolean status, String reason) {
         float qualityvalue = livenessDetectViewModel.getFeatureValue(bitmap);
         ALog.e("qualityvalue:" + qualityvalue);
         quality = qualityvalue;
@@ -1739,7 +1746,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             longTermRecords.checkTime = TimeUtils.getNowString();
             longTermRecords.status = String.valueOf(status);
             if (!status) {
-                longTermRecords.reason = "人证不匹配";
+                longTermRecords.reason = PassAbnormalReasonUtil.resolve(longTermPass, reason);
             }
 
             if (longTermPass.idCode.startsWith("C") && ObjectUtils.isNotEmpty(longTermPass.leadingPeopleId)) {
@@ -2015,6 +2022,7 @@ public class LivenessDetectJinActivity extends BaseActivity
                         // }
                         ALog.i("没有有当前区域权限" + longTermPass.cardId);
                         showCustomDialog(2, "无当前区域权限");
+                        savePassFailRecord(longTermPass, null, 0, 0, "无当前区域权限");
                         setRfidNull();
                         return null;
                     }
@@ -2088,6 +2096,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "证件未生效");
+            savePassFailRecord(longTermPass, null, 0, 0, "证件未生效");
             stopChecking();
             return false;
         }
@@ -2099,6 +2108,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "证件过期");
+            savePassFailRecord(longTermPass, null, 0, 0, PassAbnormalReasonUtil.forCardStatus(3));
             stopChecking();
             return false;
         }
@@ -2118,6 +2128,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "证件已" + theCardIsExpired(longTermPass.status));
+            savePassFailRecord(longTermPass, null, 0, 0, PassAbnormalReasonUtil.forCardStatus(longTermPass.status));
             stopChecking();
             // startReadLongPassCardID();
             return false;
@@ -2128,6 +2139,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "通行证在黑名单中");
+            savePassFailRecord(longTermPass, null, 0, 0, "通行证在黑名单中");
             stopChecking();
             return false;
 
@@ -2137,6 +2149,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "通行证被收回");
+            savePassFailRecord(longTermPass, null, 0, 0, "通行证被收回");
             stopChecking();
             return false;
 
@@ -2146,6 +2159,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "通行证被暂扣");
+            savePassFailRecord(longTermPass, null, 0, 0, "通行证被暂扣");
             stopChecking();
             return false;
 
@@ -2155,6 +2169,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, "通行证分数为0");
+            savePassFailRecord(longTermPass, null, 0, 0, "通行证分数为0");
             stopChecking();
             return false;
 
@@ -2166,6 +2181,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             setRfidNull();
             playAudio(mediaReject);
             showCustomDialog(2, timeControlResult.getErrorMessage());
+            savePassFailRecord(longTermPass, null, 0, 0, timeControlResult.getErrorMessage());
             stopChecking();
             return false;
         }
@@ -2184,6 +2200,11 @@ public class LivenessDetectJinActivity extends BaseActivity
      */
     public void saveTemporaryRecords(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             boolean status) {
+        saveTemporaryRecords(longTermPass, bitmap, faceSimilar, quality, status, null);
+    }
+
+    public void saveTemporaryRecords(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
+            boolean status, String reason) {
         float qualityvalue = livenessDetectViewModel.getFeatureValue(bitmap);
         ALog.e("qualityvalue:" + qualityvalue);
         quality = qualityvalue;
@@ -2200,7 +2221,7 @@ public class LivenessDetectJinActivity extends BaseActivity
             // temporaryCardRecords.sitePhoto = imgUrl;
             temporaryCardRecords.status = String.valueOf(status);
             if (!status) {
-                temporaryCardRecords.reason = "人证不匹配";
+                temporaryCardRecords.reason = PassAbnormalReasonUtil.resolve(longTermPass, reason);
             }
             temporaryCardRecords.passid = longTermPass.id;
             temporaryCardRecords.idCode = longTermPass.idCode;
@@ -2897,6 +2918,32 @@ public class LivenessDetectJinActivity extends BaseActivity
         faceFeature = null;
         stopChecking();
 
+        if (longTermPass != null && longTermPass.status != 1) {
+            ALog.e("人脸通过但证件状态异常 status=" + longTermPass.status);
+            String reason = PassAbnormalReasonUtil.forCardStatus(longTermPass.status);
+            savePassFailRecord(longTermPass, bitmap, faceSimilar, quality, reason);
+            playAudio(mediaReject);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    showCustomDialog(2, reason);
+                    iv_face.setImageBitmap(bitmap);
+                    iv_face.setVisibility(View.VISIBLE);
+                    if (faceSimilar > 0) {
+                        binding.tvFaceSimilar.setBackgroundResource(R.drawable.face_similar_bg);
+                        binding.tvFaceSimilar.setVisibility(View.VISIBLE);
+                        binding.tvFaceSimilar.setText(String.format("%.2f%%", faceSimilar * 100));
+                        countdownHandler.removeMessages(10);
+                        countdownHandler.sendEmptyMessageDelayed(10, 10 * 1000L);
+                    }
+                    turnFragment1();
+                }
+            });
+            lastLongTermPass = null;
+            lastTime = 0;
+            return;
+        }
+
         if (longTermPass != null) {
             if (longTermPass.type == 0) {
                 playAudio(mediaPass);
@@ -2945,14 +2992,7 @@ public class LivenessDetectJinActivity extends BaseActivity
         ALog.e("chechFailed");
         setRfidNull();
         if (longTermPass != null) {
-            if (longTermPass.type == 0) {
-                // ALog.i("上传图片路径: " + s);
-                saveLongTermRecords(longTermPass, bitmap, faceSimilar, quality, false); // 保存长期通行记录到本地数据库
-            } else if (longTermPass.type == 1) {
-                // String s = imageUploader.uploadBitmap(bitmap);
-                // ALog.i("上传图片路径: " + s);
-                saveTemporaryRecords(longTermPass, bitmap, faceSimilar, quality, false);// 保存临时通信记录到本地数据库
-            }
+            savePassFailRecord(longTermPass, bitmap, faceSimilar, quality, PassAbnormalReasonUtil.FACE_MISMATCH);
         }
         stopChecking();
         playAudio(mediaReject);

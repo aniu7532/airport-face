@@ -38,6 +38,7 @@ import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.config.ChannelConfig;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
+import com.arcsoft.arcfacedemo.util.PassAbnormalReasonUtil;
 import com.arcsoft.arcfacedemo.util.PlayerUtil;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
@@ -361,6 +362,8 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
     /** 是否正在执行 queryPassCard，防止并发重复查验 */
     boolean checking = false;
+    /** checkCard 失败时的异常原因，供随后落库使用 */
+    private String lastCheckCardFailReason;
     /** 上一次成功查验的通行证，用于 1500ms 内去重 */
     public LongTermPass lastLongTermPass;
     /** 上一次成功查验的时间戳 */
@@ -1365,23 +1368,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
      * @return 状态中文描述
      */
     public String theCardIsExpired(int status) {
-        String sta = "正常";
-        if (status == 1) {
-            sta = "正常";
-        }
-        if (status == 2) {
-            sta = "注销";
-        }
-        if (status == 3) {
-            sta = "过期";
-        }
-        if (status == 4) {
-            sta = "挂失";
-        }
-        if (status == 5) {
-            sta = "停用";
-        }
-        return sta;
+        return PassAbnormalReasonUtil.cardStatusText(status);
     }
 
     /* ---------- 查验并发控制 ---------- */
@@ -1568,7 +1555,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
                 // }
 
                 if (!checkCard(card)) {
-                    savePassRecord(card, bitmap, faceSimilar, quality, false);
+                    savePassRecord(card, bitmap, faceSimilar, quality, false, lastCheckCardFailReason);
                     lastLongTermPass = null;
                     lastTime = 0;
                     stopChecking();
@@ -1682,7 +1669,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity
      * @return 通过返回 true；失败时播放提示音、弹窗并 {@link #stopChecking}
      */
     public boolean checkCard(LongTermPass longTermPass) {
+        lastCheckCardFailReason = null;
         if (longTermPass.type == 1 && !ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
+            lastCheckCardFailReason = "不支持临时通行证";
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "不支持临时通行证");
             stopChecking();
@@ -1691,6 +1680,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         long span = TimeUtils.getTimeSpan(DateUtil.string2MillisStartDate(longTermPass.startDate), TimeUtils.getNowMills(),
                 TimeConstants.SEC);
         if (span > 0) {
+            lastCheckCardFailReason = "证件未生效";
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "证件未生效");
             stopChecking();
@@ -1701,6 +1691,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
                 TimeConstants.SEC);
         if (span < 0) {
             longTermPass.status = 3;
+            lastCheckCardFailReason = PassAbnormalReasonUtil.forCardStatus(3);
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "证件过期");
             stopChecking();
@@ -1719,6 +1710,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
         // 判断证件是否正常
         if (longTermPass.status != 1) {
+            lastCheckCardFailReason = PassAbnormalReasonUtil.forCardStatus(longTermPass.status);
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "证件已" + theCardIsExpired(longTermPass.status));
             stopChecking();
@@ -1728,6 +1720,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
 
         if (longTermPass.isBlacklist) {
+            lastCheckCardFailReason = "通行证在黑名单中";
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "通行证在黑名单中");
             stopChecking();
@@ -1736,6 +1729,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
 
         if (longTermPass.isWithdraw) {
+            lastCheckCardFailReason = "通行证被收回";
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "通行证被收回");
             stopChecking();
@@ -1744,6 +1738,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
 
         if (longTermPass.isWithhold) {
+            lastCheckCardFailReason = "通行证被暂扣";
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "通行证被暂扣");
             stopChecking();
@@ -1752,6 +1747,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         }
 
         if (longTermPass.score <= 0) {
+            lastCheckCardFailReason = "通行证分数为0";
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, "通行证分数为0");
             stopChecking();
@@ -1762,6 +1758,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         // 检查时间控制
         TimeControlUtil.TimeControlResult timeControlResult = TimeControlUtil.checkTimeControl(longTermPass);
         if (!timeControlResult.isAllowed()) {
+            lastCheckCardFailReason = timeControlResult.getErrorMessage();
             playAudio(R.raw.validation_failed);
             showCustomDialog(2, timeControlResult.getErrorMessage());
             stopChecking();
@@ -1779,17 +1776,22 @@ public class RegisterAndRecognizeActivity extends BaseActivity
      * @param isPass 是否查验通过
      */
     public void savePassRecord(LongTermPass card, Bitmap bitmap, float faceSimilar, float quality, Boolean isPass) {
+        savePassRecord(card, bitmap, faceSimilar, quality, isPass, null);
+    }
+
+    public void savePassRecord(LongTermPass card, Bitmap bitmap, float faceSimilar, float quality, Boolean isPass,
+            String reason) {
         // uploadPassRecord();
         // boolean availableByPing = NetworkUtils.isAvailableByPing();
         // ALog.i("用 ping 判断网络是否可用：" + availableByPing);
         int type = card.type;
         if (type == 0) {// 长期卡
-            saveLongRecord(card, bitmap, faceSimilar, quality, isPass);
+            saveLongRecord(card, bitmap, faceSimilar, quality, isPass, reason);
         } else if (type == 1) {
             if (!ChannelConfig.SUPPORTS_TEMPORARY_PASS) {
                 return;
             }
-            saveShortRecord(card, bitmap, faceSimilar, quality, isPass);
+            saveShortRecord(card, bitmap, faceSimilar, quality, isPass, reason);
         }
     }
 
@@ -1800,6 +1802,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity
      */
     public void saveLongRecord(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             Boolean isPass) {
+        saveLongRecord(longTermPass, bitmap, faceSimilar, quality, isPass, null);
+    }
+
+    public void saveLongRecord(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
+            Boolean isPass, String reason) {
         float qualityvalue = recognizeViewModel.getFeatureValue(bitmap);
         ALog.e("qualityvalue:" + qualityvalue);
         quality = qualityvalue;
@@ -1812,7 +1819,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             longTermRecords.id = worker.nextId() + "";
             longTermRecords.status = String.valueOf(isPass);
             if (!isPass) {
-                longTermRecords.reason = "人证不匹配";
+                longTermRecords.reason = PassAbnormalReasonUtil.resolve(longTermPass, reason);
             }
             if (longTermPass.idCode.startsWith("C") && ObjectUtils.isNotEmpty(longTermPass.leadingPeopleId)) {
                 longTermRecords.parentld = localLongId;
@@ -1981,6 +1988,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity
      */
     public void saveShortRecord(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
             Boolean isPass) {
+        saveShortRecord(longTermPass, bitmap, faceSimilar, quality, isPass, null);
+    }
+
+    public void saveShortRecord(LongTermPass longTermPass, Bitmap bitmap, float faceSimilar, float quality,
+            Boolean isPass, String reason) {
         float qualityvalue = recognizeViewModel.getFeatureValue(bitmap);
         ALog.e("qualityvalue:" + qualityvalue);
         quality = qualityvalue;
@@ -1994,7 +2006,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             temporaryCardRecords.id = worker.nextId() + "";
             temporaryCardRecords.status = String.valueOf(isPass);
             if (!isPass) {
-                temporaryCardRecords.reason = "人证不匹配";
+                temporaryCardRecords.reason = PassAbnormalReasonUtil.resolve(longTermPass, reason);
             }
             temporaryCardRecords.passid = longTermPass.id;
             temporaryCardRecords.idCode = longTermPass.idCode;
