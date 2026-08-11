@@ -46,6 +46,7 @@ import com.arcsoft.arcfacedemo.util.DateUtil;
 import com.arcsoft.arcfacedemo.util.FaceRectTransformer;
 import com.arcsoft.arcfacedemo.util.ImageUploader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
+import com.arcsoft.arcfacedemo.util.PsamResetTimeoutGuard;
 import com.arcsoft.arcfacedemo.util.SimpleTask;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.SnowFlake;
@@ -944,7 +945,10 @@ public class LivenessDetectYuanActivity extends BaseActivity
             String[] resultArr;
             // 1. psam卡复位
             BasicOper.dc_setcpu(2); // 选择PSAM卡座
-            String result = BasicOper.dc_cpureset_hex(); //
+            String result = PsamResetTimeoutGuard.dcCpuResetHex(); //
+            if (ObjectUtils.isEmpty(result)) {
+                return false;
+            }
             resultArr = result.split("\\|", -1);
             if (resultArr[0].equals("0000")) {
                 // Toast.makeText(this, "PSAM卡复位成功", Toast.LENGTH_SHORT).show();
