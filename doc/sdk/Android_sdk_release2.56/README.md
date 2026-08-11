@@ -36,10 +36,16 @@ a43af39d7e64951ff7b0f361afef6a9b51a3e8ff8693ced9aacd9e0c10fd2bbd  dc_reader_rele
 
 ## 2. 当前项目接入现状
 
-项目已接入较早版本：
+项目当前编译版本：
 
 ```text
-app/libs/dc_reader_release_V1.0.0_20230516162946.aar
+app/libs/dc_reader_release_V1.0.0_20231121115913.aar
+```
+
+旧版备份：
+
+```text
+doc/sdk/Android_sdk_release2.56/dc_reader_release_V1.0.0_20230516162946.aar.bak
 ```
 
 `app/build.gradle` 通过 `implementation(fileTree("libs"))` 自动加载 `app/libs` 下的本地依赖。现有业务已经使用 `com.decard.NDKMethod.BasicOper`：
@@ -267,4 +273,4 @@ dc_exit 返回值
 
 ## 7. 本次交付边界
 
-本次只归档厂商资源并整理升级开发流程，尚未替换 `app/libs` 中正在使用的旧 AAR，也未修改现有读卡代码。实际升级必须经过上述编译、真机和业务回归后再合入。
+厂商资源已归档；`app/libs` 已替换为 `dc_reader_release_V1.0.0_20231121115913.aar`（`assembleYinchuanDebug` 编译通过）。旧版 AAR 备份在本目录 `dc_reader_release_V1.0.0_20230516162946.aar.bak`。真机仍需回归 PSAM 外部认证全链路后再合入。
