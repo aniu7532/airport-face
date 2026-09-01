@@ -466,6 +466,30 @@ public class LoginActivity extends BaseActivity
         });
     }
 
+    private String buildFailureMessage(String fallback, String detail) {
+        if (TextUtils.isEmpty(detail)) {
+            return fallback;
+        }
+        detail = detail.trim();
+        if (TextUtils.isEmpty(detail)) {
+            return fallback;
+        }
+        return fallback + "：" + detail;
+    }
+
+    private String buildFailureMessage(String fallback, Throwable throwable) {
+        return buildFailureMessage(fallback, throwable == null ? null : throwable.getMessage());
+    }
+
+    private void showLoginInputLayout() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                binding.inputLayout.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
     /**
      * 延迟自动触发登录按钮点击，并展示登录进度弹窗。
      *
@@ -528,8 +552,8 @@ public class LoginActivity extends BaseActivity
                          */
                         @Override
                         public void onSetSpaConfig(String result, SFBaseMessage error) {
-                            ALog.e("result:" + result + ",error:" + error.toString());
-                            switch ((int) error.mErrCode) {
+                            ALog.e("result:" + result + ",error:" + GsonUtils.toJson(error));
+                            switch ((int) (error == null ? -1 : error.mErrCode)) {
                             case 0:
                                 ALog.e("auto：" + auto);
                                 if (auto) {
@@ -553,12 +577,7 @@ public class LoginActivity extends BaseActivity
                                         handler.removeMessages(1);
                                         handler.sendEmptyMessageDelayed(1, 10L);
                                     } else {
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                binding.inputLayout.setVisibility(View.VISIBLE);
-                                            }
-                                        });
+                                        showLoginInputLayout();
                                         loging = false;
                                         auto = false;
                                         showErrorToast("免密登陆失败 ");
@@ -598,10 +617,12 @@ public class LoginActivity extends BaseActivity
                                 showErrorToast("不支持的参数");
                                 break;
                             default:
+                                showErrorToast(buildFailureMessage("安全码配置失败",
+                                        error == null ? null : error.mErrStr));
                                 break;
                             }
                             auto = false;
-                            binding.inputLayout.setVisibility(View.VISIBLE);
+                            showLoginInputLayout();
                             String spa = SPUtils.getInstance().getString("spa", "y121-fbcq-BPXz");
                             DialogUtils.startInputConfirm(LoginActivity.this, "安全码验证失败", "请核对后再次验证", spa, "请输入文案内容",
                                     new DialogUtils.OnInputListener() {
@@ -706,7 +727,8 @@ public class LoginActivity extends BaseActivity
             /** 零信任认证失败，重置登录状态并提示错误信息 */
             @Override
             public void onAuthFailed(SFBaseMessage sfBaseMessage) {
-                Toast.makeText(LoginActivity.this, sfBaseMessage.mErrStr, Toast.LENGTH_SHORT).show();
+                showErrorToast(buildFailureMessage("零信任认证失败",
+                        sfBaseMessage == null ? null : sfBaseMessage.mErrStr));
                 ALog.e("零信任认证失败: " + GsonUtils.toJson(sfBaseMessage));
                 loging = false;
             }
@@ -815,15 +837,32 @@ public class LoginActivity extends BaseActivity
                     resData = GsonUtils.fromJson(response, ApiResponse.class);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    showWarningToast("接口返回异常，解析错误");
+                    showWarningToast(buildFailureMessage("后台登录返回解析失败", e));
                     loging = false;
                     dismissProgressDialog();
                     return;
                 }
 
-                if (resData.getCode() == 200) {
+                if (resData != null && resData.getCode() == 200) {
 
-                    Login login = GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), Login.class);
+                    Login login;
+                    try {
+                        login = GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), Login.class);
+                    } catch (Exception e) {
+                        showWarningToast(buildFailureMessage("后台登录返回解析失败", e));
+                        loging = false;
+                        dismissProgressDialog();
+                        showLoginInputLayout();
+                        return;
+                    }
+                    if (login == null || TextUtils.isEmpty(login.getAccessToken())
+                            || TextUtils.isEmpty(login.getUserId())) {
+                        showWarningToast("后台登录返回数据不完整");
+                        loging = false;
+                        dismissProgressDialog();
+                        showLoginInputLayout();
+                        return;
+                    }
                     String accessToken = login.getAccessToken();
                     String refreshToken = login.getRefreshToken();
                     String userId = login.getUserId();
@@ -838,28 +877,31 @@ public class LoginActivity extends BaseActivity
                         @Override
                         public String doInBackground() throws Throwable {
                             // 获取设备详情
-                            boolean result = getMACDetail();
-                            if (!result) {
+                            String failureMessage = getMACDetail();
+                            if (failureMessage != null) {
                                 dismissProgressDialog();
-                                showWarningToast("初始化失败，获取设备详情失败");
+                                showWarningToast(failureMessage);
+                                showLoginInputLayout();
                                 loging = false;
                                 return null;
                             }
 
                             // 获取配置信息
-                            result = getConfigInfo();
-                            if (!result) {
+                            failureMessage = getConfigInfo();
+                            if (failureMessage != null) {
                                 dismissProgressDialog();
-                                showWarningToast("初始化失败，获取配置信息失败");
+                                showWarningToast(failureMessage);
+                                showLoginInputLayout();
                                 loging = false;
                                 return null;
                             }
 
                             // 获取用户详情
-                            result = getUserDetail(login.getUserId());
-                            if (!result) {
+                            failureMessage = getUserDetail(login.getUserId());
+                            if (failureMessage != null) {
                                 dismissProgressDialog();
-                                showWarningToast("初始化失败，获取用户详情失败");
+                                showWarningToast(failureMessage);
+                                showLoginInputLayout();
                                 loging = false;
                                 return null;
                             }
@@ -887,8 +929,9 @@ public class LoginActivity extends BaseActivity
                         }
                     });
                 } else {
-                    showWarningToast(resData.getMsg());
+                    showWarningToast(buildFailureMessage("后台登录失败", resData == null ? null : resData.getMsg()));
                     dismissProgressDialog();
+                    showLoginInputLayout();
                 }
                 loging = false;
             }
@@ -897,9 +940,9 @@ public class LoginActivity extends BaseActivity
             public void onFailure(Throwable e) {
                 ALog.e("Error: " + e.getMessage());
                 loging = false;
-                showWarningToast("登录失败，" + e.getMessage());
+                showWarningToast(buildFailureMessage("登录失败", e));
                 dismissProgressDialog();
-                binding.inputLayout.setVisibility(View.VISIBLE);
+                showLoginInputLayout();
             }
         });
     }
@@ -984,9 +1027,9 @@ public class LoginActivity extends BaseActivity
      * 同步获取用户详情并保存昵称、手机号到本地。
      *
      * @param userId 登录返回的用户 ID
-     * @return 是否获取成功
+     * @return 获取成功返回 null，否则返回失败原因
      */
-    private boolean getUserDetail(String userId) {
+    private String getUserDetail(String userId) {
         ALog.d("获得用户详情: ");
         GetRequest<String> request =
                 OkGo.<String> get(UrlConstants.URL_GET_USER_DETAIL).tag(UrlConstants.URL_GET_USER_DETAIL);
@@ -1004,31 +1047,35 @@ public class LoginActivity extends BaseActivity
             com.lzy.okgo.model.Response<String> res = call.execute();
             ALog.d("获获取用户详情Response");
             ApiResponse resData = GsonUtils.fromJson(res.body(), ApiResponse.class);
-            if (resData.getCode() == 200) {
+            if (resData != null && resData.getCode() == 200) {
                 // 解析 JSON 字符串为 User 对象
                 User login = GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), User.class);
+                if (login == null) {
+                    return "初始化失败，获取用户详情失败：接口返回用户为空";
+                }
                 String nickname = login.getNickname();
                 infoStorage.saveString("loginName", nickname);
                 SPUtils.getInstance().put("mobile", login.getMobile());
-                return true;
+                return null;
             } else {
-                showWarningToast(resData.getMsg());
+                String failureMessage = buildFailureMessage("初始化失败，获取用户详情失败",
+                        resData == null ? null : resData.getMsg());
                 ALog.e("获获取用户详情Response失败: " + GsonUtils.toJson(resData));
+                return failureMessage;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(LoginActivity.this, "获获取用户详情失败", Toast.LENGTH_SHORT).show();
             ALog.e("Error: " + e.getMessage());
+            return buildFailureMessage("初始化失败，获取用户详情失败", e);
         }
-        return false;
     }
 
     /**
      * 根据设备 MAC/ID 同步获取设备详情，保存 deviceId、deviceName 等到本地。
      *
-     * @return 是否获取成功
+     * @return 获取成功返回 null，否则返回失败原因
      */
-    private boolean getMACDetail() {
+    private String getMACDetail() {
         ALog.d("获得设备详细信息: ");
         ALog.d("MACAddress: " + deviceId);
 
@@ -1049,7 +1096,7 @@ public class LoginActivity extends BaseActivity
             ALog.d("获得设备详细信息");
             // 解析 JSON 数据
             ApiResponse resData = GsonUtils.fromJson(res.body(), ApiResponse.class);
-            if (resData.getCode() == 200) {
+            if (resData != null && resData.getCode() == 200) {
                 Map<String, Object> map =
                         GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), new TypeToken<Map<String, Object>>() {
                         }.getType());
@@ -1074,25 +1121,26 @@ public class LoginActivity extends BaseActivity
                     ALog.e("deviceAreaDetail:" + infoStorage.getString("deviceAreaDetail", ""));
                 }
                 showSuccessToast("获得查验方式成功");
-                return true;
+                return null;
             } else {
-                showWarningToast(resData.getMsg());
+                String failureMessage = buildFailureMessage("初始化失败，获取设备详情失败",
+                        resData == null ? null : resData.getMsg());
                 ALog.e("获得设备详细信息失败: " + GsonUtils.toJson(resData));
+                return failureMessage;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(LoginActivity.this, "获得查验方式失败", Toast.LENGTH_SHORT).show();
             ALog.e("Error: " + e.getMessage());
+            return buildFailureMessage("初始化失败，获取设备详情失败", e);
         }
-        return false;
     }
 
     /**
      * 同步获取设备类型（type=5）与上报间隔（type=6）配置并持久化。
      *
-     * @return 是否全部获取成功
+     * @return 全部获取成功返回 null，否则返回失败原因
      */
-    private boolean getConfigInfo() {
+    private String getConfigInfo() {
         ALog.d("获取配置信息: ");
 
         GetRequest<String> request =
@@ -1112,7 +1160,7 @@ public class LoginActivity extends BaseActivity
             ALog.d("获取配置信息Response");
             // 解析 JSON 数据
             ApiResponse resData = GsonUtils.fromJson(res.body(), ApiResponse.class);
-            if (resData.getCode() == 200) {
+            if (resData != null && resData.getCode() == 200) {
                 ConfigInfo data = GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), ConfigInfo.class);
                 ALog.d("Type: " + data.type);
                 ALog.d("Enter: " + data.params.enter);
@@ -1122,15 +1170,15 @@ public class LoginActivity extends BaseActivity
                 infoStorage.saveString("devicesOut", String.valueOf(data.params.out));
                 showSuccessToast("获取配置信息成功");
             } else {
-                showWarningToast(resData.getMsg());
+                String failureMessage = buildFailureMessage("初始化失败，获取配置信息失败",
+                        resData == null ? null : resData.getMsg());
                 ALog.e("获取配置信息失败: " + GsonUtils.toJson(resData));
-                return false;
+                return failureMessage;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            showSuccessToast("获取配置信息失败");
             ALog.e("Error: " + e.getMessage());
-            return false;
+            return buildFailureMessage("初始化失败，获取配置信息失败", e);
         }
 
         request = OkGo.<String> get(UrlConstants.URL_GETCONFIGINFO).tag(UrlConstants.URL_GETCONFIGINFO);
@@ -1149,23 +1197,24 @@ public class LoginActivity extends BaseActivity
             ALog.d("获取配置信息Response");
             // 解析 JSON 数据
             ApiResponse resData = GsonUtils.fromJson(res.body(), ApiResponse.class);
-            if (resData.getCode() == 200) {
+            if (resData != null && resData.getCode() == 200) {
                 ConfigInfo data = GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), ConfigInfo.class);
                 ALog.d("Type: " + data.type);
                 ALog.d("interval: " + data.params.interval);
                 infoStorage.saveInt("interval", data.params.interval);
                 showSuccessToast("获取配置信息成功");
-                return true;
+                return null;
             } else {
-                showWarningToast(resData.getMsg());
+                String failureMessage = buildFailureMessage("初始化失败，获取配置信息失败",
+                        resData == null ? null : resData.getMsg());
                 ALog.e("获取配置信息失败: " + GsonUtils.toJson(resData));
+                return failureMessage;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            showSuccessToast("获取配置信息失败");
             ALog.e("Error: " + e.getMessage());
+            return buildFailureMessage("初始化失败，获取配置信息失败", e);
         }
-        return false;
     }
 
     // ======================== 通行证同步 ========================
@@ -1175,6 +1224,7 @@ public class LoginActivity extends BaseActivity
      */
     private void getLongPassCards() {
         List<LongPassCard> longPassCardList = new ArrayList<>();
+        final String[] failureMessage = new String[1];
         longTermPassDao = ArcFaceApplication.getApplication().getDb().longTermPassDao();
         Map<String, String> params = new HashMap<>();
         params.put("timestamp", String.valueOf(System.currentTimeMillis()));
@@ -1221,7 +1271,7 @@ public class LoginActivity extends BaseActivity
                                 }.getType());
                         // ALog.d("获取通信证接口数据response: " + gson.toJson(response));
 
-                        if (response.getCode() == 200) {
+                        if (response != null && response.getCode() == 200) {
                             LongPassCards longPassCards = response.getData();
                             if (longPassCards != null && longPassCards.getList() != null
                                     && !longPassCards.getList().isEmpty()) {
@@ -1264,8 +1314,9 @@ public class LoginActivity extends BaseActivity
                                 break;
                             }
                         } else {
-                            showWarningToast(response.getMsg());
-                            ALog.d("接口非200: " + response.getMsg());
+                            failureMessage[0] = buildFailureMessage("获取通信证接口数据失败",
+                                    response == null ? null : response.getMsg());
+                            ALog.d("接口非200: " + (response == null ? "null" : response.getMsg()));
                             // shouldContinue.set(false); // 设置标志位为 false，终止循环
                             page = 1;
                             longPassCardList.clear();
@@ -1274,11 +1325,15 @@ public class LoginActivity extends BaseActivity
                         // 计数器减一
                         latch.countDown();
                         continue;
+                    } else {
+                        failureMessage[0] = "获取通信证接口数据失败：HTTP " + res.code();
+                        page = 1;
+                        longPassCardList.clear();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     ALog.e("获取通信证接口数据失败", e);
-                    showWarningToast("获取通信证接口数据失败");
+                    failureMessage[0] = buildFailureMessage("获取通信证接口数据失败", e);
                     ALog.d("接口报错: " + e.getMessage());
                     // shouldContinue.set(false); // 设置标志位为 false，终止循环
                     page = 1;
@@ -1298,6 +1353,12 @@ public class LoginActivity extends BaseActivity
             if (longPassCardList.size() > 0) {
                 page = 1;
                 insertDataToLocalDb(longPassCardList);
+            } else {
+                page = 1;
+                dismissProgressDialog();
+                showWarningToast(failureMessage[0] == null ? "未获取到通行证数据" : failureMessage[0]);
+                showLoginInputLayout();
+                loging = false;
             }
         });
     }
