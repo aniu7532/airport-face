@@ -611,127 +611,138 @@ public class ArcFaceApplication extends Application {
         fetchNextPage(params);
     }
 
-    /** 同步请求单页增量通行证，下载/删除图片后合并入库并注册人脸 */
+    /** 同步请求单页增量通行证，图片异常独立上报，整页请求失败保留当前页重试。 */
     private synchronized void fetchNextPage(Map<String, String> params) {
         List<LongPassCard> longPassCardList = new ArrayList<>();
-        GetRequest<String> request = OkGo.<String> get(UrlConstants.URL_GetLongPass).tag(UrlConstants.URL_GetLongPass);
-        if (params != null) {
-            // 更新或添加 timestamp 参数
+        String currentPage = params.get("pageNo");
+        boolean pageSucceeded = false;
+        boolean needFetchNext = false;
+        try {
+            GetRequest<String> request = OkGo.<String>get(UrlConstants.URL_GetLongPass)
+                    .tag(UrlConstants.URL_GetLongPass);
             params.put("timestamp", String.valueOf(System.currentTimeMillis()));
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 request.params(entry.getKey(), entry.getValue());
             }
-        }
-        request.headers("tenant-id", UrlConstants.TENANT_ID);
-        // 检查是否有 accessToken，如果有则添加 Authorization 头
-        if (ApiUtils.accessToken != null) {
-            request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
-        }
-
-        // 同步会阻塞主线程，必须开线程，不传callback即为同步请求
-        Call<String> call = request.converter(new StringConvert()).adapt();
-
-		boolean needFetchNext = false;
-
-        try {
+            request.headers("tenant-id", UrlConstants.TENANT_ID);
+            if (ApiUtils.accessToken != null) {
+                request.headers("Authorization", "Bearer " + ApiUtils.accessToken);
+            }
+            Call<String> call = request.converter(new StringConvert()).adapt();
             Response<String> res = call.execute();
             if (res.code() == 200) {
-                ApiResponse<LongPassCards> resResponse =
-                        GsonUtils.fromJson(res.body(), new TypeToken<ApiResponse<LongPassCards>>() {
-                        }.getType());
+                ApiResponse<LongPassCards> response = GsonUtils.fromJson(res.body(),
+                        new TypeToken<ApiResponse<LongPassCards>>() {}.getType());
                 ALog.i("入参: " + GsonUtils.toJson(params));
-                ALog.d("更新通信证接口数据response: " + GsonUtils.toJson(resResponse));
-                if (resResponse.getCode() == 200) {
-                    LongPassCards longPassCards = resResponse.getData();
-                    if (longPassCards != null && longPassCards.getList() != null
-                            && !longPassCards.getList().isEmpty()) {
-                        if (!ArcFaceApplication.TEST) {
-                            List<Map<String, String>> downloadFailures = new ArrayList<>();
-                            for (LongPassCard longPassCard : longPassCards.list) {
-								// 如果是注销的 需要删除之前的缓存
-								if (longPassCard.status == 2) {
-									ALog.e("正在删除：" + longPassCard.nickname + "，第" + updatePage + "页");
-									File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
-									boolean result = ImageDeleter.deleteImage(directory1, longPassCard.checkPhoto,
-										longPassCard.id, longPassCard.nickname);
-									if (!result) {
-										ALog.e("删除失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
-									}
-									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
-									result = ImageDeleter.deleteImage(directory2, longPassCard.photo, longPassCard.id,
-										longPassCard.nickname);
-									if (!result) {
-										ALog.e("删除失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
-									}
-								} else {
-									ALog.e("正在下载：" + longPassCard.nickname + "，第" + updatePage + "页");
-									File directory1 = new File(getApplication().getExternalFilesDir(null), "register");// 应用的私有目录
-									if (!directory1.exists()) {
-										directory1.mkdirs();
-									}
-									boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-										longPassCard.id, longPassCard.nickname, false);
-									if (!result) {
-										ALog.e("下载失敗 checkPhoto：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                        downloadFailures.add(LongPassCardsRemedialMeasuresUtils
-                                                .buildFailedContent(longPassCard.id, "checkPhoto下载失败"));
-									}
-									File directory2 = new File(getApplication().getExternalFilesDir(null), "photo");// 应用的私有目录
-									if (!directory2.exists()) {
-										directory2.mkdirs();
-									}
-									result = ImageDownloader.downloadImage(directory2, longPassCard.photo, longPassCard.id,
-										longPassCard.nickname, true);
-									if (!result) {
-										ALog.e("下载失敗 photo：" + longPassCard.nickname + "，第" + updatePage + "页");
-                                        downloadFailures.add(LongPassCardsRemedialMeasuresUtils
-                                                .buildFailedContent(longPassCard.id, "photo下载失败"));
-									}
-								}
-                            }
-                            LongPassCardsRemedialMeasuresUtils.reportCheckAbnormal(downloadFailures);
-                        }
-						needFetchNext = true;
-                        longPassCardList.addAll(longPassCards.getList());
+                ALog.d("更新通信证接口数据response: " + GsonUtils.toJson(response));
+                if (response != null && response.getCode() == 200) {
+                    LongPassCards cards = response.getData();
+                    if (cards == null || cards.getList() == null) {
+                        ALog.e("更新通行证响应缺少列表，当前页码: " + currentPage);
                     } else {
-                        ALog.i("更新通行证数据为空，当前页码: " + updatePage);
+                        pageSucceeded = true;
+                        needFetchNext = !cards.getList().isEmpty();
+                        List<Map<String, String>> failures = new ArrayList<>();
+                        longPassCardList = prepareLongPassCards(cards.getList(), currentPage, failures);
+                        try {
+                            LongPassCardsRemedialMeasuresUtils.reportCheckAbnormal(failures);
+                        } catch (Exception e) {
+                            ALog.e("通行证异常上报失败，继续同步", e);
+                        }
+                        if (!needFetchNext) {
+                            ALog.i("更新通行证数据为空，当前页码: " + currentPage);
+                        }
                     }
-                } else if (resResponse.getCode() == 401) {
-                    ALog.d("更新通行证线程接口401: " + resResponse.getMsg());
-                    ALog.e("Intent intent = new Intent(getInstance(), LoginActivity.class)");
+                } else if (response != null && response.getCode() == 401) {
+                    ALog.d("更新通行证线程接口401: " + response.getMsg());
                     Intent intent = new Intent(getApplication(), LoginActivity.class);
                     intent.putExtra("auto", true);
                     ActivityUtils.startActivity(intent);
-					updateNext = true;
+                    updateNext = true;
                     return;
                 } else {
-                    ALog.d("更新通行证线程接口非200: " + resResponse.getMsg());
+                    ALog.d("更新通行证线程接口非200: " + (response == null ? "null" : response.getMsg()));
                 }
+            } else if (res.code() == 401) {
+                Intent intent = new Intent(getApplication(), LoginActivity.class);
+                intent.putExtra("auto", true);
+                ActivityUtils.startActivity(intent);
+                updateNext = true;
+                return;
+            } else {
+                ALog.e("更新通行证请求失败，HTTP " + res.code() + "，当前页码: " + currentPage);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            ALog.e("更新通信证接口数据失败", e);
+            ALog.e("更新通信证接口数据失败，当前页码: " + currentPage, e);
         }
         if (!ArcFaceApplication.TEST) {
             handleUpdateComplete(longPassCardList);
         }
-		if (needFetchNext) {
-			// 等待5分钟后再获取下一页
-			ALog.d("等待5分钟后获取下一页数据...");
+        if (!pageSucceeded || needFetchNext) {
+            // 保留本轮时间范围；整页失败时重试原页，避免跳过未入库数据。
+            if (pageSucceeded) {
+                params.put("pageNo", String.valueOf(Integer.parseInt(currentPage) + 1));
+            }
+            ALog.d("等待同步间隔后" + (pageSucceeded ? "获取下一页" : "重试当前页")
+                    + "，页码: " + params.get("pageNo"));
             int interval = infoStorage.getInt("interval", UPDATE_DELAY_TIME);
-			ThreadUtils.executeByCachedWithDelay(new SmallTask() {
-				@Override
-				public String doInBackground() throws Throwable {
-					String pageNo = params.get("pageNo");
-					int pageNumInt = Integer.parseInt(pageNo);
-					params.put("pageNo", String.valueOf(pageNumInt + 1));
-					fetchNextPage(params);
-					return null;
-				}
-			}, interval * 60 * 1000, TimeUnit.MILLISECONDS); // 延迟5分钟执行
-		} else {
-			updateNext = true;
-		}
+            ThreadUtils.executeByCachedWithDelay(new SmallTask() {
+                @Override
+                public String doInBackground() throws Throwable {
+                    fetchNextPage(params);
+                    return null;
+                }
+            }, interval * 60 * 1000, TimeUnit.MILLISECONDS);
+        } else {
+            updateNext = true;
+        }
+    }
+
+    private List<LongPassCard> prepareLongPassCards(List<LongPassCard> cards, String pageNo,
+            List<Map<String, String>> failures) {
+        List<LongPassCard> validCards = new ArrayList<>();
+        for (LongPassCard card : cards) {
+            if (card == null || card.id == null || card.id.trim().isEmpty()) {
+                ALog.e("通行证记录为空或缺少ID，跳过，页码: " + pageNo);
+                continue;
+            }
+            // 照片失败不能影响通行证本身入库或后续分页。
+            validCards.add(card);
+            if (ArcFaceApplication.TEST) {
+                continue;
+            }
+            try {
+                File registerDirectory = new File(getExternalFilesDir(null), "register");
+                File photoDirectory = new File(getExternalFilesDir(null), "photo");
+                if (card.status == 2) {
+                    ALog.e("正在删除：" + card.nickname + "，第" + pageNo + "页");
+                    if (!ImageDeleter.deleteImage(registerDirectory, card.checkPhoto, card.id, card.nickname)) {
+                        ALog.e("删除失败 checkPhoto：" + card.nickname + "，第" + pageNo + "页");
+                    }
+                    if (!ImageDeleter.deleteImage(photoDirectory, card.photo, card.id, card.nickname)) {
+                        ALog.e("删除失败 photo：" + card.nickname + "，第" + pageNo + "页");
+                    }
+                } else {
+                    ALog.e("正在下载：" + card.nickname + "，第" + pageNo + "页");
+                    if (!registerDirectory.exists()) {
+                        registerDirectory.mkdirs();
+                    }
+                    if (!ImageDownloader.downloadImage(registerDirectory, card.checkPhoto, card.id, card.nickname, false)) {
+                        failures.add(LongPassCardsRemedialMeasuresUtils.buildFailedContent(card.id, "checkPhoto下载失败"));
+                    }
+                    if (!photoDirectory.exists()) {
+                        photoDirectory.mkdirs();
+                    }
+                    if (!ImageDownloader.downloadImage(photoDirectory, card.photo, card.id, card.nickname, true)) {
+                        failures.add(LongPassCardsRemedialMeasuresUtils.buildFailedContent(card.id, "photo下载失败"));
+                    }
+                }
+            } catch (Exception e) {
+                ALog.e("通行证图片处理异常，继续下一条，ID: " + card.id + "，页码: " + pageNo, e);
+                failures.add(LongPassCardsRemedialMeasuresUtils.buildFailedContent(card.id, "图片处理异常"));
+            }
+        }
+        return validCards;
     }
 
     /** 单页增量同步完成后：入库并触发人脸更新 */

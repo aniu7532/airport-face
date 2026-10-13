@@ -36,6 +36,7 @@ import com.arcsoft.arcfacedemo.util.ImageDeleter;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
 import com.arcsoft.arcfacedemo.util.InfoStorage;
 import com.arcsoft.arcfacedemo.util.LogUtils;
+import com.arcsoft.arcfacedemo.util.LongPassCardsRemedialMeasuresUtils;
 import com.arcsoft.arcfacedemo.util.PermissionUtils;
 import com.arcsoft.arcfacedemo.util.SmallTask;
 import com.arcsoft.arcfacedemo.util.WeakHandler;
@@ -1402,38 +1403,51 @@ public class LoginActivity extends BaseActivity
                             LongPassCards longPassCards = response.getData();
                             if (longPassCards != null && longPassCards.getList() != null
                                     && !longPassCards.getList().isEmpty()) {
-                                // 下载图片到本地
+                                List<Map<String, String>> failures = new ArrayList<>();
                                 for (LongPassCard longPassCard : longPassCards.list) {
-
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            snackbar.setText("正在下载：" + longPassCard.nickname + "，第" + page + "页");
-                                        }
-                                    });
-
-                                    if (longPassCard.status == 2) {
-										continue;
+                                    if (longPassCard == null || longPassCard.id == null
+                                            || longPassCard.id.trim().isEmpty()) {
+                                        ALog.e("通行证记录为空或缺少ID，跳过，页码: " + page);
+                                        continue;
                                     }
-									ALog.i("下载图片:" + longPassCard.nickname);
-
-									File directory1 = new File(getActivity().getExternalFilesDir(null), "register");// 应用的私有目录
-									if (!directory1.exists()) {
-										directory1.mkdirs();
-									}
-									boolean result = ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
-										longPassCard.id, longPassCard.nickname, false);
-
-									File directory2 = new File(getActivity().getExternalFilesDir(null), "photo");// 应用的私有目录
-									if (!directory2.exists()) {
-										directory2.mkdirs();
-									}
-									result = ImageDownloader.downloadImage(directory2, longPassCard.photo,
-										longPassCard.id, longPassCard.nickname, true);
+                                    // 照片失败仍保留记录，避免丢弃已拉取的通行证。
+                                    longPassCardList.add(longPassCard);
+                                    try {
+                                        runOnUiThread(() -> snackbar.setText(
+                                                "正在下载：" + longPassCard.nickname + "，第" + page + "页"));
+                                        if (longPassCard.status == 2) {
+                                            continue;
+                                        }
+                                        ALog.i("下载图片:" + longPassCard.nickname);
+                                        File directory1 = new File(getActivity().getExternalFilesDir(null), "register");
+                                        if (!directory1.exists()) {
+                                            directory1.mkdirs();
+                                        }
+                                        if (!ImageDownloader.downloadImage(directory1, longPassCard.checkPhoto,
+                                                longPassCard.id, longPassCard.nickname, false)) {
+                                            failures.add(LongPassCardsRemedialMeasuresUtils.buildFailedContent(
+                                                    longPassCard.id, "checkPhoto下载失败"));
+                                        }
+                                        File directory2 = new File(getActivity().getExternalFilesDir(null), "photo");
+                                        if (!directory2.exists()) {
+                                            directory2.mkdirs();
+                                        }
+                                        if (!ImageDownloader.downloadImage(directory2, longPassCard.photo,
+                                                longPassCard.id, longPassCard.nickname, true)) {
+                                            failures.add(LongPassCardsRemedialMeasuresUtils.buildFailedContent(
+                                                    longPassCard.id, "photo下载失败"));
+                                        }
+                                    } catch (Exception e) {
+                                        ALog.e("通行证图片处理异常，继续下一条，ID: " + longPassCard.id, e);
+                                        failures.add(LongPassCardsRemedialMeasuresUtils.buildFailedContent(
+                                                longPassCard.id, "图片处理异常"));
+                                    }
                                 }
-
-                                // ImageDownloader.downloadImages(longPassCards.list, LoginActivity.this);
-                                longPassCardList.addAll(longPassCards.getList());
+                                try {
+                                    LongPassCardsRemedialMeasuresUtils.reportCheckAbnormal(failures);
+                                } catch (Exception e) {
+                                    ALog.e("通行证异常上报失败，继续同步", e);
+                                }
                                 page++; // 修改成员变量 page
                                 params.put("pageNo", String.valueOf(page));
                             } else {

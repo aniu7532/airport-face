@@ -54,49 +54,52 @@ public class ImageDownloader {
 
     public static boolean downloadImage(File directory, String imageUrl, String imageName, String nickname, boolean zip) {
 
-        File file = new File(directory, imageName + ".jpg");
-        ALog.i("Image imageName: " + imageName);
-
-        String baseUrl = UrlConstants.fileStreamUrl(imageUrl);
-        Request.Builder requestBuilder = new Request.Builder().url(baseUrl);
-        if (ApiUtils.getAccessToken() != null) {
-            requestBuilder.addHeader("Authorization", "Bearer " + ApiUtils.getAccessToken());
-        }
-
         Bitmap bitmap = null;
-        try (Response response = DOWNLOAD_CLIENT.newCall(requestBuilder.build()).execute()) {
-            if (!response.isSuccessful()) {
-                ALog.e("下载图片失败，HTTP " + response.code() + ", url=" + baseUrl);
-                return false;
-            }
-            ResponseBody body = response.body();
-            if (body == null) {
-                ALog.e("下载图片失败，响应体为空, url=" + baseUrl);
-                return false;
-            }
-            byte[] imageBytes = readBodyWithLimit(body);
-            if (imageBytes == null) {
-                ALog.e("下载图片失败，读取响应体失败或超出大小限制, url=" + baseUrl);
-                return false;
+        String baseUrl = imageUrl;
+        try {
+            File file = new File(directory, imageName + ".jpg");
+            ALog.i("Image imageName: " + imageName);
+
+            baseUrl = UrlConstants.fileStreamUrl(imageUrl);
+            Request.Builder requestBuilder = new Request.Builder().url(baseUrl);
+            if (ApiUtils.getAccessToken() != null) {
+                requestBuilder.addHeader("Authorization", "Bearer " + ApiUtils.getAccessToken());
             }
 
-            int maxDimension = zip ? MAX_PHOTO_DIMENSION : MAX_REGISTER_DIMENSION;
-            bitmap = decodeSampledBitmap(imageBytes, maxDimension);
-            if (bitmap == null || bitmap.isRecycled()) {
-                ALog.e("下载图片失败，解码 bitmap 失败, url=" + baseUrl);
-                return false;
-            }
-            if (zip) {
-                bitmap = compressBitmap(bitmap);
-                if (bitmap == null || bitmap.isRecycled()) {
-                    ALog.e("图片压缩后为 null 或已被回收，终止加密保存");
+            try (Response response = DOWNLOAD_CLIENT.newCall(requestBuilder.build()).execute()) {
+                if (!response.isSuccessful()) {
+                    ALog.e("下载图片失败，HTTP " + response.code() + ", url=" + baseUrl);
                     return false;
                 }
+                ResponseBody body = response.body();
+                if (body == null) {
+                    ALog.e("下载图片失败，响应体为空, url=" + baseUrl);
+                    return false;
+                }
+                byte[] imageBytes = readBodyWithLimit(body);
+                if (imageBytes == null) {
+                    ALog.e("下载图片失败，读取响应体失败或超出大小限制, url=" + baseUrl);
+                    return false;
+                }
+
+                int maxDimension = zip ? MAX_PHOTO_DIMENSION : MAX_REGISTER_DIMENSION;
+                bitmap = decodeSampledBitmap(imageBytes, maxDimension);
+                if (bitmap == null || bitmap.isRecycled()) {
+                    ALog.e("下载图片失败，解码 bitmap 失败, url=" + baseUrl);
+                    return false;
+                }
+                if (zip) {
+                    bitmap = compressBitmap(bitmap);
+                    if (bitmap == null || bitmap.isRecycled()) {
+                        ALog.e("图片压缩后为 null 或已被回收，终止加密保存");
+                        return false;
+                    }
+                }
+                SecretKey secretKey = AESUtils.generateKey();
+                AESUtils.encryptBitmapToFile(bitmap, file, secretKey);
+                ALog.i("Image downloaded successfully: " + nickname + "," + file.getAbsolutePath());
+                return true;
             }
-            SecretKey secretKey = AESUtils.generateKey();
-            AESUtils.encryptBitmapToFile(bitmap, file, secretKey);
-            ALog.i("Image downloaded successfully: " + nickname + "," + file.getAbsolutePath());
-            return true;
         } catch (Exception e) {
             ALog.e("下载或加密图片失败, url=" + baseUrl, e);
         } finally {
