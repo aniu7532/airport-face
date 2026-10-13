@@ -205,14 +205,14 @@ public class FaceCompareActivity extends BaseActivity {
                 ArcSoftImageUtil.createImageData(bitmap.getWidth(), bitmap.getHeight(), ArcSoftImageFormat.BGR24);
         int transformCode = ArcSoftImageUtil.bitmapToImageData(bitmap, bgr24, ArcSoftImageFormat.BGR24);
         if (transformCode != ArcSoftImageUtilError.CODE_SUCCESS) {
-            showToast("failed to transform bitmap to imageData, code is " + transformCode);
+            showToast("图像格式转换失败，错误码：" + transformCode);
             return;
         }
         List<FaceInfo> faceInfoList = new ArrayList<>();
         // 人脸检测
         int detectCode = mainFaceEngine.detectFaces(bgr24, width, height, FaceEngine.CP_PAF_BGR24, faceInfoList);
         if (detectCode != 0 || faceInfoList.isEmpty()) {
-            showToast("face detection finished, code is " + detectCode + ", face num is " + faceInfoList.size());
+            showToast("人脸检测失败或未检测到人脸，错误码：" + detectCode + "，人脸数量：" + faceInfoList.size());
             return;
         }
         // 绘制bitmap
@@ -237,7 +237,7 @@ public class FaceCompareActivity extends BaseActivity {
         int faceProcessCode = mainFaceEngine.process(bgr24, width, height, FaceEngine.CP_PAF_BGR24, faceInfoList,
                 FaceEngine.ASF_AGE | FaceEngine.ASF_GENDER | FaceEngine.ASF_MASK_DETECT);
         if (faceProcessCode != ErrorInfo.MOK) {
-            showToast("face process finished, code is " + faceProcessCode);
+            showToast("人脸属性检测失败，错误码：" + faceProcessCode);
             return;
         }
         // 年龄信息结果
@@ -251,7 +251,7 @@ public class FaceCompareActivity extends BaseActivity {
         int genderCode = mainFaceEngine.getGender(genderInfoList);
         int maskInfoCode = mainFaceEngine.getMask(maskInfoList);
         if ((ageCode | genderCode | maskInfoCode) != ErrorInfo.MOK) {
-            showToast("at lease one of age、gender、mask detect failed! codes are: " + ageCode + " ," + genderCode + " ,"
+            showToast("年龄、性别或口罩检测失败，错误码：" + ageCode + " ," + genderCode + " ,"
                     + maskInfoCode);
             return;
         }
@@ -264,7 +264,7 @@ public class FaceCompareActivity extends BaseActivity {
          * 过滤掉mask值为MaskInfo.UNKNOWN的图片
          */
         if (isMask == MaskInfo.UNKNOWN) {
-            showToast("mask is unknown");
+            showToast("无法确定是否佩戴口罩，请重新采集");
             return;
         }
 
@@ -280,7 +280,7 @@ public class FaceCompareActivity extends BaseActivity {
         int qualityCode = mainFaceEngine.imageQualityDetect(bgr24, width, height, FaceEngine.CP_PAF_BGR24,
                 faceInfoList.get(0), isMask, imageQualitySimilar);
         if (qualityCode != ErrorInfo.MOK) {
-            showToast("imageQualityDetect failed! code is " + qualityCode);
+            showToast("图像质量检测失败，错误码：" + qualityCode);
             return;
         }
         float quality = imageQualitySimilar.getScore();
@@ -307,7 +307,7 @@ public class FaceCompareActivity extends BaseActivity {
             }
         }
         if (quality < destQuality) {
-            showToast("image quality invalid");
+            showToast("图像质量不符合要求，请重新采集");
             return;
         }
 

@@ -1,5 +1,7 @@
 package com.arcsoft.arcfacedemo.widget.dialog
 
+import com.arcsoft.arcfacedemo.util.UserMessageUtil
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
@@ -147,7 +149,7 @@ class AreaPickerDialog(
             }
 
             override fun onError(response: Response<Base<List<Area?>?>?>) {
-                val msg = response.exception?.message ?: "网络错误"
+                val msg = UserMessageUtil.failure("区域数据获取失败", response.exception)
                 showErrorMessage(msg)
             }
         })
@@ -198,7 +200,7 @@ class AreaPickerDialog(
         progress.visibility = View.GONE
         listView.visibility = View.GONE
         tvError.visibility = View.VISIBLE
-        tvError.text = msg
+        tvError.text = UserMessageUtil.message(msg, "区域数据获取失败")
     }
 
     private fun Area.isValidNode(): Boolean =

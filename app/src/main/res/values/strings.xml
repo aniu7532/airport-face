@@ -43,7 +43,7 @@
     <string name="already_activated">已激活</string>
     <string name="active_key_activated">该激活码已被其他设备使用</string>
     <string name="dont_need_active_anymore">引擎已激活，无需再次激活</string>
-    <string name="active_failed">引擎激活失败，错误码：%d， 错误码常量名：%s</string>
+    <string name="active_failed">引擎激活失败，错误码：%d， 错误说明：%s</string>
     <string name="not_activated">SDK未激活</string>
     <string name="app_id">appId</string>
     <string name="sdk_key">sdkKey</string>
@@ -75,7 +75,7 @@
     <string name="permission_denied">权限被拒绝！</string>
 
     <!--各个界面引擎初始化失败的提示-->
-    <string name="init_failed">引擎初始化失败，错误码为：%d，错误码常量名为：%s</string>
+    <string name="init_failed">引擎初始化失败，错误码为：%d，错误说明：%s</string>
     <string name="engine_not_initialized">引擎未初始化，错误码为 %d</string>
 
     <!--人脸属性检测（图片） 界面-->
@@ -90,7 +90,7 @@
     <string name="recognize_failed_notice">未通过:%s</string>
     <string name="recognize_success_notice">通过:%s</string>
     <string name="low_confidence_level">人脸置信度低</string>
-    <string name="specific_engine_init_failed">%s 初始化失败，错误码：%d\n错误码常量名：%s</string>
+    <string name="specific_engine_init_failed">%s 初始化失败，错误码：%d\n错误说明：%s</string>
     <string name="notice_change_detect_degree">相机已切换，若无法检测到人脸，需要在配置界面修改视频模式人脸检测角度</string>
     <string name="liveness_detect">活体检测</string>
     <string name="camera_rgb">RGB CAMERA</string>

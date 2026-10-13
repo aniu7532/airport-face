@@ -474,14 +474,14 @@ public class LongPassCardsRemedialMeasuresUtils {
                                 faceEntity = faceRepository.registerJpeg(context, decryptedBytes, name);
                                 if (faceEntity == null) {
                                     failed[0]++;
-                                    failFileNames.add(buildFileFailedContent(file, "注册文件失败 faceEntity == null"));
+                                    failFileNames.add(buildFileFailedContent(file, "注册文件失败，未生成有效人脸数据"));
                                 } else {
                                     success[0]++;
                                 }
                             } catch (Exception e) {
                                 ALog.e(TAG, "注册文件失败: " + file.getName(), e);
                                 failed[0]++;
-                                failFileNames.add(buildFileFailedContent(file, "注册文件失败" + e.getMessage()));
+                                failFileNames.add(buildFileFailedContent(file, UserMessageUtil.failure("注册文件失败", e)));
                                 faceEntity = null;
                             }
                             FaceEntity finalFaceEntity = faceEntity;
@@ -514,7 +514,7 @@ public class LongPassCardsRemedialMeasuresUtils {
                                 if (!failFileNames.isEmpty()) {
                                     ToastUtils.showLong(failFileNames.toString());
                                 }
-                                callback.onFinish(success[0], failed[0], total, e.getMessage());
+                                callback.onFinish(success[0], failed[0], total, UserMessageUtil.failure("批量注册失败", e));
                             }
 
                             @Override

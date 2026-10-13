@@ -111,7 +111,7 @@ public class HttpLog implements Interceptor {
         Protocol protocol = connection != null ? connection.protocol() : Protocol.HTTP_1_1;
 
         try {
-            String requestStartMessage = "--> " + request.method() + ' ' + request.url() + ' ' + protocol;
+            String requestStartMessage = "--> " + request.method() + ' ' + logUrl(request) + ' ' + protocol;
             log(requestStartMessage);
 
             if (logHeaders) {
@@ -158,7 +158,7 @@ public class HttpLog implements Interceptor {
         boolean logHeaders = (printLevel == Level.BODY || printLevel == Level.HEADERS);
 
         try {
-            log("<-- " + clone.code() + ' ' + clone.message() + ' ' + clone.request().url() + " (" + tookMs + "ms）");
+            log("<-- " + clone.code() + ' ' + clone.message() + ' ' + logUrl(clone.request()) + " (" + tookMs + "ms）");
             if (logHeaders) {
                 Headers headers = clone.headers();
                 for (int i = 0, count = headers.size(); i < count; i++) {
@@ -196,6 +196,10 @@ public class HttpLog implements Interceptor {
             charset = UTF8;
         }
         return charset;
+    }
+
+    private static String logUrl(Request request) {
+        return request.url().newBuilder().query(null).build().toString();
     }
 
     /**

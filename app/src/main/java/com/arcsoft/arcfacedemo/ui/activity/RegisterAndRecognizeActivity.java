@@ -527,7 +527,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
 
         recognizeViewModel.getFtInitCode().observe(this, ftInitCode -> {
             if (ftInitCode != ErrorInfo.MOK) {
-                String error = getString(R.string.specific_engine_init_failed, "ftEngine", ftInitCode,
+                String error = getString(R.string.specific_engine_init_failed, "人脸检测引擎", ftInitCode,
                         ErrorCodeUtil.arcFaceErrorCodeToFieldName(ftInitCode));
                 ALog.i("initEngine: " + error);
                 showToast(error);
@@ -535,7 +535,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         });
         recognizeViewModel.getFrInitCode().observe(this, frInitCode -> {
             if (frInitCode != ErrorInfo.MOK) {
-                String error = getString(R.string.specific_engine_init_failed, "frEngine", frInitCode,
+                String error = getString(R.string.specific_engine_init_failed, "特征提取引擎", frInitCode,
                         ErrorCodeUtil.arcFaceErrorCodeToFieldName(frInitCode));
                 ALog.i("initEngine: " + error);
                 showToast(error);
@@ -543,7 +543,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         });
         recognizeViewModel.getFlInitCode().observe(this, flInitCode -> {
             if (flInitCode != ErrorInfo.MOK) {
-                String error = getString(R.string.specific_engine_init_failed, "flEngine", flInitCode,
+                String error = getString(R.string.specific_engine_init_failed, "活体检测引擎", flInitCode,
                         ErrorCodeUtil.arcFaceErrorCodeToFieldName(flInitCode));
                 ALog.i("initEngine: " + error);
                 showToast(error);
@@ -572,7 +572,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         });
 
         recognizeViewModel.setOnRegisterFinishedCallback(
-                (facePreviewInfo, success) -> showToast(success ? "register success" : "register failed"));
+                (facePreviewInfo, success) -> showToast(success ? "人脸注册成功" : "人脸注册失败"));
 
         recognizeViewModel.getRecognizeNotice().observe(this, notice -> binding.setRecognizeNotice(notice));
 
@@ -1191,7 +1191,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
         try {
             irCameraHelper.start();
         } catch (RuntimeException e) {
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
         }
     }
 
@@ -2198,7 +2198,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             @Override
             public void onSuccess(Response<Base<String>> response) {
                 if (ObjectUtils.isEmpty(response.body())) {
-                    showToast("uploadTemporaryRecords失败");
+                    showToast("通行记录上传失败");
                     return;
                 }
                 Base<String> res = response.body();
@@ -2261,7 +2261,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity
             @Override
             public void onSuccess(Response<Base<String>> response) {
                 if (ObjectUtils.isEmpty(response.body())) {
-                    showToast("uploadTemporaryRecords失败");
+                    showToast("通行记录上传失败");
                     return;
                 }
                 Base<String> res = response.body();

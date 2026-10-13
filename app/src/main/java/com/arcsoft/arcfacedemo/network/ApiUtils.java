@@ -1,6 +1,5 @@
 package com.arcsoft.arcfacedemo.network;
 
-import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
@@ -10,6 +9,7 @@ import javax.net.ssl.X509TrustManager;
 
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.exception.HttpException;
 import com.lzy.okgo.model.Response;
 import com.lzy.okgo.request.GetRequest;
 import com.lzy.okgo.request.PostRequest;
@@ -66,6 +66,14 @@ public class ApiUtils {
         void onFailure(Throwable e);
     }
 
+    static void dispatchResponse(Response<String> response, ApiCallback callback) {
+        if (response.code() >= 200 && response.code() < 300) {
+            callback.onSuccess(response.body());
+        } else {
+            callback.onFailure(new HttpException(response));
+        }
+    }
+
     /**
      * 发起 GET 请求。
      * <p>自动附加请求头 {@code tenant-id}、{@code Authorization: Bearer}（有 token 时）；
@@ -90,11 +98,7 @@ public class ApiUtils {
         request.execute(new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                if (response.isSuccessful()) {
-                    callback.onSuccess(response.body());
-                } else {
-                    callback.onFailure(new IOException("Unexpected code " + response));
-                }
+                dispatchResponse(response, callback);
             }
 
             @Override
@@ -123,11 +127,7 @@ public class ApiUtils {
         request.execute(new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                if (response.isSuccessful()) {
-                    callback.onSuccess(response.body());
-                } else {
-                    callback.onFailure(new IOException("Unexpected code " + response));
-                }
+                dispatchResponse(response, callback);
             }
 
             @Override
@@ -155,11 +155,7 @@ public class ApiUtils {
         request.upJson(json).execute(new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                if (response.isSuccessful()) {
-                    callback.onSuccess(response.body());
-                } else {
-                    callback.onFailure(new IOException("Unexpected code " + response));
-                }
+                dispatchResponse(response, callback);
             }
 
             @Override

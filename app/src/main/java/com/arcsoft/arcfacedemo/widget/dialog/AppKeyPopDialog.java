@@ -56,15 +56,15 @@ public class AppKeyPopDialog extends CenterPopupView {
             @Override
             public void onClick(View view) {
                 if (ObjectUtils.isEmpty(etAppid.getText())) {
-                    ToastUtils.showShort("请输入Appid");
+                    ToastUtils.showShort("请输入应用标识");
                     return;
                 }
                 if (ObjectUtils.isEmpty(etSdkkey.getText())) {
-                    ToastUtils.showShort("请输入Sdkkey");
+                    ToastUtils.showShort("请输入 SDK 密钥");
                     return;
                 }
                 if (ObjectUtils.isEmpty(etActivecode.getText())) {
-                    ToastUtils.showShort("请输入Activecode");
+                    ToastUtils.showShort("请输入激活码");
                     return;
                 }
                 SPUtils.getInstance().put("Appid", etAppid.getText().toString());

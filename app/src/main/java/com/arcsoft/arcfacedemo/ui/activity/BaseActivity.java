@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.arcsoft.arcfacedemo.BuildConfig;
 import com.arcsoft.arcfacedemo.R;
+import com.arcsoft.arcfacedemo.util.UserMessageUtil;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.snackbar.SnackbarContentLayout;
@@ -235,7 +236,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast toast = Toasty.warning(Utils.getApp(), msg, Toast.LENGTH_LONG, true);
+                Toast toast = Toasty.warning(Utils.getApp(), UserMessageUtil.message(msg, "操作失败，请重试"), Toast.LENGTH_LONG, true);
                 toast.show();
             }
         });
@@ -245,7 +246,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast toast = Toasty.error(Utils.getApp(), msg, Toast.LENGTH_LONG, true);
+                Toast toast = Toasty.error(Utils.getApp(), UserMessageUtil.message(msg, "操作失败，请重试"), Toast.LENGTH_LONG, true);
                 toast.show();
             }
         });

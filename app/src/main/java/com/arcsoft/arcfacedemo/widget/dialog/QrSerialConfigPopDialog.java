@@ -67,7 +67,7 @@ public class QrSerialConfigPopDialog extends CenterPopupView {
                 String stopBitsStr = etStopBits.getText() == null ? "" : etStopBits.getText().toString().trim();
                 String parityStr = etParity.getText() == null ? "" : etParity.getText().toString().trim();
                 if (ObjectUtils.isEmpty(path)) {
-                    ToastUtils.showShort("请输入devicePath");
+                    ToastUtils.showShort("请输入串口路径");
                     return;
                 }
                 if (ObjectUtils.isEmpty(baudStr) || ObjectUtils.isEmpty(dataBitsStr) || ObjectUtils.isEmpty(stopBitsStr)

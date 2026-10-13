@@ -1734,7 +1734,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
             @Override
             public void onSuccess(Response<Base<String>> response) {
                 if (ObjectUtils.isEmpty(response.body())) {
-                    showToast("uploadTemporaryRecords失败");
+                    showToast("通行记录上传失败");
                     return;
                 }
                 Base<String> res = response.body();
@@ -2243,7 +2243,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
             @Override
             public void onSuccess(Response<Base<String>> response) {
                 if (ObjectUtils.isEmpty(response.body())) {
-                    showToast("uploadTemporaryRecords失败");
+                    showToast("通行记录上传失败");
                     return;
                 }
                 Base<String> res = response.body();
@@ -2526,7 +2526,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
         try {
             irCameraHelper.start();
         } catch (RuntimeException e) {
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
         }
     }
 
@@ -2588,7 +2588,7 @@ public class LivenessDetectYuanActivity extends BaseActivity
                 showToast(getString(R.string.switch_camera_failed));
             }
         } catch (RuntimeException e) {
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
         }
     }
 

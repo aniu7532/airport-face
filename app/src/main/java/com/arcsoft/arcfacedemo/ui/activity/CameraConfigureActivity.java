@@ -353,7 +353,7 @@ public class CameraConfigureActivity extends BaseActivity
         } catch (RuntimeException e) {
             irCameraHelper.release();
             irCameraHelper = null;
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
             hideIrView();
         }
     }
@@ -454,7 +454,7 @@ public class CameraConfigureActivity extends BaseActivity
                 FaceEngine.ASF_FACE_DETECT);
 
         if (initCode != ErrorInfo.MOK) {
-            String error = getString(R.string.specific_engine_init_failed, "ftEngine", initCode,
+            String error = getString(R.string.specific_engine_init_failed, "人脸检测引擎", initCode,
                     ErrorCodeUtil.arcFaceErrorCodeToFieldName(initCode));
             Log.i(TAG, "initEngine: " + error);
             showToast(error);
@@ -518,7 +518,7 @@ public class CameraConfigureActivity extends BaseActivity
                 showToast(getString(R.string.switch_camera_failed));
             }
         } catch (RuntimeException e) {
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
         }
     }
 
@@ -625,7 +625,7 @@ public class CameraConfigureActivity extends BaseActivity
                 irCameraHelper.start();
             }
         } catch (RuntimeException e) {
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
         }
     }
 

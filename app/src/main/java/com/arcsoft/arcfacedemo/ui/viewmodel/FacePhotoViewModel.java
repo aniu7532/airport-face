@@ -14,6 +14,7 @@ import com.arcsoft.arcfacedemo.faceserver.FaceServer;
 import com.arcsoft.arcfacedemo.ui.callback.BatchRegisterCallback;
 import com.arcsoft.arcfacedemo.ui.callback.OnRegisterFinishedCallback;
 import com.arcsoft.arcfacedemo.util.FileUtil;
+import com.arcsoft.arcfacedemo.util.UserMessageUtil;
 import com.arcsoft.arcfacedemo.util.glide.AESUtils;
 import com.arcsoft.imageutil.ArcSoftImageFormat;
 import com.arcsoft.imageutil.ArcSoftImageUtil;
@@ -240,7 +241,7 @@ public class FacePhotoViewModel extends ViewModel {
 
                     @Override
                     public void onError(Throwable e) {
-                        callback.onFinish(success[0], failed[0], total, e.getMessage());
+                        callback.onFinish(success[0], failed[0], total, UserMessageUtil.failure("人脸照片导入失败", e));
                         disposable.dispose();
                     }
 
@@ -331,7 +332,7 @@ public class FacePhotoViewModel extends ViewModel {
                     @Override
                     public void onError(Throwable e) {
                         Log.e(TAG, "Error in registerFromDecryptFile", e);
-                        callback.onFinish(success[0], failed[0], total, e.getMessage());
+                        callback.onFinish(success[0], failed[0], total, UserMessageUtil.failure("人脸照片导入失败", e));
                         disposable.dispose();
                     }
 

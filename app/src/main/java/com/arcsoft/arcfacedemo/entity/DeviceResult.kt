@@ -18,4 +18,8 @@ data class DeviceResult(
     val createTime: String?,
     /** 设备类型 */
     val type: String?,
+    /** 虹软 SDK 初始化参数，空则沿用本地密钥 */
+    val appId: String? = null,
+    val sdkKey: String? = null,
+    val activeCode: String? = null,
 )

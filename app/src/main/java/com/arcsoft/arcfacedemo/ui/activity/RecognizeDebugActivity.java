@@ -116,7 +116,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
 
         recognizeViewModel.getFtInitCode().observe(this, ftInitCode -> {
             if (ftInitCode != ErrorInfo.MOK) {
-                String error = getString(R.string.specific_engine_init_failed, "ftEngine", ftInitCode,
+                String error = getString(R.string.specific_engine_init_failed, "人脸检测引擎", ftInitCode,
                         ErrorCodeUtil.arcFaceErrorCodeToFieldName(ftInitCode));
                 Log.i(TAG, "initEngine: " + error);
                 showToast(error);
@@ -124,7 +124,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
         });
         recognizeViewModel.getFrInitCode().observe(this, frInitCode -> {
             if (frInitCode != ErrorInfo.MOK) {
-                String error = getString(R.string.specific_engine_init_failed, "frEngine", frInitCode,
+                String error = getString(R.string.specific_engine_init_failed, "特征提取引擎", frInitCode,
                         ErrorCodeUtil.arcFaceErrorCodeToFieldName(frInitCode));
                 Log.i(TAG, "initEngine: " + error);
                 showToast(error);
@@ -132,7 +132,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
         });
         recognizeViewModel.getFlInitCode().observe(this, flInitCode -> {
             if (flInitCode != ErrorInfo.MOK) {
-                String error = getString(R.string.specific_engine_init_failed, "flEngine", flInitCode,
+                String error = getString(R.string.specific_engine_init_failed, "活体检测引擎", flInitCode,
                         ErrorCodeUtil.arcFaceErrorCodeToFieldName(flInitCode));
                 Log.i(TAG, "initEngine: " + error);
                 showToast(error);
@@ -416,7 +416,7 @@ public class RecognizeDebugActivity extends BaseActivity implements ViewTreeObse
         try {
             irCameraHelper.start();
         } catch (RuntimeException e) {
-            showToast(e.getMessage() + getString(R.string.camera_error_notice));
+            showToast("相机操作失败" + getString(R.string.camera_error_notice));
         }
     }
 

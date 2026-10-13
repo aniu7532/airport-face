@@ -43,7 +43,7 @@ public class HttpInitUtils {
         if (true) {
             // log相关
             HttpLog loggingInterceptor = new HttpLog(ArcFaceApplication.TAG);
-            loggingInterceptor.setPrintLevel(HttpLog.Level.BODY); // log打印级别，决定了log显示的详细程度
+            loggingInterceptor.setPrintLevel(HttpLog.Level.BASIC); // 仅记录请求与状态，避免把凭据写入日志文件
             loggingInterceptor.setColorLevel(Level.INFO); // log颜色级别，决定了log在控制台显示的颜色
             builder.addInterceptor(loggingInterceptor); // 添加OkGo默认debug日志
         } else {

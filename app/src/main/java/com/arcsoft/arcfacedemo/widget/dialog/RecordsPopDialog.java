@@ -1,5 +1,7 @@
 package com.arcsoft.arcfacedemo.widget.dialog;
 
+import com.arcsoft.arcfacedemo.util.UserMessageUtil;
+
 import android.content.Context;
 import android.view.View;
 
@@ -105,7 +107,7 @@ public class RecordsPopDialog extends BottomPopupView {
                     @Override
                     public void onSuccess(Response<Base<CardRecords>> response) {
                         if (ObjectUtils.isEmpty(response.body())) {
-                            ToastUtils.showLong("getAllRecords失败");
+                            ToastUtils.showLong("查验记录获取失败");
                             return;
                         }
                         Base<CardRecords> res = response.body();
@@ -116,7 +118,7 @@ public class RecordsPopDialog extends BottomPopupView {
                                 mListAdapter.addAll(res.getData().getList());
                             }
                         } else {
-                            ToastUtils.showLong(res.getMsg());
+                            ToastUtils.showLong(UserMessageUtil.failure("查验记录获取失败", res.getMsg()));
                         }
                     }
 

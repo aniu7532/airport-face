@@ -25,9 +25,12 @@ import com.arcsoft.arcfacedemo.network.ApiUtils;
 import com.arcsoft.arcfacedemo.network.UrlConstants;
 import com.arcsoft.arcfacedemo.ui.callback.BatchRegisterCallback;
 import com.arcsoft.arcfacedemo.ui.viewmodel.FacePhotoViewModel;
+import com.arcsoft.arcfacedemo.util.ArcSoftKeys;
 import com.arcsoft.arcfacedemo.util.ConfigUtil;
 import com.arcsoft.arcfacedemo.util.Converters;
 import com.arcsoft.arcfacedemo.util.DeviceUtils;
+import com.arcsoft.arcfacedemo.util.ErrorCodeUtil;
+import com.arcsoft.arcfacedemo.util.UserMessageUtil;
 import com.arcsoft.arcfacedemo.util.DialogUtils;
 import com.arcsoft.arcfacedemo.util.ImageDeleter;
 import com.arcsoft.arcfacedemo.util.ImageDownloader;
@@ -39,6 +42,8 @@ import com.arcsoft.arcfacedemo.util.WeakHandler;
 import com.arcsoft.arcfacedemo.util.log.ALog;
 import com.arcsoft.arcfacedemo.widget.dialog.CustomDrawerPopupView;
 import com.arcsoft.arcfacedemo.widget.dialog.LogingPopDialog;
+import com.arcsoft.face.ErrorInfo;
+import com.arcsoft.face.FaceEngine;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.GsonUtils;
@@ -55,9 +60,11 @@ import com.lxj.xpopup.interfaces.XPopupCallback;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.adapter.Call;
 import com.lzy.okgo.convert.StringConvert;
+import com.lzy.okgo.exception.HttpException;
 import com.lzy.okgo.model.Response;
 import com.lzy.okgo.request.GetRequest;
 import com.sangfor.sdk.SFUemSDK;
+import com.sangfor.sdk.SFTunnel;
 import com.sangfor.sdk.base.SFAuthResultListener;
 import com.sangfor.sdk.base.SFAuthType;
 import com.sangfor.sdk.base.SFBaseMessage;
@@ -66,6 +73,8 @@ import com.sangfor.sdk.base.SFSDKExtras;
 import com.sangfor.sdk.base.SFSDKFlags;
 import com.sangfor.sdk.base.SFSDKMode;
 import com.sangfor.sdk.base.SFSetSpaConfigListener;
+import com.sangfor.sdk.base.SFTunnelStatus;
+import com.sangfor.sdk.base.SFTunnelStatusListener;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -76,6 +85,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -118,6 +128,7 @@ public class LoginActivity extends BaseActivity
 
     /** 通行证分页拉取每页条数 */
     private static final int PAGE_SIZE = 20;
+    private static final int LOGIN_GATEWAY_MAX_RETRIES = 3;
 
     /** 隐藏入口连续点击次数阈值，达到后弹出调试抽屉 */
     private static final int REQUIRED_CLICKS = 5;
@@ -199,6 +210,24 @@ public class LoginActivity extends BaseActivity
     String newPassword;
     /** 是否正在登录中，防止重复触发 */
     boolean loging;
+    private boolean backendLoginPending;
+    private final Handler loginRetryHandler = new Handler(Looper.getMainLooper());
+    private final SFTunnelStatusListener tunnelStatusListener = new SFTunnelStatusListener() {
+        @Override
+        public void onTunnelStatusChanged(SFTunnelStatus status) {
+            loginDiag("tunnel_changed status=" + status);
+        }
+
+        @Override
+        public void onTunnelStarted(SFBaseMessage message) {
+            loginDiag("tunnel_started code=" + (message == null ? "null" : message.mErrCode));
+        }
+
+        @Override
+        public void onTunnelStoped() {
+            loginDiag("tunnel_stopped");
+        }
+    };
     /** 是否为自动登录模式（免密/定时触发） */
     boolean auto;
     /** 是否已尝试免密票据登录 */
@@ -334,7 +363,6 @@ public class LoginActivity extends BaseActivity
 		}
 
         android_id.setText(deviceId);
-        ALog.d("Android ID: " + deviceId);
         String deviceModel = DeviceUtils.getDeviceModel();
         ALog.e("deviceModel: " + deviceModel);
         int[] screenSize = DeviceUtils.getScreenSize(this);
@@ -369,10 +397,6 @@ public class LoginActivity extends BaseActivity
             binding.inputLayout.setVisibility(View.INVISIBLE);
         }
 
-        ALog.e("getAppId:" + ConfigUtil.getAppId(this));
-        ALog.e("getSdkKey:" + ConfigUtil.getSdkKey(this));
-        ALog.e("getActiveKey:" + ConfigUtil.getActiveKey(this));
-
     }
 
     @Override
@@ -383,8 +407,18 @@ public class LoginActivity extends BaseActivity
     /** 解除 DataBinding 绑定并清空 Handler 回调 */
     @Override
     protected void onDestroy() {
+        try {
+            SFTunnel tunnel = SFUemSDK.getInstance().getSFTunnel();
+            if (tunnel != null) {
+                tunnel.unRegisterTunnelStatusListener(tunnelStatusListener);
+            }
+        } catch (RuntimeException e) {
+            loginDiag("tunnel_listener_unregister_failed exception=" + e.getClass().getSimpleName());
+        }
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
+        loginRetryHandler.removeCallbacksAndMessages(null);
+        backendLoginPending = false;
         auto = false;
         if (binding != null) {
             binding.unbind(); // 解除绑定
@@ -467,18 +501,25 @@ public class LoginActivity extends BaseActivity
     }
 
     private String buildFailureMessage(String fallback, String detail) {
-        if (TextUtils.isEmpty(detail)) {
-            return fallback;
-        }
-        detail = detail.trim();
-        if (TextUtils.isEmpty(detail)) {
-            return fallback;
-        }
-        return fallback + "：" + detail;
+        return UserMessageUtil.failure(fallback, detail);
     }
 
     private String buildFailureMessage(String fallback, Throwable throwable) {
-        return buildFailureMessage(fallback, throwable == null ? null : throwable.getMessage());
+        return UserMessageUtil.failure(fallback, throwable);
+    }
+
+    private void loginDiag(String event) {
+        String status;
+        try {
+            SFUemSDK sdk = SFUemSDK.getInstance();
+            SFTunnel tunnel = sdk.getSFTunnel();
+            status = " auth=" + sdk.getAuthStatus()
+                    + " tunnel=" + (tunnel == null ? "null" : tunnel.getTunnelStatus());
+        } catch (RuntimeException e) {
+            status = " statusUnavailable=" + e.getClass().getSimpleName();
+        }
+        ALog.i("LOGIN_DIAG activity=" + Integer.toHexString(System.identityHashCode(this))
+                + " event=" + event + status);
     }
 
     private void showLoginInputLayout() {
@@ -542,7 +583,7 @@ public class LoginActivity extends BaseActivity
                     // "{\"loginAddress\":\"https://171.221.216.108:44433\",\"spasecret\":\"" + spa + "\"}";
                     String spaConfig =
                             "{\"loginAddress\":\"https://kzqtxzvpn.caacsri.com:9998\",\"spaSecret\":\"" + spa + "\"}";
-                    ALog.e("spaConfig:" + spaConfig);
+                    loginDiag("set_spa_start auto=" + auto);
                     SFUemSDK.setSpaConfig(spaConfig, new SFSetSpaConfigListener() {
                         /**
                          * SPA 配置结果回调：成功则走免密或密码认证，失败则提示安全码错误。
@@ -552,7 +593,8 @@ public class LoginActivity extends BaseActivity
                          */
                         @Override
                         public void onSetSpaConfig(String result, SFBaseMessage error) {
-                            ALog.e("result:" + result + ",error:" + GsonUtils.toJson(error));
+                            loginDiag("set_spa_result code=" + (error == null ? "null" : error.mErrCode)
+                                    + " resultPresent=" + !TextUtils.isEmpty(result));
                             switch ((int) (error == null ? -1 : error.mErrCode)) {
                             case 0:
                                 ALog.e("auto：" + auto);
@@ -591,7 +633,7 @@ public class LoginActivity extends BaseActivity
                                 String password = editTextPassword.getText().toString().trim();
                                 String user = username.isEmpty() ? Constants.ZERO_USERNAME : username;
                                 String pwd = password.isEmpty() ? Constants.ZERO_PASSWORD : password;
-                                ALog.i("user: " + user + ",pwd:" + pwd);
+                                loginDiag("password_auth_start");
                                 SFUemSDK.getInstance().startPasswordAuth(Constants.BASE_VPN, user, pwd);// 零信任登录
                                 return;
                             case 11011:
@@ -617,7 +659,8 @@ public class LoginActivity extends BaseActivity
                                 showErrorToast("不支持的参数");
                                 break;
                             default:
-                                showErrorToast(buildFailureMessage("安全码配置失败",
+                                showErrorToast(UserMessageUtil.sdkFailure("安全码配置失败",
+                                        error == null ? -1 : error.mErrCode,
                                         error == null ? null : error.mErrStr));
                                 break;
                             }
@@ -707,12 +750,17 @@ public class LoginActivity extends BaseActivity
         int sdkFlags = SFSDKFlags.FLAGS_HOST_APPLICATION;
         sdkFlags |= SFSDKFlags.FLAGS_VPN_MODE_TCP;
         SFUemSDK.getInstance().initSDK(this, SFSDKMode.MODE_SUPPORT_MUTABLE, sdkFlags, extra);
+        loginDiag("sdk_initialized");
+        SFTunnel tunnel = SFUemSDK.getInstance().getSFTunnel();
+        if (tunnel != null) {
+            tunnel.registerTunnelStatusListener(tunnelStatusListener);
+        }
         // 监听认证结果
         SFUemSDK.getInstance().setAuthResultListener(new SFAuthResultListener() {
             /** 零信任认证成功，触发后台登录；改密类型则清空密码并等待用户输入 */
             @Override
             public void onAuthSuccess(SFBaseMessage sfBaseMessage) {
-							ALog.d("零信任认证成功: " + GsonUtils.toJson(sfBaseMessage));
+							loginDiag("auth_success type=" + (sfBaseMessage == null ? "null" : sfBaseMessage.currentAuthType));
 							// 保存账号和密码到全局变量
 							infoStorage.saveString("zero_trust_username", editTextUsername.getText().toString().trim());
 							infoStorage.saveString("zero_trust_password", editTextPassword.getText().toString().trim());
@@ -727,16 +775,18 @@ public class LoginActivity extends BaseActivity
             /** 零信任认证失败，重置登录状态并提示错误信息 */
             @Override
             public void onAuthFailed(SFBaseMessage sfBaseMessage) {
-                showErrorToast(buildFailureMessage("零信任认证失败",
+                showErrorToast(UserMessageUtil.sdkFailure("零信任认证失败",
+                        sfBaseMessage == null ? -1 : sfBaseMessage.mErrCode,
                         sfBaseMessage == null ? null : sfBaseMessage.mErrStr));
-                ALog.e("零信任认证失败: " + GsonUtils.toJson(sfBaseMessage));
+                loginDiag("auth_failed code=" + (sfBaseMessage == null ? "null" : sfBaseMessage.mErrCode));
                 loging = false;
             }
 
             /** 零信任认证进度回调；首次登录改密时弹出改密对话框 */
             @Override
             public void onAuthProgress(SFAuthType sfAuthType, SFBaseMessage sfBaseMessage) {
-                ALog.i("零信任认证进度: " + GsonUtils.toJson(sfBaseMessage) + "类型：" + sfAuthType);
+                loginDiag("auth_progress type=" + sfAuthType
+                        + " code=" + (sfBaseMessage == null ? "null" : sfBaseMessage.mErrCode));
                 loging = false;
                 // 账号第一次登录时，需要输入新密码
                 if (sfAuthType == SFAuthType.AUTH_TYPE_RENEW_PASSWORD) {
@@ -813,6 +863,10 @@ public class LoginActivity extends BaseActivity
      * 首次启动或本地无通行证时同步通行证并注册人脸，否则直接跳转查验页。
      */
     private void login() {
+        if (isFinishing() || isDestroyed() || backendLoginPending) {
+            return;
+        }
+        backendLoginPending = true;
         showProgressDialog("初始化...");
         ALog.i("系统登录");
         Map<String, String> params = new HashMap<>();
@@ -824,12 +878,24 @@ public class LoginActivity extends BaseActivity
         // params.put("username", "ls001");
         params.put("clientSecret", "admin123");
         params.put("clientId", UrlConstants.URL_ClIENTID);
+        params.put("mac", deviceId);
         String jsonPost = GsonUtils.toJson(params);
         // 这里可以添加登录逻辑，例如调用登录接口等
         // Toast.makeText(this, "正在登录...", Toast.LENGTH_SHORT).show();
+        postBackendLogin(jsonPost, 0);
+    }
+
+    private void postBackendLogin(String jsonPost, int retryCount) {
+        loginDiag("backend_post retryCount=" + retryCount);
         ApiUtils.post(UrlConstants.URL_LOGIN, jsonPost, new ApiUtils.ApiCallback() {
             @Override
             public void onSuccess(String response) {
+                loginDiag("backend_success retryCount=" + retryCount);
+                if (isFinishing() || isDestroyed()) {
+                    backendLoginPending = false;
+                    return;
+                }
+                backendLoginPending = false;
                 // ALog.d("Response: " + response);
                 ApiResponse resData;
                 try {
@@ -840,6 +906,7 @@ public class LoginActivity extends BaseActivity
                     showWarningToast(buildFailureMessage("后台登录返回解析失败", e));
                     loging = false;
                     dismissProgressDialog();
+                    showLoginInputLayout();
                     return;
                 }
 
@@ -938,13 +1005,51 @@ public class LoginActivity extends BaseActivity
 
             @Override
             public void onFailure(Throwable e) {
-                ALog.e("Error: " + e.getMessage());
+                HttpException httpError = e instanceof HttpException ? (HttpException) e : null;
+                Response<?> httpResponse = httpError == null ? null : httpError.response();
+                String server = httpResponse == null || httpResponse.headers() == null
+                        ? null : httpResponse.headers().get("Server");
+                loginDiag("backend_failure retryCount=" + retryCount + " httpCode="
+                        + (httpError == null ? "none" : httpError.code()) + " server=" + server);
+                if (isFinishing() || isDestroyed()) {
+                    backendLoginPending = false;
+                    return;
+                }
+                if (isGatewayForbidden(e)) {
+                    if (retryCount < LOGIN_GATEWAY_MAX_RETRIES) {
+                        loginRetryHandler.postDelayed(() -> {
+                            if (isFinishing() || isDestroyed()) {
+                                backendLoginPending = false;
+                                return;
+                            }
+                            postBackendLogin(jsonPost, retryCount + 1);
+                        }, 2000L * (retryCount + 1));
+                        return;
+                    }
+                    backendLoginPending = false;
+                    loging = false;
+                    showWarningToast("后台登录失败：HTTP 403，aTrust 网关暂未放通，请稍后重试");
+                    dismissProgressDialog();
+                    showLoginInputLayout();
+                    return;
+                }
+                backendLoginPending = false;
                 loging = false;
                 showWarningToast(buildFailureMessage("登录失败", e));
                 dismissProgressDialog();
                 showLoginInputLayout();
             }
         });
+    }
+
+    private boolean isGatewayForbidden(Throwable error) {
+        if (!(error instanceof HttpException) || ((HttpException) error).code() != 403) {
+            return false;
+        }
+        Response<?> response = ((HttpException) error).response();
+        String server = response == null || response.headers() == null
+                ? null : response.headers().get("Server");
+        return server != null && server.toLowerCase(java.util.Locale.ROOT).contains("sangine");
     }
 
     /**
@@ -995,7 +1100,6 @@ public class LoginActivity extends BaseActivity
         ApiUtils.get(UrlConstants.URL_GETCHECKMETH, params, new ApiUtils.ApiCallback() {
             @Override
             public void onSuccess(String response) {
-                ALog.d("Response: " + response);
                 // 解析 JSON 数据
                 ApiResponse resData = GsonUtils.fromJson(response, ApiResponse.class);
 
@@ -1010,7 +1114,7 @@ public class LoginActivity extends BaseActivity
                     showSuccessToast("获得查验方式成功");
                 } else {
                     showWarningToast(resData.getMsg());
-                    ALog.e("获取查验方式失败: " + GsonUtils.toJson(resData));
+                    ALog.e("获取查验方式失败: code=" + resData.getCode());
                 }
 
             }
@@ -1060,7 +1164,7 @@ public class LoginActivity extends BaseActivity
             } else {
                 String failureMessage = buildFailureMessage("初始化失败，获取用户详情失败",
                         resData == null ? null : resData.getMsg());
-                ALog.e("获获取用户详情Response失败: " + GsonUtils.toJson(resData));
+                ALog.e("获取用户详情失败: code=" + (resData == null ? "null" : resData.getCode()));
                 return failureMessage;
             }
         } catch (Exception e) {
@@ -1077,7 +1181,6 @@ public class LoginActivity extends BaseActivity
      */
     private String getMACDetail() {
         ALog.d("获得设备详细信息: ");
-        ALog.d("MACAddress: " + deviceId);
 
         GetRequest<String> request =
                 OkGo.<String> get(UrlConstants.URL_GET_MAC_DETAIL).tag(UrlConstants.URL_GET_MAC_DETAIL);
@@ -1100,9 +1203,7 @@ public class LoginActivity extends BaseActivity
                 Map<String, Object> map =
                         GsonUtils.fromJson(GsonUtils.toJson(resData.getData()), new TypeToken<Map<String, Object>>() {
                         }.getType());
-                // 打印解析结果
                 for (Map.Entry<String, Object> entry : map.entrySet()) {
-                    ALog.d("Key: " + entry.getKey() + ", Value: " + entry.getValue());
                     if (entry.getKey().equals("id")) {
                         infoStorage.saveString("deviceId", String.valueOf(entry.getValue()));
                     }
@@ -1115,17 +1216,17 @@ public class LoginActivity extends BaseActivity
                     if (entry.getKey().equals("areaDetail")) {
                         infoStorage.saveString("deviceAreaDetail", String.valueOf(entry.getValue()));
                     }
-                    ALog.e("deviceId:" + infoStorage.getString("deviceId", ""));
-                    ALog.e("deviceName:" + infoStorage.getString("deviceName", ""));
-                    ALog.e("deviceMac:" + infoStorage.getString("deviceMac", ""));
-                    ALog.e("deviceAreaDetail:" + infoStorage.getString("deviceAreaDetail", ""));
+                }
+                String sdkFailure = applyServerArcSoftKeys(map);
+                if (sdkFailure != null) {
+                    return sdkFailure;
                 }
                 showSuccessToast("获得查验方式成功");
                 return null;
             } else {
                 String failureMessage = buildFailureMessage("初始化失败，获取设备详情失败",
                         resData == null ? null : resData.getMsg());
-                ALog.e("获得设备详细信息失败: " + GsonUtils.toJson(resData));
+                ALog.e("获取设备详情失败: code=" + (resData == null ? "null" : resData.getCode()));
                 return failureMessage;
             }
         } catch (Exception e) {
@@ -1133,6 +1234,32 @@ public class LoginActivity extends BaseActivity
             ALog.e("Error: " + e.getMessage());
             return buildFailureMessage("初始化失败，获取设备详情失败", e);
         }
+    }
+
+    /**
+     * 设备详情返回完整虹软三字段时写入本地并在线激活；缺任一则保持原密钥。
+     *
+     * @return 激活成功或无需激活返回 null，否则返回失败原因
+     */
+    private String applyServerArcSoftKeys(Map<String, Object> map) {
+        String appId = ArcSoftKeys.fromApiValue(map.get("appId"));
+        String sdkKey = ArcSoftKeys.fromApiValue(map.get("sdkKey"));
+        String activeCode = ArcSoftKeys.fromApiValue(map.get("activeCode"));
+        if (!ArcSoftKeys.isComplete(appId, sdkKey, activeCode)) {
+            return null;
+        }
+        ConfigUtil.commitAppId(this, appId);
+        ConfigUtil.commitSdkKey(this, sdkKey);
+        ConfigUtil.commitActiveKey(this, activeCode);
+        SPUtils.getInstance().put("Appid", appId);
+        SPUtils.getInstance().put("Sdkkey", sdkKey);
+        SPUtils.getInstance().put("Activecode", activeCode);
+        int code = FaceEngine.activeOnline(getApplicationContext(), activeCode, appId, sdkKey);
+        if (code == ErrorInfo.MOK || code == ErrorInfo.MERR_ASF_ALREADY_ACTIVATED) {
+            return null;
+        }
+        return buildFailureMessage("初始化失败，虹软 SDK 激活失败",
+                ErrorCodeUtil.arcFaceErrorCodeToFieldName(code) + "(" + code + ")");
     }
 
     /**
@@ -1172,7 +1299,7 @@ public class LoginActivity extends BaseActivity
             } else {
                 String failureMessage = buildFailureMessage("初始化失败，获取配置信息失败",
                         resData == null ? null : resData.getMsg());
-                ALog.e("获取配置信息失败: " + GsonUtils.toJson(resData));
+                ALog.e("获取配置信息失败: code=" + (resData == null ? "null" : resData.getCode()));
                 return failureMessage;
             }
         } catch (Exception e) {
@@ -1207,7 +1334,7 @@ public class LoginActivity extends BaseActivity
             } else {
                 String failureMessage = buildFailureMessage("初始化失败，获取配置信息失败",
                         resData == null ? null : resData.getMsg());
-                ALog.e("获取配置信息失败: " + GsonUtils.toJson(resData));
+                ALog.e("获取配置信息失败: code=" + (resData == null ? "null" : resData.getCode()));
                 return failureMessage;
             }
         } catch (Exception e) {

@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.arcsoft.arcfacedemo.R;
+import com.arcsoft.arcfacedemo.network.ApiUtils;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectJinActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanActivity;
 import com.arcsoft.arcfacedemo.ui.activity.LivenessDetectYuanAndJinActivity;
@@ -37,6 +38,7 @@ import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.core.DrawerPopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnSelectListener;
+import com.sangfor.sdk.SFUemSDK;
 
 /**
  * 运维侧滑抽屉菜单（XPopup {@link DrawerPopupView}）。
@@ -417,6 +419,13 @@ public class CustomDrawerPopupView extends DrawerPopupView {
                 DialogUtils.startConfirmDialog(getContext(), "", "确认注销登录吗？", new DialogUtils.ConfirmListener() {
                     @Override
                     public void onConfirm() {
+                        try {
+                            ALog.i("LOGIN_DIAG logout_confirm auth=" + SFUemSDK.getInstance().getAuthStatus()
+                                    + " tunnel=" + SFUemSDK.getInstance().getSFTunnel().getTunnelStatus()
+                                    + " backendTokenPresent=" + (ApiUtils.getAccessToken() != null));
+                        } catch (RuntimeException e) {
+                            ALog.i("LOGIN_DIAG logout_confirm statusUnavailable=" + e.getClass().getSimpleName());
+                        }
                         if (!(ActivityUtils.getTopActivity() instanceof LoginActivity)) {
                             Bundle extra = new Bundle();
                             extra.putBoolean("auto", false);
